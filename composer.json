@@ -1,0 +1,27 @@
+{
+  "name": "cupracer/thumbsniper-backend",
+  "description": "ThumbSniper",
+  "homepage": "https://thumbsniper.com",
+  "minimum-stability": "dev",
+  "license": "GPL-3.0+",
+  "authors": [
+    {
+      "name": "Thomas Schulte",
+      "email": "thomas@cupracer.de",
+      "homepage": "https://www.mynakedgirlfriend.de",
+      "role": "Project founder"
+    }
+  ],
+  "require": {
+    "thumbsniper/shared-libs": "v0.8.0",
+    "thumbsniper/client-php": "dev-master",
+    "piwik/piwik-php-tracker": "1.0.0",
+    "smarty/smarty": "v3.1.21",
+    "abraham/twitteroauth": "0.5.1",
+    "slim/slim": "2.6.2",
+    "predis/predis": "v1.0.1"
+  },
+  "autoload": {
+    "psr-4": {"ThumbSniper\\": "lib/thumbsniper"}
+  }
+}

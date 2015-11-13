@@ -1,0 +1,8 @@
+.idea
+config/config.inc.php
+config/config-panel.inc.php
+composer.lock
+vendor/
+web_panel/bower_components/*
+web_panel/templates_c/*
+web_images/thumbnails/*
