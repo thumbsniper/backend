@@ -1713,18 +1713,21 @@ class Panel extends ApiV3
 
         $oauthProfiles = array();
 
-        $oauthProfileGoogle = $this->getOauthModel()->getByProvider($account->getId(), "google");
+        if(Settings::isGoogleAuthEnabled()) {
+            $oauthProfileGoogle = $this->getOauthModel()->getByProvider($account->getId(), "google");
 
-        if($oauthProfileGoogle instanceof Oauth)
-        {
-            $oauthProfiles['google'] = $oauthProfileGoogle;
+            if($oauthProfileGoogle instanceof Oauth)
+            {
+                $oauthProfiles['google'] = $oauthProfileGoogle;
+            }
         }
 
-        $oauthProfileTwitter = $this->getOauthModel()->getByProvider($account->getId(), "twitter");
+        if(Settings::isTwitterAuthEnabled()) {
+            $oauthProfileTwitter = $this->getOauthModel()->getByProvider($account->getId(), "twitter");
 
-        if($oauthProfileTwitter instanceof Oauth)
-        {
-            $oauthProfiles['twitter'] = $oauthProfileTwitter;
+            if ($oauthProfileTwitter instanceof Oauth) {
+                $oauthProfiles['twitter'] = $oauthProfileTwitter;
+            }
         }
 
         if($oauthProfiles) {
