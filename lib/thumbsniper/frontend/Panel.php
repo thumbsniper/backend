@@ -1587,7 +1587,7 @@ class Panel extends ApiV3
                     $this->getTargetModel()->checkTargetCurrentness($target, 1000, Settings::getImageDefaultMaxAge());
                 }
 
-                $images[] = "https://" . Settings::getApiHost() . "/v2/thumbnail/" . $width . "/" . $effect . "/?url=" . Settings::getFrontendImagesUrl() . "/static/robots.png";
+                $images[] = "https://" . Settings::getApiHost() . "/v3/thumbnail/" . $width . "/" . $effect . "/?url=" . Settings::getFrontendImagesUrl() . "/static/robots.png";
             }
         }
 
@@ -1616,7 +1616,7 @@ class Panel extends ApiV3
                     $this->getTargetModel()->checkTargetCurrentness($target, 1000, Settings::getImageDefaultMaxAge());
                 }
 
-                $images[] = "https://" . Settings::getApiHost() . "/v2/thumbnail/" . $width . "/" . $effect . "/?url=" . Settings::getFrontendImagesUrl() . "/static/broken.png";
+                $images[] = "https://" . Settings::getApiHost() . "/v3/thumbnail/" . $width . "/" . $effect . "/?url=" . Settings::getFrontendImagesUrl() . "/static/broken.png";
             }
         }
 
@@ -1645,7 +1645,7 @@ class Panel extends ApiV3
                     $this->getTargetModel()->checkTargetCurrentness($target, 1000, Settings::getImageDefaultMaxAge());
                 }
 
-                $images[] = "https://" . Settings::getApiHost() . "/v2/thumbnail/" . $width . "/" . $effect . "/?url=" . Settings::getFrontendImagesUrl() . "/static/violation.png";
+                $images[] = "https://" . Settings::getApiHost() . "/v3/thumbnail/" . $width . "/" . $effect . "/?url=" . Settings::getFrontendImagesUrl() . "/static/violation.png";
             }
         }
 
