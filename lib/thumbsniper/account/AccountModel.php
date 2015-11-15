@@ -51,11 +51,11 @@ class AccountModel
 
 
 
-    private static function load($data) {
+    private static function load($data)
+    {
         $account = new Account();
 
-        if(!is_array($data))
-        {
+        if (!is_array($data)) {
             return false;
         }
 
@@ -66,7 +66,10 @@ class AccountModel
         $account->setEmailVerified(isset($data[Settings::getMongoKeyAccountAttrEmailVerified()]) ? $data[Settings::getMongoKeyAccountAttrEmailVerified()] : null);
 
         $account->setActive(isset($data[Settings::getMongoKeyAccountAttrActive()]) ? $data[Settings::getMongoKeyAccountAttrActive()] : null);
-        $account->setAdmin(isset($data[Settings::getMongoKeyAccountAttrAdmin()]) ? $data[Settings::getMongoKeyAccountAttrAdmin()] : null);
+
+        if(Settings::getFrontendAdminEmail() && $account->getEmail() == Settings::getFrontendAdminEmail()) {
+            $account->setAdmin(true);
+        }
 
         $account->setApiKey(isset($data[Settings::getMongoKeyAccountAttrApiKey()]) ? $data[Settings::getMongoKeyAccountAttrApiKey()] : null);
         $account->setApiKeyType(isset($data[Settings::getMongoKeyAccountAttrApiKeyType()]) ? $data[Settings::getMongoKeyAccountAttrApiKeyType()] : null);

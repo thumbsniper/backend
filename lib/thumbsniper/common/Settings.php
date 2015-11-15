@@ -248,7 +248,6 @@ abstract class Settings
     static private $mongoKeyAccountAttrEmailVerified = "eMailVerified";
     static private $mongoKeyAccountAttrTsAdded = "tsAdded";
     static private $mongoKeyAccountAttrActive = "active";
-    static private $mongoKeyAccountAttrAdmin = "admin";
     static private $mongoKeyAccountAttrApiKey = "apiKey";
     static private $mongoKeyAccountAttrApiKeyType = "apiKeyType";
     static private $mongoKeyAccountAttrApiKeyTsAdded = "apiKeyTsAdded";
@@ -1641,14 +1640,6 @@ abstract class Settings
     public static function getMongoKeyAccountAttrActive()
     {
         return self::$mongoKeyAccountAttrActive;
-    }
-
-    /**
-     * @return string
-     */
-    public static function getMongoKeyAccountAttrAdmin()
-    {
-        return self::$mongoKeyAccountAttrAdmin;
     }
 
     /**
