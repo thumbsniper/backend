@@ -194,6 +194,13 @@ class Panel extends ApiV3
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
+        if(!Settings::isGoogleAuthEnabled())
+        {
+            //TODO: show error?
+            header("Location: " . Settings::getPanelUrl());
+            exit;
+        }
+
         $googleAuth = new GoogleAuth(
             $this->getLogger(),
             Settings::getGoogleClientId(),
@@ -286,6 +293,13 @@ class Panel extends ApiV3
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
+        if(!Settings::isTwitterAuthEnabled())
+        {
+            //TODO: show error?
+            header("Location: " . Settings::getPanelUrl());
+            exit;
+        }
+
         /* Build TwitterOAuth object with client credentials. */
         $connection = new TwitterOAuth(Settings::getTwitterConsumerKey(), Settings::getTwitterConsumerSecret());
 
@@ -331,6 +345,13 @@ class Panel extends ApiV3
     public function twitterAuthCallback()
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
+
+        if(!Settings::isTwitterAuthEnabled())
+        {
+            //TODO: show error?
+            header("Location: " . Settings::getPanelUrl());
+            exit;
+        }
 
         /* Get temporary credentials from session. */
         $request_token = [];
@@ -533,6 +554,9 @@ class Panel extends ApiV3
 	{
 		$this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
+        $this->smarty->assign('googleAuthEnabled', Settings::isGoogleAuthEnabled());
+        $this->smarty->assign('twitterAuthEnabled', Settings::isTwitterAuthEnabled());
+
 		$this->smarty->display('loginTabLogin.tpl');
 	}
 
@@ -540,6 +564,9 @@ class Panel extends ApiV3
 	public function showLoginTabNewAccountPage()
 	{
 		$this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $this->smarty->assign('googleAuthEnabled', Settings::isGoogleAuthEnabled());
+        $this->smarty->assign('twitterAuthEnabled', Settings::isTwitterAuthEnabled());
 
 		$this->smarty->display('loginTabNewAccount.tpl');
 	}

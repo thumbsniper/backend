@@ -53,11 +53,13 @@ abstract class Settings
 	static private $redisDb;
 
     // GoogleAuth
+    static private $googleAuthEnabled;
     static private $googleAuthUrl;
     static private $googleClientId;
     static private $googleClientSecret;
 
     // TwitterAuth
+    static private $twitterAuthEnabled;
     static private $twitterAuthRedirectUrl;
     static private $twitterAuthCallbackUrl;
     static private $twitterConsumerKey;
@@ -2574,5 +2576,37 @@ abstract class Settings
     public static function setApiAgentSecret($apiAgentSecret)
     {
         self::$apiAgentSecret = $apiAgentSecret;
+    }
+
+    /**
+     * @return mixed
+     */
+    public static function isGoogleAuthEnabled()
+    {
+        return self::$googleAuthEnabled;
+    }
+
+    /**
+     * @param mixed $googleAuthEnabled
+     */
+    public static function setGoogleAuthEnabled($googleAuthEnabled)
+    {
+        self::$googleAuthEnabled = $googleAuthEnabled;
+    }
+
+    /**
+     * @return mixed
+     */
+    public static function isTwitterAuthEnabled()
+    {
+        return self::$twitterAuthEnabled;
+    }
+
+    /**
+     * @param mixed $twitterAuthEnabled
+     */
+    public static function setTwitterAuthEnabled($twitterAuthEnabled)
+    {
+        self::$twitterAuthEnabled = $twitterAuthEnabled;
     }
 }
