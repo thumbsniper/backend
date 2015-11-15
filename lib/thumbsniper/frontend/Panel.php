@@ -1687,15 +1687,9 @@ class Panel extends ApiV3
 
         if(isset($action))
         {
-            //FIXME kein Unterschied mehr zwischen create und reset
             switch($action)
             {
-                case "create";
-                    $privateApiKey = $this->getAccountModel()->createApiKey($this->account->getId());
-                    $this->setGlobals();
-                    $account = $this->account;
-                    break;
-
+                case "create":
                 case "reset":
                     $privateApiKey = $this->getAccountModel()->createApiKey($this->account->getId());
                     $this->setGlobals();
