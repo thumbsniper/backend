@@ -1581,13 +1581,14 @@ class Panel extends ApiV3
             foreach(Settings::getApiValidWidths() as $width)
             {
                 $target = $this->getTargetModel()->getOrCreateByUrl(Settings::getFrontendImagesUrl() . "/static/robots.png", $width, $effect);
+                $thumbsniperClient = new ThumbSniperClient();
 
                 if($target instanceof Target)
                 {
                     $this->getTargetModel()->checkTargetCurrentness($target, 1000, Settings::getImageDefaultMaxAge());
                 }
-
-                $images[] = "https://" . Settings::getApiHost() . "/v3/thumbnail/" . $width . "/" . $effect . "/?url=" . Settings::getFrontendImagesUrl() . "/static/robots.png";
+                $images[] = $thumbsniperClient->getThumbnailUrl(Settings::getFrontendImagesUrl() . "/static/robots.png", $width, $effect);
+                //$images[] = "https://" . Settings::getApiHost() . "/v3/thumbnail/" . $width . "/" . $effect . "/?url=" . Settings::getFrontendImagesUrl() . "/static/robots.png";
             }
         }
 
@@ -1610,13 +1611,14 @@ class Panel extends ApiV3
             foreach(Settings::getApiValidWidths() as $width)
             {
                 $target = $this->getTargetModel()->getOrCreateByUrl(Settings::getFrontendImagesUrl() . "/static/broken.png", $width, $effect);
+                $thumbsniperClient = new ThumbSniperClient();
 
                 if($target instanceof Target)
                 {
                     $this->getTargetModel()->checkTargetCurrentness($target, 1000, Settings::getImageDefaultMaxAge());
                 }
-
-                $images[] = "https://" . Settings::getApiHost() . "/v3/thumbnail/" . $width . "/" . $effect . "/?url=" . Settings::getFrontendImagesUrl() . "/static/broken.png";
+                $images[] = $thumbsniperClient->getThumbnailUrl(Settings::getFrontendImagesUrl() . "/static/broken.png", $width, $effect);
+                //$images[] = "https://" . Settings::getApiHost() . "/v3/thumbnail/" . $width . "/" . $effect . "/?url=" . Settings::getFrontendImagesUrl() . "/static/broken.png";
             }
         }
 
@@ -1639,13 +1641,14 @@ class Panel extends ApiV3
             foreach(Settings::getApiValidWidths() as $width)
             {
                 $target = $this->getTargetModel()->getOrCreateByUrl(Settings::getFrontendImagesUrl() . "/static/violation.png", $width, $effect);
+                $thumbsniperClient = new ThumbSniperClient();
 
                 if($target instanceof Target)
                 {
                     $this->getTargetModel()->checkTargetCurrentness($target, 1000, Settings::getImageDefaultMaxAge());
                 }
-
-                $images[] = "https://" . Settings::getApiHost() . "/v3/thumbnail/" . $width . "/" . $effect . "/?url=" . Settings::getFrontendImagesUrl() . "/static/violation.png";
+                $images[] = $thumbsniperClient->getThumbnailUrl(Settings::getFrontendImagesUrl() . "/static/violation.png", $width, $effect);
+                //$images[] = "https://" . Settings::getApiHost() . "/v3/thumbnail/" . $width . "/" . $effect . "/?url=" . Settings::getFrontendImagesUrl() . "/static/violation.png";
             }
         }
 
