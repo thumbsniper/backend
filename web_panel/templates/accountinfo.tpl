@@ -116,6 +116,7 @@
                     </div>
 		    <!-- /.panel-primary -->
 
+                    {if $googleAuthEnabled == true}
                         {if isset($oauthProfiles) && isset($oauthProfiles.google)}
                                 <div class="panel panel-primary">
                                     <div class="panel-heading">
@@ -180,7 +181,9 @@
                             </div>
                             <!-- /.panel-primary -->
                         {/if}
+                    {/if}
 
+                    {if $twitterAuthEnabled == true}
                         {if isset($oauthProfiles) && isset($oauthProfiles.twitter)}
                             <div class="panel panel-primary">
                                 <div class="panel-heading">
@@ -241,6 +244,7 @@
                             </div>
                         <!-- /.panel-primary -->
                         {/if}
+                    {/if}
                 </div>
                 <!-- /.col-lg-6 -->
 

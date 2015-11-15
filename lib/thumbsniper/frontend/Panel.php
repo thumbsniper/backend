@@ -1757,9 +1757,12 @@ class Panel extends ApiV3
             }
         }
 
-        if($oauthProfiles) {
+        if(!empty($oauthProfiles)) {
             $this->smarty->assignByRef('oauthProfiles', $oauthProfiles);
         }
+
+        $this->smarty->assign('googleAuthEnabled', Settings::isGoogleAuthEnabled());
+        $this->smarty->assign('twitterAuthEnabled', Settings::isTwitterAuthEnabled());
 
         $this->smarty->display('accountinfo.tpl');
     }
