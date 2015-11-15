@@ -17,10 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-require_once('config/config.inc.php');
-require_once('config/config-panel.inc.php');
+define('DIRECTORY_ROOT', dirname(dirname(__DIR__)));
 
-require_once('vendor/autoload.php');
+require_once(DIRECTORY_ROOT . '/config/config.inc.php');
+require_once(DIRECTORY_ROOT . '/config/config-panel.inc.php');
 
 use ThumbSniper\common\Settings;
 use ThumbSniper\frontend\Panel;
