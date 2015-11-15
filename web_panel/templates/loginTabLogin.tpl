@@ -44,13 +44,13 @@
                 </form>
 
                 <div style="margin-top: 50px;">
-                    {if googleAuthEnabled == true}
+                    {if $googleAuthEnabled == true}
                     <a class="btn btn-block btn-social btn-google-plus" href="/pages/googleAuth.php" onclick="$('#loginForm').validator('destroy')">
                         <i class="fa fa-google-plus"></i> Sign in with Google
                     </a>
                     {/if}
 
-                    {if twitterAuthEnabled == true}
+                    {if $twitterAuthEnabled == true}
                     <a class="btn btn-block btn-social btn-twitter" href="/pages/twitterAuthRedirect.php" onclick="$('#loginForm').validator('destroy')">
                         <i class="fa fa-twitter"></i> Sign in with Twitter
                     </a>

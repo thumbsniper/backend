@@ -53,13 +53,13 @@
                 </form>
 
                 <div style="margin-top: 30px;">
-                    {if googleAuthEnabled == true}
+                    {if $googleAuthEnabled == true}
                     <a class="btn btn-block btn-social btn-google-plus" href="/pages/googleAuth.php" onclick="$('#newAccountForm').validator('destroy')">
                         <i class="fa fa-google-plus"></i> Use your Google account
                     </a>
                     {/if}
 
-                    {if twitterAuthEnabled == true}
+                    {if $twitterAuthEnabled == true}
                     <a class="btn btn-block btn-social btn-twitter" href="/pages/twitterAuthRedirect.php" onclick="$('#newAccountForm').validator('destroy')">
                         <i class="fa fa-twitter"></i> Use your Twitter account
                     </a>
