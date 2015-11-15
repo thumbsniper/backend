@@ -37,11 +37,13 @@ Settings::setRedisHost("thumbsniper-redis.docker");
 Settings::setRedisDb(0);
 
 // Google Auth
+Settings::setGoogleAuthEnabled(false);
 Settings::setGoogleAuthUrl('https://panel.' . Settings::getDomain() . '/pages/googleAuth.php');
 Settings::setGoogleClientId('XXX.apps.googleusercontent.com');
 Settings::setGoogleClientSecret('secret');
 
 // Twitter Auth
+Settings::setTwitterAuthEnabled(false);
 Settings::setTwitterAuthRedirectUrl('https://panel.' . Settings::getDomain() . '/pages/twitterAuthRedirect.php');
 Settings::setTwitterAuthCallbackUrl('https://panel.' . Settings::getDomain() . '/pages/twitterAuthCallback.php');
 Settings::setTwitterConsumerKey('changeme');
