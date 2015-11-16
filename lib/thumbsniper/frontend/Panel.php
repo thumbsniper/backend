@@ -1545,7 +1545,7 @@ class Panel extends ApiV3
 
         $images = array();
 
-        foreach(Settings::getApiValidEffects() as $effect)
+        foreach(array_keys(Settings::getImageEffects()) as $effect)
         {
             foreach(Settings::getApiValidWidths() as $width)
             {
@@ -1576,7 +1576,7 @@ class Panel extends ApiV3
 
         $images = array();
 
-        foreach(Settings::getApiValidEffects() as $effect)
+        foreach(array_keys(Settings::getImageEffects()) as $effect)
         {
             foreach(Settings::getApiValidWidths() as $width)
             {
@@ -1606,7 +1606,7 @@ class Panel extends ApiV3
 
         $images = array();
 
-        foreach(Settings::getApiValidEffects() as $effect)
+        foreach(array_keys(Settings::getImageEffects()) as $effect)
         {
             foreach(Settings::getApiValidWidths() as $width)
             {
@@ -1636,7 +1636,7 @@ class Panel extends ApiV3
 
         $images = array();
 
-        foreach(Settings::getApiValidEffects() as $effect)
+        foreach(array_keys(Settings::getImageEffects()) as $effect)
         {
             foreach(Settings::getApiValidWidths() as $width)
             {

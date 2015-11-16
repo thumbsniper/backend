@@ -173,25 +173,24 @@ abstract class Settings
     );
     static private $apiAgentSecret;
 
-    // 1st row: ThumbSniper new, 2nd row: ThumbSniper old, 3rd row: compatibility with m-software and fadeout
+//    // 1st row: ThumbSniper new, 2nd row: ThumbSniper old, 3rd row: compatibility with m-software and fadeout
+//    static private $apiValidWidths = array( // min 110 pixel (Watermark + 2x 5px border)
+//        120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420, 450, 500, 600, 800,
+//        91, 104, 121, 146, 182, 242, 365,
+//        90, 123, 148, 185, 225, 246, 370,
+//        80, 133, 200, 267, 400,
+//        119, 143, 178, 238, 356,
+//        555
+//    );
+
     static private $apiValidWidths = array( // min 110 pixel (Watermark + 2x 5px border)
-        120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420, 450, 500, 600, 800,
-        91, 104, 121, 146, 182, 242, 365,
-        90, 123, 148, 185, 225, 246, 370,
-        80, 133, 200, 267, 400,
-        119, 143, 178, 238, 356,
-        555
-    );
-    static private $apiValidEffects = array(
-        'plain', 'fade1', 'fade2', 'button1', 'curly', 'blur1', 'blur2', 'tornpaper1', 'polaroid1'
+        90, 120, 150, 180, 200, 300
     );
 
-    static private $masterFiletype = 'png';
-
-    static private $imageFiletypes = array(
+    static private $imageEffects = array(
         'plain' => 'jpeg',
-        'fade1' => 'png',
-        'fade2' => 'png',
+//        'fade1' => 'png',
+//        'fade2' => 'png',
         'button1' => 'png',
         'curly' => 'png',
         'blur1' => 'png',
@@ -199,6 +198,8 @@ abstract class Settings
         'tornpaper1' => 'png',
         'polaroid1' => 'png'
     );
+
+    static private $masterFiletype = 'png';
 
     static private $apiKeyOrReferrerWhitelistOnly = true;
 	static private $oauthLocalPasswordSalt = "secret";
@@ -417,14 +418,6 @@ abstract class Settings
     public static function getApiValidActions()
     {
         return self::$apiValidActions;
-    }
-
-    /**
-     * @return mixed
-     */
-    public static function getApiValidEffects()
-    {
-        return self::$apiValidEffects;
     }
 
     /**
@@ -944,15 +937,6 @@ abstract class Settings
         self::$apiKeyOrReferrerWhitelistOnly = $apiKeyOrReferrerWhitelistOnly;
     }
 
-
-    /**
-     * @return array
-     */
-    public static function getImageFiletypes()
-    {
-        return self::$imageFiletypes;
-    }
-
     /**
      *
      * @param mixed $effect
@@ -961,12 +945,12 @@ abstract class Settings
      */
     public static function getImageFiletype($effect)
     {
-        if(!array_key_exists($effect, self::$imageFiletypes))
+        if(!array_key_exists($effect, self::$imageEffects))
         {
             return false;
         }else
         {
-            return self::$imageFiletypes[$effect];
+            return self::$imageEffects[$effect];
         }
     }
 
@@ -2599,5 +2583,29 @@ abstract class Settings
     public static function setTwitterAuthEnabled($twitterAuthEnabled)
     {
         self::$twitterAuthEnabled = $twitterAuthEnabled;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getImageEffects()
+    {
+        return self::$imageEffects;
+    }
+
+    /**
+     * @param array $imageEffects
+     */
+    public static function setImageEffects($imageEffects)
+    {
+        self::$imageEffects = $imageEffects;
+    }
+
+    /**
+     * @param array $apiValidWidths
+     */
+    public static function setApiValidWidths($apiValidWidths)
+    {
+        self::$apiValidWidths = $apiValidWidths;
     }
 }

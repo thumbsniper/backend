@@ -312,7 +312,7 @@ class ApiV3
 
         // otnEffect
 
-        if (!$otnEffect || !is_string($otnEffect) || !in_array($otnEffect, Settings::getApiValidEffects())) {
+        if (!$otnEffect || !is_string($otnEffect) || !in_array($otnEffect, array_keys(Settings::getImageEffects()))) {
             $this->getLogger()->log(__METHOD__, "invalid otnEffect: " . strval($otnEffect), LOG_ERR);
             $result = false;
         } else {
