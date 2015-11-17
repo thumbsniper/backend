@@ -56,7 +56,7 @@
         <div class="row">
             {foreach from=$images item=image}
                 <div style="float: left; border: 1px solid lightgrey; padding: 5px; margin: 5px;">
-                    <img src="{$image}" />
+                    <img src="{$image.url}" title="{$image.width} - {$image.effect}" />
                 </div>
             {/foreach}
         </div>
