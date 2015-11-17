@@ -102,7 +102,7 @@ abstract class Settings
     static private $frontendImagesUrl;
     static private $frontendImageHosts;
 
-    static private $frontendImagesPathWatermark;
+    static private $frontendImagesPathWatermark = "/static/thumbsniper.png";
     static private $frontendImagesPathViolation = "/static/violation.png";
     static private $frontendImagesPathBroken = "/static/broken.png";
     static private $frontendImagesPathDummy = "/static/dummy.png";
