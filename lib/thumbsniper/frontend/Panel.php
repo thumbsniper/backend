@@ -2006,6 +2006,7 @@ class Panel extends ApiV3
 
 		if(!$firstName || empty($firstName) || !preg_match('/^[a-z][a-z0-9-.\s]{5,50}$/i', $firstName))
 		{
+            $this->getLogger()->log(__METHOD__, "invalid first name: " . $firstName, LOG_ERR);
 			return false;
 		}else
 		{
@@ -2020,6 +2021,7 @@ class Panel extends ApiV3
 
 		if(!$lastName || empty($lastName) || !preg_match('/^[a-z][a-z0-9-.\s]{5,50}$/i', $lastName))
 		{
+            $this->getLogger()->log(__METHOD__, "invalid last name: " . $lastName, LOG_ERR);
 			return false;
 		}else
 		{
@@ -2032,8 +2034,9 @@ class Panel extends ApiV3
 	{
 		$this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
-		if(!$email || empty($email) || !preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/i', $email))
+		if(!$email || empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL))
 		{
+            $this->getLogger()->log(__METHOD__, "invalid email address: " . $email, LOG_ERR);
 			return false;
 		}else
 		{
