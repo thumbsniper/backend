@@ -626,6 +626,7 @@ class Panel extends ApiV3
                         {
                             $this->getOauthModel()->saveOauth($accountId, $_SESSION['oauth_temp']);
                             $this->login($_SESSION['oauth_temp']);
+                            unset($_SESSION['oauth_temp']);
                         }
 
                         header("Location: /");
