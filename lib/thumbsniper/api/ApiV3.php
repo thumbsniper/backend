@@ -599,9 +599,12 @@ class ApiV3
             if($this->target->getUrl() == $output['newTargetUrl'])
             {
                 $this->getLogger()->log(__METHOD__, "Loop detected: " . $this->target->getUrl(), LOG_DEBUG);
-	            $slimResponse->setHttpStatus(500);
 
-                return $slimResponse;
+                $output['redirectUrl'] = $this->httpProtocol . "://" . $this->getRandomImageServer() . Settings::getFrontendImagesPathTransparentPixel();
+                $output['newTargetUrl'] = null;
+
+	            //$slimResponse->setHttpStatus(500);
+                //return $slimResponse;
             }
         }
 

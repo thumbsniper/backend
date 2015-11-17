@@ -107,6 +107,7 @@ abstract class Settings
     static private $frontendImagesPathBroken = "/static/broken.png";
     static private $frontendImagesPathDummy = "/static/dummy.png";
     static private $frontendImagesPathRobots = "/static/robots.png";
+    static private $frontendImagesPathTransparentPixel = "/static/transparent-pixel.png";
 
     static private $frontendAdminEmail;
 
@@ -2607,5 +2608,13 @@ abstract class Settings
     public static function setApiValidWidths($apiValidWidths)
     {
         self::$apiValidWidths = $apiValidWidths;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getFrontendImagesPathTransparentPixel()
+    {
+        return self::$frontendImagesPathTransparentPixel;
     }
 }
