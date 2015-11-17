@@ -19,7 +19,6 @@
 
 require_once(DIRECTORY_ROOT . '/vendor/autoload.php');
 
-ini_set('display_errors', 0);
 date_default_timezone_set("Europe/Berlin");
 
 use ThumbSniper\common\Settings;
@@ -38,14 +37,14 @@ Settings::setRedisDb(0);
 
 // Google Auth
 Settings::setGoogleAuthEnabled(false);
-Settings::setGoogleAuthUrl('https://panel.' . Settings::getDomain() . '/pages/googleAuth.php');
+Settings::setGoogleAuthUrl('http://panel.' . Settings::getDomain() . '/pages/googleAuth.php');
 Settings::setGoogleClientId('XXX.apps.googleusercontent.com');
 Settings::setGoogleClientSecret('secret');
 
 // Twitter Auth
 Settings::setTwitterAuthEnabled(false);
-Settings::setTwitterAuthRedirectUrl('https://panel.' . Settings::getDomain() . '/pages/twitterAuthRedirect.php');
-Settings::setTwitterAuthCallbackUrl('https://panel.' . Settings::getDomain() . '/pages/twitterAuthCallback.php');
+Settings::setTwitterAuthRedirectUrl('http://panel.' . Settings::getDomain() . '/pages/twitterAuthRedirect.php');
+Settings::setTwitterAuthCallbackUrl('http://panel.' . Settings::getDomain() . '/pages/twitterAuthCallback.php');
 Settings::setTwitterConsumerKey('changeme');
 Settings::setTwitterConsumerSecret('secret');
 Settings::setTwitterAccessToken('changeme');
@@ -58,6 +57,7 @@ Settings::setPiwikSiteId(1);
 Settings::setPiwikTokenAuth('secret');
 
 // Logging
+Settings::setLogSeverity(LOG_INFO);
 Settings::setLogMethodThumbSniperAccountAccountModel(true);
 Settings::setLogMethodThumbSniperApiApiV2(true);
 Settings::setLogMethodThumbSniperApiApiTasks(true);
@@ -68,11 +68,11 @@ Settings::setLogMethodThumbSniperObjectiveReferrerModel(true);
 Settings::setLogMethodThumbSniperObjectiveTargetModel(true);
 
 // Web
-Settings::setWebUrl('https://www.' . Settings::getDomain());
+Settings::setWebUrl('http://www.' . Settings::getDomain());
 
 // Panel
 Settings::setPanelTitle('ThumbSniper');
-Settings::setPanelUrl('https://panel.' . Settings::getDomain());
+Settings::setPanelUrl('http://panel.' . Settings::getDomain());
 
 // Frontend
 Settings::setFrontendAdminEmail('my-admin-address@example.com');
@@ -91,7 +91,7 @@ Settings::setFrontendImageHosts(array(
 */
 
 // Misc
-Settings::setUserAgentName("ThumbSniper");
+Settings::setUserAgentName("Example");
 Settings::setUserAgentUrl(Settings::getDomain());
 Settings::setImageWatermarksEnabled(false);
 Settings::setApiKeyOrReferrerWhitelistOnly(true);
