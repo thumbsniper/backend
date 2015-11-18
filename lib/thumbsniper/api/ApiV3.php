@@ -165,19 +165,19 @@ class ApiV3
 
     // validation
 
-    public function loadAndValidateCommonParameters($otnAction)
+    public function loadAndValidateCommonParameters($action)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
         $result = true;
 
-        // otnAction
+        // action
 
-        if (!$otnAction || !is_string($otnAction) || !in_array($otnAction, Settings::getApiValidActions())) {
-            $this->getLogger()->log(__METHOD__, "invalid otnAction", LOG_ERR);
+        if (!$action || !is_string($action) || !in_array($action, Settings::getApiValidActions())) {
+            $this->getLogger()->log(__METHOD__, "invalid action", LOG_ERR);
             $result = false;
         } else {
-            $this->action = $otnAction;
+            $this->action = $action;
         }
 
         if($this->isSSL())
@@ -274,26 +274,26 @@ class ApiV3
     }
 
 
-    public function loadAndValidateThumbnailParameters($otnApiKey, $otnWidth, $otnEffect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr)
+    public function loadAndValidateThumbnailParameters($apiKey, $width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
         $result = true;
 
-        // otnApiKey
+        // apiKey
 
-        if (!$otnApiKey) {
-            $this->getLogger()->log(__METHOD__, "no otnApiKey used", LOG_DEBUG);
-        }else if(!is_string($otnApiKey) || !strlen($otnApiKey) == 32) {
-            $this->getLogger()->log(__METHOD__, "invalid otnApiKey: " . strval($otnApiKey), LOG_ERR);
+        if (!$apiKey) {
+            $this->getLogger()->log(__METHOD__, "no apiKey used", LOG_DEBUG);
+        }else if(!is_string($apiKey) || !strlen($apiKey) == 32) {
+            $this->getLogger()->log(__METHOD__, "invalid apiKey: " . strval($apiKey), LOG_ERR);
         } else {
-            $account = $this->getAccountModel()->getByApiKey($otnApiKey);
+            $account = $this->getAccountModel()->getByApiKey($apiKey);
 
             if (!$account instanceof Account) {
                 $this->getLogger()->log(__METHOD__, "invalid account", LOG_WARNING);
             } else {
                 //TODO: check if active and not expired
-                $this->apiKey = $otnApiKey;
+                $this->apiKey = $apiKey;
                 $this->account = $account;
 
                 // track all active accounts on daily basis
@@ -301,22 +301,22 @@ class ApiV3
             }
         }
 
-        // otnWidth
+        // width
 
-        if (!$otnWidth || !in_array($otnWidth, Settings::getApiValidWidths())) {
-            $this->getLogger()->log(__METHOD__, "invalid otnWidth: " . strval($otnWidth), LOG_ERR);
+        if (!$width || !in_array($width, Settings::getApiValidWidths())) {
+            $this->getLogger()->log(__METHOD__, "invalid width: " . strval($width), LOG_ERR);
             $result = false;
         } else {
-            $this->thumbnailWidth = $otnWidth;
+            $this->thumbnailWidth = $width;
         }
 
-        // otnEffect
+        // effect
 
-        if (!$otnEffect || !is_string($otnEffect) || !in_array($otnEffect, array_keys(Settings::getImageEffects()))) {
-            $this->getLogger()->log(__METHOD__, "invalid otnEffect: " . strval($otnEffect), LOG_ERR);
+        if (!$effect || !is_string($effect) || !in_array($effect, array_keys(Settings::getImageEffects()))) {
+            $this->getLogger()->log(__METHOD__, "invalid effect: " . strval($effect), LOG_ERR);
             $result = false;
         } else {
-            $this->thumbnailEffect = $otnEffect;
+            $this->thumbnailEffect = $effect;
         }
 
         // url
@@ -654,20 +654,20 @@ class ApiV3
 
     // Cached Image
 
-    public function loadAndValidateCachedImageParameters($otnCacheId)
+    public function loadAndValidateCachedImageParameters($cacheId)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
         $result = true;
 
-        // otnCacheId
+        // cacheId
 
 
-        if (!$otnCacheId || !is_string($otnCacheId) || !preg_match('/^[a-z0-9]{32}$/', $otnCacheId)) {
-            $this->getLogger()->log(__METHOD__, "invalid otnCacheId", LOG_ERR);
+        if (!$cacheId || !is_string($cacheId) || !preg_match('/^[a-z0-9]{32}$/', $cacheId)) {
+            $this->getLogger()->log(__METHOD__, "invalid cacheId", LOG_ERR);
             $result = false;
         } else {
-            $this->cacheId = $otnCacheId;
+            $this->cacheId = $cacheId;
         }
 
         return $result;
