@@ -820,7 +820,7 @@ class Panel extends ApiV3
 
         // TEST Thumbnail
         $this->loadAndValidateCommonParameters("thumbnail");
-        $this->loadAndValidateThumbnailParameters(null, $image->getWidth(), $image->getEffect(), $target->getUrl(), null, null, false, null, null);
+        $this->loadAndValidateThumbnailParameters($image->getWidth(), $image->getEffect(), $target->getUrl(), null, null, false, null, null);
         Settings::setImageWatermarksEnabled(false);
 
         $thumbnail = $this->processThumbnailRequest();
@@ -941,6 +941,7 @@ class Panel extends ApiV3
                 switch ($action) {
                     case "forceUpdate":
                         $this->getTargetModel()->forceUpdate($target->getId());
+                        $target->setForcedUpdate(true);
 
                         $targetPriority = Settings::getTargetPriority($this->account->getApiKeyType());
                         $imageMaxAge = Settings::getImageMaxAge($this->account->getApiKeyType());

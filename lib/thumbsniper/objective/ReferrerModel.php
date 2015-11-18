@@ -21,6 +21,7 @@ namespace ThumbSniper\objective;
 
 
 use ThumbSniper\account\Account;
+use ThumbSniper\common\Helpers;
 use ThumbSniper\frontend\FrontendException;
 use ThumbSniper\common\Logger;
 use ThumbSniper\common\Settings;
@@ -167,18 +168,26 @@ class ReferrerModel
 
 
 
-    private function getUrlBase($url)
+    public function getByUrl($url)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $urlParts = parse_url($url);
-        $urlBase = NULL;
+        $urlBase = Helpers::getUrlBase($url);
 
-        if (!empty($urlParts['host'])) {
-            $urlBase = strtolower($urlParts['scheme']) . "://" . strtolower($urlParts['host']) ."/";
+        if ($urlBase == NULL) {
+            //TODO: log message
+            return null;
         }
 
-        return $urlBase;
+        $referrerId = $this->calculateId($urlBase);
+        $referrer = $this->getById($referrerId);
+
+        if($referrer instanceof Referrer)
+        {
+            return $referrer;
+        }
+
+        return null;
     }
 
 
@@ -190,7 +199,7 @@ class ReferrerModel
         //FIXME:
         $accountId = null;
 
-        $urlBase = $this->getUrlBase($url);
+        $urlBase = Helpers::getUrlBase($url);
 
         if ($urlBase == NULL) {
             //TODO: log message
@@ -360,7 +369,7 @@ class ReferrerModel
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $result = $this->getVerifyDomainHttpCode($this->getUrlBase($url), $account->getDomainVerificationKey());
+        $result = $this->getVerifyDomainHttpCode(Helpers::getUrlBase($url), $account->getDomainVerificationKey());
         if(!array_key_exists('httpCode', $result)) {
             if(array_key_exists('error', $result))
             {
@@ -920,7 +929,7 @@ class ReferrerModel
 
 
 
-    private function isBlacklisted($urlBase)
+    public function isBlacklisted($urlBase)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 

@@ -84,6 +84,10 @@ class ApiV3
     /** @var Target */
     protected $target;
 
+    // Make the plain URL available without an object
+    // to be able to use it without a Target->getOrCreate() call
+    protected $targetUrl;
+
     /** @var Referrer */
     protected $referrer;
 
@@ -282,21 +286,45 @@ class ApiV3
     }
 
 
+    protected function validateWidth($width)
+    {
+        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
+
+        if ($width && in_array($width, Settings::getApiValidWidths())) {
+           return $width;
+        }
+
+        return null;
+    }
+
+
     protected function checkWidth($width)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
         $result = false;
+        $validatedWidth = $this->validateWidth($width);
 
-        if (!$width || !in_array($width, Settings::getApiValidWidths())) {
+        if (!$validatedWidth) {
             $this->getLogger()->log(__METHOD__, "invalid width: " . strval($width), LOG_ERR);
         } else {
-            $this->thumbnailWidth = $width;
-
+            $this->thumbnailWidth = $validatedWidth;
             $result = true;
         }
 
         return $result;
+    }
+
+
+    protected function validateEffect($effect)
+    {
+        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
+
+        if ($effect && is_string($effect) && in_array($effect, array_keys(Settings::getImageEffects()))) {
+            return $effect;
+        }
+
+        return null;
     }
 
 
@@ -305,11 +333,12 @@ class ApiV3
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
         $result = false;
+        $validatedEffect = $this->validateEffect($effect);
 
-        if (!$effect || !is_string($effect) || !in_array($effect, array_keys(Settings::getImageEffects()))) {
+        if (!$validatedEffect) {
             $this->getLogger()->log(__METHOD__, "invalid effect: " . strval($effect), LOG_ERR);
         } else {
-            $this->thumbnailEffect = $effect;
+            $this->thumbnailEffect = $validatedEffect;
 
             $result = true;
         }
@@ -343,6 +372,7 @@ class ApiV3
                     $result = false;
                 } else {
                     $this->target = $target;
+                    $this->targetUrl = $target->getUrl();
 
                     if (!$this->target->getCurrentImage() instanceof Image) {
                         $this->getLogger()->log(__METHOD__, "invalid target", LOG_ERR);
@@ -388,7 +418,8 @@ class ApiV3
         } else {
             if(!Settings::isEnergySaveActive() && $referrerUrl != null) {
 
-                $referrerUrl = $this->getValidatedUrl($referrerUrl, true, true);
+
+                $referrerUrl = $referrerUrl ? $this->getValidatedUrl($referrerUrl, true, true) : null;
 
                 if($referrerUrl == null) {
                     $this->getLogger()->log(__METHOD__, "invalid referrerUrl: " . $referrerUrl, LOG_WARNING);
@@ -496,13 +527,39 @@ class ApiV3
     }
 
 
-    public function loadAndValidateThumbnailParameters($apiKey, $width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr)
+    private function isViolation($targetUrl, $referrerUrl)
+    {
+        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $isViolation = false;
+
+        if(Settings::isApiKeyOrReferrerWhitelistOnly())
+        {
+            if(!$this->account && !in_array($targetUrl, $this->frontendImageUrls))
+            {
+                $referrer = $this->getReferrerModel()->getByUrl($referrerUrl);
+
+                if(!$referrer || !$referrer->isWhitelisted())
+                {
+                    $this->getLogger()->log(__METHOD__, "violation - invalid referrer: " . $referrerUrl, LOG_INFO);
+                    $isViolation = true;
+                }
+            }
+        }elseif($this->getValidatedUrl($referrerUrl, false, false) && $this->getReferrerModel()->isBlacklisted($this->getValidatedUrl($referrerUrl, false, false)))
+        {
+            $this->getLogger()->log(__METHOD__, "violation - referrer is blacklisted: " . $referrerUrl, LOG_INFO);
+            $isViolation = true;
+        }
+
+        return $isViolation;
+    }
+
+
+    public function loadAndValidateThumbnailParameters($width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
         $result = true;
-
-        $this->checkApiKey($apiKey);
 
         if(!$this->checkWidth($width))
         {
@@ -543,6 +600,7 @@ class ApiV3
     }
 
 
+
     protected function processThumbnailRequest()
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
@@ -567,14 +625,7 @@ class ApiV3
 	    $this->getTargetModel()->checkTargetCurrentness($this->target, $targetPriority, $imageMaxAge);
 
 
-        if ((Settings::isApiKeyOrReferrerWhitelistOnly()
-                && (!$this->account && !in_array($this->target->getUrl(), $this->frontendImageUrls)
-                    && (!$this->referrer || !$this->referrer->isWhitelisted())))
-            || ($this->referrer && $this->referrer->isBlacklisted())) {
-            $this->getLogger()->log(__METHOD__, "violation: " . $this->target->getUrl(), LOG_INFO);
-            $output = $this->generateViolationOutput();
-        //}else if($this->target->isBlacklisted())
-        }else if($this->getTargetModel()->isBlacklisted($this->target->getUrl()))
+        if($this->getTargetModel()->isBlacklisted($this->target->getUrl()))
         {
             $this->getLogger()->log(__METHOD__, "target is blacklisted: " . $this->target->getUrl(), LOG_INFO);
             $output = $this->generateRobotsOutput();
@@ -632,14 +683,20 @@ class ApiV3
 
         $slimResponse = new SlimResponse();
 
-        if(!$this->loadAndValidateThumbnailParameters($apiKey, $width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr))
-        {
-            $this->getLogger()->log(__METHOD__, "invalid thumbnail parameters", LOG_ERR);
-            //TODO: create SlimResponse
-            return false;
-        }
+        $this->checkApiKey($apiKey);
+        $violation = $this->isViolation($url, $referrerUrl);
 
-        $output = $this->processThumbnailRequest();
+        if(!$violation) {
+            if (!$this->loadAndValidateThumbnailParameters($width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr)) {
+                $this->getLogger()->log(__METHOD__, "invalid thumbnail parameters", LOG_ERR);
+                //TODO: create SlimResponse
+                return false;
+            }
+
+            $output = $this->processThumbnailRequest();
+        }else {
+            $output = $this->generateViolationOutput($this->validateWidth($width), $this->validateEffect($effect));
+        }
 
 	    $slimResponse->setExpires('Sat, 26 Jul 1997 05:00:00 GMT');
 	    $slimResponse->setCacheControl('no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
@@ -657,12 +714,12 @@ class ApiV3
         // CHECK FOR INFINITE LOOP
         if($output['status'] != "ok" && isset($output['newTargetUrl']))
         {
-            $this->getLogger()->log(__METHOD__, "requested URL: " . $this->target->getUrl(), LOG_DEBUG);
+            $this->getLogger()->log(__METHOD__, "requested URL: " . $this->targetUrl, LOG_DEBUG);
             $this->getLogger()->log(__METHOD__, "delivered URL: " . $output['newTargetUrl'], LOG_DEBUG);
 
-            if($this->target->getUrl() == $output['newTargetUrl'])
+            if($this->targetUrl == $output['newTargetUrl'])
             {
-                $this->getLogger()->log(__METHOD__, "Loop detected: " . $this->target->getUrl(), LOG_DEBUG);
+                $this->getLogger()->log(__METHOD__, "Loop detected: " . $this->targetUrl, LOG_DEBUG);
 
                 $output['redirectUrl'] = $this->httpProtocol . "://" . $this->getRandomImageServer() . Settings::getFrontendImagesPathTransparentPixel();
                 $output['newTargetUrl'] = null;
@@ -677,7 +734,7 @@ class ApiV3
 			//don't track dummies with callback URL
 		}else
 		{
-			if(!Settings::isEnergySaveActive())
+			if(!$violation && !Settings::isEnergySaveActive())
 			{
 				$this->getApiStatistics()->updateTargetRequestStats($this->target->getId());
 				$this->getApiStatistics()->incrementImageRequestStats($this->target->getCurrentImage()->getId());
@@ -1178,19 +1235,19 @@ class ApiV3
     }
 
 
-    private function generateViolationOutput()
+    private function generateViolationOutput($width, $effect)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
         $output['status'] = "violation";
         $output['redirectUrl'] = $this->httpProtocol . "://" . Settings::getApiHost() . "/v3/thumbnail/";
 
-        if ($this->account) {
-            $output['redirectUrl'] .= $this->account->getApiKey() . "/";
-        }
+        //TODO: may be unsafe to use the API key here
+//        if ($this->account) {
+//            $output['redirectUrl'] .= $this->account->getApiKey() . "/";
+//        }
 
-        $output['redirectUrl'].= $this->target->getCurrentImage()->getWidth() .
-            "/" . $this->target->getCurrentImage()->getEffect() . "/?";
+        $output['redirectUrl'].= $width . "/" . $effect . "/?";
 
         if ($this->forceDebug) {
             $output['redirectUrl'] .= "otnDebug&";
