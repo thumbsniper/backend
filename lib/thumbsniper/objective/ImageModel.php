@@ -320,28 +320,33 @@ class ImageModel
 	}
 
 
-	//TODO: delete or implement for Redis
+
     private function deleteCachedImages($imageId)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        try {
-            $collection = new \MongoCollection($this->mongoDB, 'images_cache');
+        $imageCacheKeyBranded = Settings::getRedisKeyImageCacheKeyBranded() . $imageId;
+        $imageCacheKeyUnbranded = Settings::getRedisKeyImageCacheKeyUnbranded() . $imageId;
 
-            $query = array(
-                'imageId' => $imageId
-            );
-
-            if($collection->remove($query))
-            {
-                $this->logger->log(__METHOD__, "removed cached images for image " . $imageId, LOG_DEBUG);
-                return true;
+        if($this->redis->exists($imageCacheKeyBranded))
+        {
+            if($this->redis->exists(Settings::getRedisKeyImageCacheData() . $this->redis->get($imageCacheKeyBranded))) {
+                $this->redis->del(Settings::getRedisKeyImageCacheData() . $this->redis->get($imageCacheKeyBranded));
+                $this->logger->log(__METHOD__, "deleted branded image cache for " . $imageId, LOG_INFO);
             }
-        }catch (\Exception $e) {
-            $this->logger->log(__METHOD__, "failed to remove cached images for image " . $imageId . ": " . $e->getMessage(), LOG_ERR);
+            $this->redis->del($imageCacheKeyBranded);
+            $this->logger->log(__METHOD__, "deleted branded image cache key for " . $imageId, LOG_INFO);
         }
 
-        return false;
+        if($this->redis->exists($imageCacheKeyUnbranded))
+        {
+            if($this->redis->exists(Settings::getRedisKeyImageCacheData() . $this->redis->get($imageCacheKeyUnbranded))) {
+                $this->redis->del(Settings::getRedisKeyImageCacheData() . $this->redis->get($imageCacheKeyUnbranded));
+                $this->logger->log(__METHOD__, "deleted unbranded image cache for " . $imageId, LOG_INFO);
+            }
+            $this->redis->del($imageCacheKeyUnbranded);
+            $this->logger->log(__METHOD__, "deleted unbranded image cache key for " . $imageId, LOG_INFO);
+        }
     }
 
 
@@ -680,7 +685,7 @@ class ImageModel
         }
 
         //TODO: vielleicht ist das sofortige Löschen keine gute Idee. Besser auf das normale Cache-Ende warten?
-        //$this->deleteCachedImages($image->getId());
+        $this->deleteCachedImages($image->getId());
         $this->dequeue($image);
 
 		if(!Settings::isEnergySaveActive())

@@ -163,4 +163,17 @@ class Helpers
 
         return false;
     }
+
+
+    public static function getUrlBase($url)
+    {
+        $urlParts = parse_url($url);
+        $urlBase = NULL;
+
+        if (!empty($urlParts['scheme']) && !empty($urlParts['host'])) {
+            $urlBase = strtolower($urlParts['scheme']) . "://" . strtolower($urlParts['host']) ."/";
+        }
+
+        return $urlBase;
+    }
 }
