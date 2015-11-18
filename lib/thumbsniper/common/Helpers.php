@@ -146,4 +146,21 @@ class Helpers
 	{
 		return hash('sha256', $salt . $password);
 	}
+
+
+    public static function isSSL()
+    {
+        if(isset($_SERVER['HTTPS']))
+        {
+            if(strtolower($_SERVER['HTTPS']) == 'on' || $_SERVER['HTTPS'] == '1')
+            {
+                return true;
+            }
+        }elseif(isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443')
+        {
+            return true;
+        }
+
+        return false;
+    }
 }

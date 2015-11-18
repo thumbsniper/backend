@@ -136,25 +136,6 @@ class ApiV3
     }
 
 
-    protected function isSSL()
-    {
-        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
-
-        if(isset($_SERVER['HTTPS']))
-        {
-            if(strtolower($_SERVER['HTTPS']) == 'on' || $_SERVER['HTTPS'] == '1')
-            {
-                return true;
-            }
-        }elseif(isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443')
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-
     public function publishLogsAsHeaders()
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
@@ -180,7 +161,7 @@ class ApiV3
             $this->action = $action;
         }
 
-        if($this->isSSL())
+        if(Helpers::isSSL())
         {
             $this->httpProtocol = "https";
         }else
@@ -490,6 +471,7 @@ class ApiV3
     protected function processThumbnailRequest()
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
+
         $output = array();
 
         $targetPriority = Settings::getTargetDefaultPriority();
@@ -569,9 +551,16 @@ class ApiV3
     }
 
 
-    public function outputThumbnail()
+    public function outputThumbnail($apiKey, $width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
+
+        if(!$this->loadAndValidateThumbnailParameters($apiKey, $width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr))
+        {
+            $this->getLogger()->log(__METHOD__, "invalid thumbnail parameters", LOG_ERR);
+            //TODO: create SlimResponse
+            return false;
+        }
 
 	    $slimResponse = new SlimResponse();
 

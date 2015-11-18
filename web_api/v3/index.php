@@ -113,14 +113,17 @@ $slim->get('/thumbnail/:apiKey/:width/:effect/', function ($apiKey, $width, $eff
 		echo "invalid common parameters";
 	}
 
-	if(!$api->loadAndValidateThumbnailParameters($apiKey, $width, $effect, $apiParams['url'], $apiParams['waitimg'], $apiParams['referrer'], null, $apiParams['callback'], $apiParams['userAgent']))
-	{
-		//$api->publishLogsAsHeaders();
-		echo "invalid thumbnail parameters";
-	}else
-	{
-		output($slim, $api->outputThumbnail());
-	}
+    $response = $api->outputThumbnail($apiKey, $width, $effect, $apiParams['url'], $apiParams['waitimg'], $apiParams['referrer'], null, $apiParams['callback'], $apiParams['userAgent']);
+
+    if(!$response)
+    {
+        //$api->publishLogsAsHeaders();
+        echo "invalid thumbnail parameters";
+    }else
+    {
+        output($slim, $response);
+    }
+
 })->conditions(array(
     'apiKey'    => '[a-z0-9]{32}',
     'width'     => '[1-9][0-9]{1,2}',
@@ -134,13 +137,15 @@ $slim->get('/thumbnail/:width/:effect/', function ($width, $effect) use ($slim, 
 		echo "invalid common parameters";
 	}
 
-	if(!$api->loadAndValidateThumbnailParameters(null, $width, $effect, $apiParams['url'], $apiParams['waitimg'], $apiParams['referrer'], null, $apiParams['callback'], $apiParams['userAgent']))
+	$response = $api->outputThumbnail(null, $width, $effect, $apiParams['url'], $apiParams['waitimg'], $apiParams['referrer'], null, $apiParams['callback'], $apiParams['userAgent']);
+
+	if(!$response)
 	{
 		//$api->publishLogsAsHeaders();
 		echo "invalid thumbnail parameters";
 	}else
 	{
-		output($slim, $api->outputThumbnail());
+		output($slim, $response);
 	}
 })->conditions(array(
     'width'     => '[1-9][0-9]{1,2}',
