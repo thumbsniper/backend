@@ -93,9 +93,6 @@ class ApiV3
     protected $httpProtocol;
     protected $httpRequestMethod;
 
-    // sent with the API request
-    protected $apiKey;
-
     protected $thumbnailWidth;
     protected $thumbnailEffect;
     protected $action;
@@ -255,13 +252,11 @@ class ApiV3
     }
 
 
-    public function loadAndValidateThumbnailParameters($apiKey, $width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr)
+    protected function checkApiKey($apiKey)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $result = true;
-
-        // apiKey
+        $result = false;
 
         if (!$apiKey) {
             $this->getLogger()->log(__METHOD__, "no apiKey used", LOG_DEBUG);
@@ -274,33 +269,58 @@ class ApiV3
                 $this->getLogger()->log(__METHOD__, "invalid account", LOG_WARNING);
             } else {
                 //TODO: check if active and not expired
-                $this->apiKey = $apiKey;
                 $this->account = $account;
 
                 // track all active accounts on daily basis
                 $this->getAccountModel()->addToActiveAccountsDailyStats($account->getId());
+
+                $result = true;
             }
         }
 
-        // width
+        return $result;
+    }
+
+
+    protected function checkWidth($width)
+    {
+        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $result = false;
 
         if (!$width || !in_array($width, Settings::getApiValidWidths())) {
             $this->getLogger()->log(__METHOD__, "invalid width: " . strval($width), LOG_ERR);
-            $result = false;
         } else {
             $this->thumbnailWidth = $width;
+
+            $result = true;
         }
 
-        // effect
+        return $result;
+    }
+
+
+    protected function checkEffect($effect)
+    {
+        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $result = false;
 
         if (!$effect || !is_string($effect) || !in_array($effect, array_keys(Settings::getImageEffects()))) {
             $this->getLogger()->log(__METHOD__, "invalid effect: " . strval($effect), LOG_ERR);
-            $result = false;
         } else {
             $this->thumbnailEffect = $effect;
+
+            $result = true;
         }
 
-        // url
+        return $result;
+    }
+
+
+    protected function checkTargetUrl($url, $result)
+    {
+        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
         //TODO: disable addQuery parameter again
         $url = $this->getValidatedUrl($url, true, false);
@@ -309,7 +329,7 @@ class ApiV3
             $this->getLogger()->log(__METHOD__, "invalid url", LOG_DEBUG);
             $result = false;
         }else {
-	        $this->getLogger()->log(__METHOD__, "requested url: " . $url, LOG_DEBUG);
+            $this->getLogger()->log(__METHOD__, "requested url: " . $url, LOG_DEBUG);
             if (!$result) {
                 $this->getLogger()->log(__METHOD__, "not building target because of previous error(s)", LOG_ERR);
             } else {
@@ -332,7 +352,13 @@ class ApiV3
             }
         }
 
-        // waitimg
+        return $result;
+    }
+
+
+    protected function checkWaitImage($waitimg, $result)
+    {
+        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
         if (!$result) {
             $this->getLogger()->log(__METHOD__, "not checking waitimg because of previous error(s)", LOG_DEBUG);
@@ -349,7 +375,13 @@ class ApiV3
             }
         }
 
-        // referrer
+        return $result;
+    }
+
+
+    protected function checkReferrer($referrerUrl, $result)
+    {
+        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
         if (!$result) {
             $this->getLogger()->log(__METHOD__, "not checking referrer because of previous error(s)", LOG_DEBUG);
@@ -405,8 +437,13 @@ class ApiV3
             }
         }
 
+        return $result;
+    }
 
-        // user agent
+
+    protected function checkUserAgent($userAgentStr, $result)
+    {
+        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
         if(!$this->referrer && Settings::isStoreUserAgents()) {
             if (!$result) {
@@ -433,14 +470,15 @@ class ApiV3
             }
         }
 
+        return $result;
+    }
 
-        // forceUpdate
 
-        if ($forceUpdate) {
-            $this->forceUpdate = true;
-        }
+    protected function checkCallback($callback)
+    {
+        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
-        // callback
+        $result = false;
 
         if ($callback != null) {
             if(!is_string($callback) || !preg_match('/^jQuery[0-9]+_[0-9]+$|^jsonp[0-9]+$/', $callback)) {
@@ -448,9 +486,46 @@ class ApiV3
             }else {
                 $this->getLogger()->log(__METHOD__, "set callback to: " . $callback, LOG_INFO);
                 $this->callback = $callback;
+                $result = true;
             }
         }else {
             $this->getLogger()->log(__METHOD__, "not using callback", LOG_DEBUG);
+        }
+
+        return $result;
+    }
+
+
+    public function loadAndValidateThumbnailParameters($apiKey, $width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr)
+    {
+        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $result = true;
+
+        $this->checkApiKey($apiKey);
+
+        if(!$this->checkWidth($width))
+        {
+            $result = false;
+        }
+
+        if(!$this->checkEffect($effect))
+        {
+            $result = false;
+        }
+
+        if(!$this->checkTargetUrl($url, $result))
+        {
+            $result = false;
+        }
+
+        $this->checkWaitImage($waitimg, $result);
+        $this->checkReferrer($referrerUrl, $result);
+        $this->checkUserAgent($userAgentStr, $result);
+        $this->checkCallback($callback);
+
+        if ($forceUpdate) {
+            $this->forceUpdate = true;
         }
 
         return $result;
@@ -555,14 +630,14 @@ class ApiV3
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
+        $slimResponse = new SlimResponse();
+
         if(!$this->loadAndValidateThumbnailParameters($apiKey, $width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr))
         {
             $this->getLogger()->log(__METHOD__, "invalid thumbnail parameters", LOG_ERR);
             //TODO: create SlimResponse
             return false;
         }
-
-	    $slimResponse = new SlimResponse();
 
         $output = $this->processThumbnailRequest();
 
@@ -1017,7 +1092,7 @@ class ApiV3
 
 		    if($this->account)
 		    {
-			    $output['redirectUrl'] .= $this->apiKey . "/";
+			    $output['redirectUrl'] .= $this->account->getApiKey() . "/";
 		    }
 
 		    $output['redirectUrl'] .= $this->target->getCurrentImage()->getWidth() .
@@ -1051,7 +1126,7 @@ class ApiV3
 
 		    if($this->account)
 		    {
-			    $output['redirectUrl'] .= $this->apiKey . "/";
+			    $output['redirectUrl'] .= $this->account->getApiKey() . "/";
 		    }
 
 		    $output['redirectUrl'] .= $this->target->getCurrentImage()->getWidth() .
@@ -1085,7 +1160,7 @@ class ApiV3
             $output['redirectUrl'] = $this->httpProtocol . "://" . Settings::getApiHost() . "/v3/thumbnail/";
 
             if ($this->account) {
-                $output['redirectUrl'] .= $this->apiKey . "/";
+                $output['redirectUrl'] .= $this->account->getApiKey() . "/";
             }
 
             $output['redirectUrl'] .= $this->target->getCurrentImage()->getWidth() .
@@ -1111,7 +1186,7 @@ class ApiV3
         $output['redirectUrl'] = $this->httpProtocol . "://" . Settings::getApiHost() . "/v3/thumbnail/";
 
         if ($this->account) {
-            $output['redirectUrl'] .= $this->apiKey . "/";
+            $output['redirectUrl'] .= $this->account->getApiKey() . "/";
         }
 
         $output['redirectUrl'].= $this->target->getCurrentImage()->getWidth() .
