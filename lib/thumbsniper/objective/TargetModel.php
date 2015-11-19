@@ -148,7 +148,7 @@ class TargetModel
         try
         {
             $targetCollection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
-            $targetData = $targetCollection->findOne(array('_id' => $id));
+            $targetData = $targetCollection->findOne(array(Settings::getMongoKeyTargetAttrId() => $id));
 
             if(is_array($targetData)) {
                 $target = TargetModel::load($targetData);
