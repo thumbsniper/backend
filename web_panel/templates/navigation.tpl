@@ -147,7 +147,7 @@
 
                         {if isset($account) && ($account->isAdmin() == true && $account->isActAsAdmin())}
                             <li>
-                                <a href="/pages/targethostsblacklist.php"><i class="fa fa-table fa-fw"></i> Target blacklist</a>
+                                <a href="/pages/targethostsblacklist.php"><i class="fa fa-table fa-fw"></i> Target hosts blacklist</a>
                             </li>
                         {/if}
 

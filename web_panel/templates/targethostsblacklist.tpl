@@ -27,7 +27,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Targets blacklist - {$site.title}</title>
+    <title>Target hosts blacklist - {$site.title}</title>
 
     {include file='header.tpl'}
 </head>
@@ -41,7 +41,7 @@
     <div id="page-wrapper">
         <div class="row">
             <div class="col-lg-12">
-                <h1 class="page-header">blacklisted hosts</h1>
+                <h1 class="page-header">Blacklisted target hosts</h1>
                 {if isset($error)}
                     <div class="alert alert-warning alert-dismissable">
                         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
