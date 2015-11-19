@@ -1734,18 +1734,10 @@ class TargetModel
             }
 
             if ($where) {
-                $query['$query']['$or'] = array(
-                    array(
-                        Settings::getMongoKeyTargetHostsBlacklistAttrId() => array(
-                            '$regex' => $where,
-                            '$options' => 'i'
-                        )
-                    ),
-                    array(
-                        Settings::getMongoKeyTargetHostsBlacklistAttrHost()=> array(
-                            '$regex' => $where,
-                            '$options' => 'i'
-                        )
+                $query['$query'] = array(
+                    Settings::getMongoKeyTargetHostsBlacklistAttrHost()=> array(
+                        '$regex' => $where,
+                        '$options' => 'i'
                     )
                 );
             }
