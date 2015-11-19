@@ -286,7 +286,6 @@ abstract class Settings
 
     // TARGET
     static private $mongoCollectionTargets = "targets";
-    static private $mongoCollectionTargetsBlacklist = "targets_blacklist";
     static private $mongoKeyTargetAttrId = "_id";
     static private $mongoKeyTargetAttrUrl = "url";
     static private $mongoKeyTargetAttrFileNameBase = "fileNameBase";
@@ -311,6 +310,11 @@ abstract class Settings
     static private $mongoKeyTargetAttrMimeType = "mimeType";
 
 	static private $redisKeyTargetMasterImageData = "transient:key:target:cache:data:"; // . targetId
+
+    // TARGETS BLACKLIST
+    static private $mongoCollectionTargetHostsBlacklist = "targets_blacklist";
+    static private $mongoKeyTargetHostsBlacklistAttrId = "_id";
+    static private $mongoKeyTargetHostsBlacklistAttrHost = "host";
 
     // IMAGE
     static private $mongoCollectionImages = "images";
@@ -2095,9 +2099,9 @@ abstract class Settings
     /**
      * @return string
      */
-    public static function getMongoCollectionTargetsBlacklist()
+    public static function getMongoCollectionTargetHostsBlacklist()
     {
-        return self::$mongoCollectionTargetsBlacklist;
+        return self::$mongoCollectionTargetHostsBlacklist;
     }
 
     /**
@@ -2616,5 +2620,21 @@ abstract class Settings
     public static function getFrontendImagesPathTransparentPixel()
     {
         return self::$frontendImagesPathTransparentPixel;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyTargetHostsBlacklistAttrId()
+    {
+        return self::$mongoKeyTargetHostsBlacklistAttrId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyTargetHostsBlacklistAttrHost()
+    {
+        return self::$mongoKeyTargetHostsBlacklistAttrHost;
     }
 }

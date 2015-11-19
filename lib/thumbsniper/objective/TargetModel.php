@@ -549,10 +549,10 @@ class TargetModel
         $hostMd5 = md5($host);
 
         try {
-            $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargetsBlacklist());
+            $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargetHostsBlacklist());
 
             $query = array(
-                '_id' => $hostMd5
+                Settings::getMongoKeyTargetHostsBlacklistAttrId() => $hostMd5
             );
 
             $targetBlacklistData = $collection->findOne($query);
@@ -1678,5 +1678,103 @@ class TargetModel
         }
 
         return $numTargets;
+    }
+
+
+    public function getNumTargetHostsBlacklisted($where = NULL)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $numTargetsBlacklisted = null;
+
+        try {
+            $targetsBlacklistCollection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargetHostsBlacklist());
+
+            if($where)
+            {
+                $numTargetsBlacklisted = $targetsBlacklistCollection->count(array(
+                    Settings::getMongoKeyTargetHostsBlacklistAttrHost() => array(
+                        '$regex' => $where,
+                        '$options' => 'i'
+                    )));
+            }else {
+                $numTargetsBlacklisted = $targetsBlacklistCollection->count();
+            }
+        } catch (Exception $e) {
+            $this->logger->log(__METHOD__, "exception: " . $e->getMessage(), LOG_DEBUG);
+            die();
+        }
+
+        return $numTargetsBlacklisted;
+    }
+
+
+    //TODO: Parameter-Defaults löschen?
+    public function getTargetHostsBlacklisted($orderby = '_id', $orderDirection = 'asc', $limit = PHP_INT_MAX, $offset = 0, $where = NULL)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $targetHosts = array();
+
+        try {
+            $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargetHostsBlacklist());
+
+            $query = array(
+                '$query' => array()
+            );
+
+            if ($orderDirection == "asc") {
+                $query['$orderby'] = array(
+                    $orderby => 1
+                );
+            } else {
+                $query['$orderby'] = array(
+                    $orderby => -1
+                );
+            }
+
+            if ($where) {
+                $query['$query']['$or'] = array(
+                    array(
+                        Settings::getMongoKeyTargetHostsBlacklistAttrId() => array(
+                            '$regex' => $where,
+                            '$options' => 'i'
+                        )
+                    ),
+                    array(
+                        Settings::getMongoKeyTargetHostsBlacklistAttrHost()=> array(
+                            '$regex' => $where,
+                            '$options' => 'i'
+                        )
+                    )
+                );
+            }
+
+            $fields = array(
+                Settings::getMongoKeyTargetHostsBlacklistAttrId() => true,
+                Settings::getMongoKeyTargetHostsBlacklistAttrHost() => true
+            );
+
+            //$this->logger->log(__METHOD__, "HIER: " . print_r($query, true), LOG_DEBUG);
+
+            /** @var MongoCursor $cursor */
+            $cursor = $collection->find($query, $fields);
+            $cursor->skip($offset);
+            $cursor->limit($limit);
+
+            foreach ($cursor as $doc) {
+                $t = new TargetHostBlacklisted();
+                $t->setId($doc[Settings::getMongoKeyTargetHostsBlacklistAttrId()]);
+                $t->setHost($doc[Settings::getMongoKeyTargetHostsBlacklistAttrHost()]);
+
+                if ($t instanceof TargetHostBlacklisted) {
+                    $targetHosts[] = $t;
+                }
+            }
+        } catch (Exception $e) {
+            $this->logger->log(__METHOD__, "exception while searching for blacklisted target hosts: " . $e->getMessage(), LOG_ERR);
+        }
+
+        return $targetHosts;
     }
 }

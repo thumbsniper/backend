@@ -147,6 +147,12 @@
 
                         {if isset($account) && ($account->isAdmin() == true && $account->isActAsAdmin())}
                             <li>
+                                <a href="/pages/targethostsblacklist.php"><i class="fa fa-table fa-fw"></i> Target blacklist</a>
+                            </li>
+                        {/if}
+
+                        {if isset($account) && ($account->isAdmin() == true && $account->isActAsAdmin())}
+                            <li>
                                 <a href="#"><i class="fa fa-sitemap fa-fw"></i> Init<span class="fa arrow"></span></a>
                                 <ul class="nav nav-second-level">
                                     <li>
