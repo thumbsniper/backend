@@ -25,6 +25,7 @@ require_once('vendor/autoload.php');
 
 use ThumbSniper\common\Logger;
 use MongoClient;
+use ThumbSniper\common\Settings;
 
 
 class Mongo
@@ -92,36 +93,329 @@ class Mongo
     }
 
 
+    private function ensureAccountIndexes()
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $collection = new \MongoCollection($this->db, Settings::getMongoCollectionAccounts());
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyAccountAttrFirstName() => true,
+                Settings::getMongoKeyAccountAttrLastName() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyAccountAttrId() => true,
+                Settings::getMongoKeyAccountAttrFirstName() => true,
+                Settings::getMongoKeyAccountAttrLastName() => true,
+                Settings::getMongoKeyAccountAttrEmail() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyAccountAttrId() => true,
+                Settings::getMongoKeyAccountAttrNumRequestsDaily() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyAccountAttrEmail() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyAccountAttrId() => true,
+                Settings::getMongoKeyAccountAttrApiKey() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyAccountAttrApiKey() => true
+            )
+        );
+    }
+
+
+    private function ensureTargetIndexes()
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $collection = new \MongoCollection($this->db, Settings::getMongoCollectionTargets());
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyTargetAttrId() => true,
+                Settings::getMongoKeyTargetAttrTsCheckedOut() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyTargetAttrUrl() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                'referrers.id' => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyTargetAttrId() => true,
+                'referrers.id' => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                'referrers.id' => true,
+                Settings::getMongoKeyReferrerAttrAccountId() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                'referrers.id' => true,
+                Settings::getMongoKeyReferrerAttrAccountId() => true,
+                Settings::getMongoKeyTargetAttrUrl() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyTargetAttrCounterFailed() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyTargetAttrId() => true,
+                'useragents.id' => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                'useragents.id' => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                'useragents.id' => true,
+                Settings::getMongoKeyTargetAttrUrl() => true
+            )
+        );
+    }
+
+
+    private function ensureImageIndexes()
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $collection = new \MongoCollection($this->db, Settings::getMongoCollectionImages());
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyImageAttrId() => true,
+                Settings::getMongoKeyImageAttrNumRequestsDaily() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyImageAttrId() => true,
+                Settings::getMongoKeyImageAttrTsCheckedOut() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyImageAttrId() => true,
+                Settings::getMongoKeyImageAttrFileNameSuffix() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyImageAttrTargetId() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyImageAttrTargetId() => true,
+                Settings::getMongoKeyImageAttrId() => true,
+                Settings::getMongoKeyImageAttrFileNameSuffix() => true
+            )
+        );
+    }
+
+
+    private function ensureReferrerIndexes()
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $collection = new \MongoCollection($this->db, Settings::getMongoCollectionReferrers());
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyReferrerAttrId() => true,
+                Settings::getMongoKeyReferrerAttrAccountId() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyReferrerAttrId() => true,
+                'targets.id' => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                'targets.id' => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyReferrerAttrUrlBase() => true,
+                'targets.id' => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyReferrerAttrAccountId() => true,
+                'targets.id' => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyReferrerAttrAccountId() => true,
+                Settings::getMongoKeyReferrerAttrUrlBase() => true,
+                'targets.id' => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyReferrerAttrId() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyReferrerAttrId() => true,
+                Settings::getMongoKeyReferrerAttrUrlBase()
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyReferrerAttrId() => true,
+                Settings::getMongoKeyReferrerAttrNumRequestsDaily() => true
+            )
+        );
+    }
+
+
+    private function ensureReferrerDeeplinkIndexes()
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $collection = new \MongoCollection($this->db, Settings::getMongoCollectionReferrerDeeplinks());
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyReferrerDeeplinkAttrReferrerId() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyReferrerDeeplinkAttrReferrerId() => true,
+                Settings::getMongoKeyReferrerDeeplinkAttrUrl() => true
+            )
+        );
+    }
+
+
+    private function ensureUserAgentIndexes()
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $collection = new \MongoCollection($this->db, Settings::getMongoCollectionUserAgents());
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyUserAgentAttrId() => true,
+                'targets.id' => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                'targets.id' => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyUserAgentAttrId() => true,
+                'targets.id' => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                'targets.id' => true,
+                Settings::getMongoKeyUserAgentAttrDescription() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyUserAgentAttrDescription() => true
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyUserAgentAttrId() => true,
+                Settings::getMongoKeyUserAgentAttrNumRequestsDaily() => true
+            )
+        );
+    }
+
 
     private function init()
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        /*
-        $collections = $this->db->getCollectionNames(false);
 
-        // ACCOUNTS
-        $accountCollection = new \MongoCollection($this->db, 'accounts');
-        $accountCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyAccountAttrTsAdded() => true
-            )
-        );
-        $accountCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyAccountAttrEmail() => true
-            )
-        );
-        $accountCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyAccountAttrFirstName() => true
-            )
-        );
-        $accountCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyAccountAttrLastName() => true
-            )
-        );
+//        $collections = $this->db->getCollectionNames(false);
+
+        $this->ensureAccountIndexes();
+        $this->ensureTargetIndexes();
+        $this->ensureImageIndexes();
+        $this->ensureReferrerIndexes();
+        $this->ensureReferrerDeeplinkIndexes();
+        $this->ensureUserAgentIndexes();
+
+        /*
+
 
 
         // STATISTICS
@@ -130,146 +424,10 @@ class Mongo
         }
 
 
-        // TARGETS
-        $targetCollection = new \MongoCollection($this->db, 'targets');
-        $targetCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyTargetAttrTsAdded() => true
-            )
-        );
-        $targetCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyTargetAttrUrl() => true
-            )
-        );
-        $targetCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyTargetAttrCounterUpdated() => true
-            )
-        );
-        $targetCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyTargetAttrCounterFailed() => true
-            )
-        );
-        $targetCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyTargetAttrNumRequests() => true
-            )
-        );
-        $targetCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyTargetAttrTsLastRequested() => true
-            )
-        );
-        $targetCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyTargetAttrMimeType() => true
-            )
-        );
-        $targetCollection->ensureIndex(
-            array(
-                'images.id' => true
-            )
-        );
-
-        $targetCollection->ensureIndex(
-            array(
-                'referrers.id' => true
-            )
-        );
-
-        $targetCollection->ensureIndex(
-            array(
-                'useragents.id' => true
-            )
-        );
-
-	    $targetCollection->ensureIndex(
-		    array(
-			    Settings::getMongoKeyTargetAttrTsLastUpdated() => true
-		    )
-	    );
-
-	    $targetCollection->ensureIndex(
-		    array(
-			    Settings::getMongoKeyTargetAttrFileId() => true
-		    )
-	    );
-
-		$targetCollection->ensureIndex(
-			array(
-				Settings::getMongoKeyTargetAttrTsLastUpdated() => true,
-				Settings::getMongoKeyTargetAttrFileId() => true
-			)
-		);
-
-
-        //IMAGES
-        $imagesCollection = new \MongoCollection($this->db, 'images');
-        $imagesCollection->ensureIndex(
-            array(
-                'targetId' => true
-            )
-        );
-
-
-        // REFERRERS
-        $referrerCollection = new \MongoCollection($this->db, 'referrers');
-        $referrerCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyReferrerAttrTsAdded() => true
-            )
-        );
-        $referrerCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyReferrerAttrTsLastSeen() => true
-            )
-        );
-        $referrerCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyReferrerAttrUrlBase() => true
-            )
-        );
-        $referrerCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyReferrerAttrNumRequests() => true
-            )
-        );
-
-//        $referrerCollection->ensureIndex(
-//            array(
-//                'targets.id' => true
-//            )
-//        );
-
-        // REFERRER_DEEPLINKS
-        $referrerDeeplinkCollection = new \MongoCollection($this->db, 'referrer_deeplinks');
-        $referrerDeeplinkCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyReferrerDeeplinkAttrTsAdded() => true
-            )
-        );
-        $referrerDeeplinkCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyReferrerDeeplinkAttrUrl() => true
-            )
-        );
-        $referrerDeeplinkCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyReferrerDeeplinkAttrReferrerId() => true
-            )
-        );
-        $referrerDeeplinkCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyReferrerDeeplinkAttrNumRequests() => true
-            )
-        );
-
 
         //IMAGES_CACHE
         $imagesCacheCollection = new \MongoCollection($this->db, 'images_cache');
-        $imagesCacheCollection->ensureIndex(
+        $imagesCacheCollection->createIndex(
             array(
                 'tsAdded' => true
             ),
@@ -277,7 +435,7 @@ class Mongo
                 'expireAfterSeconds' => Settings::getMongoImageCacheExpire()
             )
         );
-        $imagesCacheCollection->ensureIndex(
+        $imagesCacheCollection->createIndex(
             array(
                 'imageId' => true,
                 'branded' => true
@@ -287,22 +445,22 @@ class Mongo
 
         //QUEUE_JOBS_MASTERS
         $queueJobsMasterCollection = new \MongoCollection($this->db, 'queue_jobs_masters');
-        $queueJobsMasterCollection->ensureIndex(
+        $queueJobsMasterCollection->createIndex(
             array(
                 'mode' => true
             )
         );
-        $queueJobsMasterCollection->ensureIndex(
+        $queueJobsMasterCollection->createIndex(
             array(
                 'tsAdded' => true
             )
         );
-        $queueJobsMasterCollection->ensureIndex(
+        $queueJobsMasterCollection->createIndex(
             array(
                 'priority' => -1
             )
         );
-        $queueJobsMasterCollection->ensureIndex(
+        $queueJobsMasterCollection->createIndex(
             array(
                 'priority' => -1,
                 'tsAdded' => 1
@@ -312,7 +470,7 @@ class Mongo
 
         //MASTERS.FILES
         $mastersFilesCollection = new \MongoCollection($this->db, 'masters.files');
-        $mastersFilesCollection->ensureIndex(
+        $mastersFilesCollection->createIndex(
             array(
                 'filename' => true
             )
@@ -321,42 +479,13 @@ class Mongo
 
         //THUMBNAILS.FILES
         $thumbnailsFilesCollection = new \MongoCollection($this->db, 'thumbnails.files');
-        $thumbnailsFilesCollection->ensureIndex(
+        $thumbnailsFilesCollection->createIndex(
             array(
                 'filename' => true
             )
         );
-
-
-        // USERAGENTS
-        $userAgentCollection = new \MongoCollection($this->db, 'useragents');
-        $userAgentCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyUserAgentAttrTsAdded() => true
-            )
-        );
-        $userAgentCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyUserAgentAttrTsLastSeen() => true
-            )
-        );
-        $userAgentCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyUserAgentAttrDescription() => true
-            )
-        );
-        $userAgentCollection->ensureIndex(
-            array(
-                Settings::getMongoKeyUserAgentAttrNumRequests() => true
-            )
-        );
 */
 
-//        $userAgentCollection->ensureIndex(
-//            array(
-//                'targets.id' => true
-//            )
-//        );
     }
 
 
