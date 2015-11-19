@@ -318,7 +318,7 @@ class Mongo
         $collection->createIndex(
             array(
                 Settings::getMongoKeyReferrerAttrId() => true,
-                Settings::getMongoKeyReferrerAttrUrlBase()
+                Settings::getMongoKeyReferrerAttrUrlBase() => true
             )
         );
 
