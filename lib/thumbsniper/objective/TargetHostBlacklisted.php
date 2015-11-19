@@ -29,6 +29,12 @@ class TargetHostBlacklisted
     /** @var string */
     private $host;
 
+    /** @var string */
+    private $type;
+
+    /** @var string */
+    private $comment;
+
     /**
      * @return string
      */
@@ -59,5 +65,37 @@ class TargetHostBlacklisted
     public function setHost($host)
     {
         $this->host = $host;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param string $type
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+    }
+
+    /**
+     * @return string
+     */
+    public function getComment()
+    {
+        return $this->comment;
+    }
+
+    /**
+     * @param string $comment
+     */
+    public function setComment($comment)
+    {
+        $this->comment = $comment;
     }
 }

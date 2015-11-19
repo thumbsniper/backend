@@ -103,6 +103,9 @@
                                         <a href="{$smarty.server.REQUEST_URI}"><i class="fa fa-table fa-fw"></i> Image information</a>
                                     </li>
                                 {/if}
+                                <li>
+                                    <a href="/pages/targethostsblacklist.php"><i class="fa fa-table fa-fw"></i> Blacklist</a>
+                                </li>
                             </ul>
                         </li>
                         {else}
@@ -143,12 +146,6 @@
                                     <a href="{$smarty.server.REQUEST_URI}"><i class="fa fa-table fa-fw"></i> User Agent information</a>
                                 </li>
                             {/if}
-                        {/if}
-
-                        {if isset($account) && ($account->isAdmin() == true && $account->isActAsAdmin())}
-                            <li>
-                                <a href="/pages/targethostsblacklist.php"><i class="fa fa-table fa-fw"></i> Target hosts blacklist</a>
-                            </li>
                         {/if}
 
                         {if isset($account) && ($account->isAdmin() == true && $account->isActAsAdmin())}

@@ -2305,7 +2305,9 @@ class Panel extends ApiV3
 
                 $t = array();
                 $t[] = $targetBlacklisted->getId();
+                $t[] = $targetBlacklisted->getType();
                 $t[] = $targetBlacklisted->getHost();
+                $t[] = $targetBlacklisted->getComment();
                 $result['data'][] = $t;
             }
         }

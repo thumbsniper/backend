@@ -67,11 +67,15 @@ if(isset($_GET['order'][0]['column']))
     switch((int)$_GET['order'][0]['column'])
     {
         case 1:
-            $orderColumn = Settings::getMongoKeyTargetHostsBlacklistAttrId();
+            $orderColumn = Settings::getMongoKeyTargetHostsBlacklistAttrType();
             break;
 
         case 2:
             $orderColumn = Settings::getMongoKeyTargetHostsBlacklistAttrHost();
+            break;
+
+        case 3:
+            $orderColumn = Settings::getMongoKeyTargetHostsBlacklistAttrComment();
             break;
     }
 }

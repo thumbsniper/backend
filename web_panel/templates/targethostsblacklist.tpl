@@ -66,7 +66,9 @@
                                 <thead>
                                 <tr>
                                     <th style="text-align: center; width: 30px;">ID</th>
+                                    <th style="text-align: center;">type</th>
                                     <th>host</th>
+                                    <th>comment</th>
                                 </tr>
                                 </thead>
                             </table>
@@ -116,11 +118,19 @@
                 },
                 {
                     targets: 0,
-                    className: "col-center",
                     orderable: false
                 },
                 {
                     targets: 1,
+                    className: "col-center",
+                    orderable: true
+                },
+                {
+                    targets: 2,
+                    orderable: true
+                },
+                {
+                    targets: 3,
                     orderable: true
                 }
             ]

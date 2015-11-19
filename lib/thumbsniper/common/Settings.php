@@ -315,6 +315,8 @@ abstract class Settings
     static private $mongoCollectionTargetHostsBlacklist = "targets_blacklist";
     static private $mongoKeyTargetHostsBlacklistAttrId = "_id";
     static private $mongoKeyTargetHostsBlacklistAttrHost = "host";
+    static private $mongoKeyTargetHostsBlacklistAttrType = "type";
+    static private $mongoKeyTargetHostsBlacklistAttrComment = "comment";
 
     // IMAGE
     static private $mongoCollectionImages = "images";
@@ -2636,5 +2638,21 @@ abstract class Settings
     public static function getMongoKeyTargetHostsBlacklistAttrHost()
     {
         return self::$mongoKeyTargetHostsBlacklistAttrHost;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyTargetHostsBlacklistAttrType()
+    {
+        return self::$mongoKeyTargetHostsBlacklistAttrType;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyTargetHostsBlacklistAttrComment()
+    {
+        return self::$mongoKeyTargetHostsBlacklistAttrComment;
     }
 }
