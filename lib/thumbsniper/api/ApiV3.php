@@ -624,7 +624,7 @@ class ApiV3
 	    $this->getTargetModel()->checkTargetCurrentness($this->target, $targetPriority, $imageMaxAge);
 
 
-        if($this->getTargetModel()->isBlacklisted($this->target->getUrl()))
+        if(!in_array($this->target->getUrl(), $this->frontendImageUrls) && $this->getTargetModel()->isBlacklisted($this->target->getUrl()))
         {
             $this->getLogger()->log(__METHOD__, "target is blacklisted: " . $this->target->getUrl(), LOG_INFO);
             $output = $this->generateRobotsOutput();
