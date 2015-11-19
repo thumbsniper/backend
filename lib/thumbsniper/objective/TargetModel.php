@@ -546,21 +546,34 @@ class TargetModel
             return true;
         }
 
-        $hostMd5 = md5($host);
-
         try {
             $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargetHostsBlacklist());
 
-            $query = array(
-                Settings::getMongoKeyTargetHostsBlacklistAttrId() => $hostMd5
-            );
+            $hostExploded = explode('.', $host);
+            $hostExplodedReverse = array_reverse($hostExploded);
 
-            $targetBlacklistData = $collection->findOne($query);
+            for($i = 0; $i <= count($hostExplodedReverse)-1; $i++) {
+                $hostPartToCheck = "";
 
-            if(is_array($targetBlacklistData))
-            {
-                $this->logger->log(__METHOD__, "host IS blacklisted: " . $host, LOG_ERR);
-                return true;
+                for($a = $i; $a >= 0; $a--) {
+                    $hostPartToCheck = $hostPartToCheck . $hostExplodedReverse[$a];
+
+                    if($a > 0)
+                    {
+                        $hostPartToCheck = $hostPartToCheck . ".";
+                    }
+                }
+
+                $query = array(
+                    Settings::getMongoKeyTargetHostsBlacklistAttrHost() => $hostPartToCheck
+                );
+
+                $targetBlacklistData = $collection->findOne($query);
+
+                if (is_array($targetBlacklistData)) {
+                    $this->logger->log(__METHOD__, "host part is blacklisted: " . $host . " (matches " . $hostPartToCheck . ")", LOG_ERR);
+                    return true;
+                }
             }
         } catch (Exception $e) {
             $this->logger->log(__METHOD__, "exception while searching for blacklisted host " . $host . ": " . $e->getMessage(), LOG_ERR);
@@ -568,7 +581,7 @@ class TargetModel
         }
 
         //not blacklisted
-		$this->logger->log(__METHOD__, "host is NOT blacklisted: " . $host . "(" . $hostMd5 . ")", LOG_DEBUG);
+		$this->logger->log(__METHOD__, "host is NOT blacklisted: " . $host, LOG_DEBUG);
 		return false;
 	}
 

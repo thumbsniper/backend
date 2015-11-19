@@ -418,8 +418,7 @@ class ApiV3
         } else {
             if(!Settings::isEnergySaveActive() && $referrerUrl != null) {
 
-
-                $referrerUrl = $referrerUrl ? $this->getValidatedUrl($referrerUrl, true, true) : null;
+                $referrerUrl = $this->getValidatedUrl($referrerUrl, true, true);
 
                 if($referrerUrl == null) {
                     $this->getLogger()->log(__METHOD__, "invalid referrerUrl: " . $referrerUrl, LOG_WARNING);
@@ -545,7 +544,7 @@ class ApiV3
                     $isViolation = true;
                 }
             }
-        }elseif($this->getValidatedUrl($referrerUrl, false, false) && $this->getReferrerModel()->isBlacklisted($this->getValidatedUrl($referrerUrl, false, false)))
+        }elseif($referrerUrl && $this->getValidatedUrl($referrerUrl, false, false) && $this->getReferrerModel()->isBlacklisted($this->getValidatedUrl($referrerUrl, false, false)))
         {
             $this->getLogger()->log(__METHOD__, "violation - referrer is blacklisted: " . $referrerUrl, LOG_INFO);
             $isViolation = true;
