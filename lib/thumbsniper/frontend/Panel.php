@@ -27,6 +27,7 @@ use ThumbSniper\common\Settings;
 use ThumbSniper\api\ApiV3;
 use ThumbSniper\account\Account;
 use ThumbSniper\account\GoogleAuth;
+use ThumbSniper\objective\TargetHostBlacklisted;
 use ThumbSniper\objective\UserAgent;
 use ThumbSniper\shared\Image;
 use ThumbSniper\objective\Referrer;
@@ -2260,6 +2261,54 @@ class Panel extends ApiV3
                     $u[] = date("d.m.Y H:i:s", $userAgent->getTsAdded());
                     $result['data'][] = $u;
                 }
+            }
+        }
+
+        header('Content-type: application/json');
+
+        echo json_encode($result);
+    }
+
+
+    public function showTargetHostsBlacklistPage()
+    {
+        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $this->redirectNoAdmin();
+
+        $this->smarty->display('targethostsblacklist.tpl');
+    }
+
+
+    public function showTargetHostsBlacklistJson($draw, $start, $length, $search, $orderColumn, $orderDirection)
+    {
+        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $result = array();
+        $result['draw'] = $draw;
+        $result['recordsTotal'] = 0;
+        $result['recordsFiltered'] = 0;
+        $result['data'] = array();
+
+
+        if($this->isAdmin()) {
+            $numTargetsBlacklisted = $this->getTargetModel()->getNumTargetHostsBlacklisted();
+            $numTargetsBlacklistedFiltered = $this->getTargetModel()->getNumTargetHostsBlacklisted($search);
+
+            $targetsBlacklisted = $this->getTargetModel()->getTargetHostsBlacklisted($orderColumn, $orderDirection, $length, $start, $search);
+
+            $result['recordsTotal'] = intval($numTargetsBlacklisted);
+            $result['recordsFiltered'] = intval($numTargetsBlacklistedFiltered);
+
+            foreach ($targetsBlacklisted as $targetBlacklisted) {
+                /** @var TargetHostBlacklisted $targetBlacklisted */
+
+                $t = array();
+                $t[] = $targetBlacklisted->getId();
+                $t[] = $targetBlacklisted->getType();
+                $t[] = $targetBlacklisted->getHost();
+                $t[] = $targetBlacklisted->getComment();
+                $result['data'][] = $t;
             }
         }
 

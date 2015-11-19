@@ -103,6 +103,9 @@
                                         <a href="{$smarty.server.REQUEST_URI}"><i class="fa fa-table fa-fw"></i> Image information</a>
                                     </li>
                                 {/if}
+                                <li>
+                                    <a href="/pages/targethostsblacklist.php"><i class="fa fa-table fa-fw"></i> Blacklist</a>
+                                </li>
                             </ul>
                         </li>
                         {else}

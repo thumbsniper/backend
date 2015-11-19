@@ -528,6 +528,109 @@ class TargetModel
 	}
 
 
+    private function isBlacklistedDomain($host)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        try {
+            $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargetHostsBlacklist());
+
+            $hostExploded = explode('.', $host);
+            $hostExplodedReverse = array_reverse($hostExploded);
+
+            for($i = 0; $i <= count($hostExplodedReverse)-1; $i++) {
+                $hostPartToCheck = "";
+
+                for($a = $i; $a >= 0; $a--) {
+                    $hostPartToCheck = $hostPartToCheck . $hostExplodedReverse[$a];
+
+                    if($a > 0)
+                    {
+                        $hostPartToCheck = $hostPartToCheck . ".";
+                    }
+                }
+
+                $query = array(
+                    Settings::getMongoKeyTargetHostsBlacklistAttrHost() => $hostPartToCheck,
+                    Settings::getMongoKeyTargetHostsBlacklistAttrType() => 'FQDN'
+                );
+
+                $targetBlacklistData = $collection->findOne($query);
+
+                if (is_array($targetBlacklistData)) {
+                    $this->logger->log(__METHOD__, "host part is blacklisted: " . $host . " (matches " . $hostPartToCheck . ")", LOG_ERR);
+                    return true;
+                }
+            }
+        } catch (Exception $e) {
+            $this->logger->log(__METHOD__, "exception while searching for blacklisted host " . $host . ": " . $e->getMessage(), LOG_ERR);
+            return true;
+        }
+
+        return false;
+    }
+
+
+    //TODO: validate $type
+    private function isBlacklistedIpAddress($host, $type)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        switch($type)
+        {
+            case "IPv4":
+                $dnsType = DNS_A;
+                $ipKey = "ip";
+                break;
+
+            case "IPv6":
+                $dnsType = DNS_AAAA;
+                $ipKey = "ipv6";
+                break;
+
+            default:
+                $this->logger->log(__METHOD__, "invalid type: " . $type, LOG_ERR);
+                return false;
+        }
+
+        $dnsRecords = dns_get_record($host,  $dnsType);
+
+        if(!is_array($dnsRecords) || !count($dnsRecords) > 0)
+        {
+            $this->logger->log(__METHOD__, "could not resolve host to ip address: " . $host, LOG_ERR);
+            return true;
+        }
+
+        foreach($dnsRecords as $dnsRecord) {
+            if (!array_key_exists($ipKey, $dnsRecord)) {
+                continue;
+            }
+
+            try {
+                $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargetHostsBlacklist());
+
+                $query = array(
+                    Settings::getMongoKeyTargetHostsBlacklistAttrHost() => $dnsRecord[$ipKey],
+                    Settings::getMongoKeyTargetHostsBlacklistAttrType() => $type
+                );
+
+                $targetBlacklistData = $collection->findOne($query);
+
+                if (is_array($targetBlacklistData)) {
+                    $this->logger->log(__METHOD__, "IP address is blacklisted: " . $host . " (IP " . $dnsRecord[$ipKey] . ")", LOG_ERR);
+                    return true;
+                }else {
+                    $this->logger->log(__METHOD__, "IP address is not blacklisted: " . $host . " (IP " . $dnsRecord[$ipKey] . ")", LOG_DEBUG);
+                }
+            } catch (Exception $e) {
+                $this->logger->log(__METHOD__, "exception while searching for blacklisted IP address for " . $host . ": " . $e->getMessage(), LOG_ERR);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 
 	public function isBlacklisted($url)
 	{
@@ -546,29 +649,23 @@ class TargetModel
             return true;
         }
 
-        $hostMd5 = md5($host);
+        if($this->isBlacklistedDomain($host))
+        {
+            return true;
+        }
 
-        try {
-            $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargetsBlacklist());
+        if($this->isBlacklistedIpAddress($host, 'IPv4'))
+        {
+            return true;
+        }
 
-            $query = array(
-                '_id' => $hostMd5
-            );
-
-            $targetBlacklistData = $collection->findOne($query);
-
-            if(is_array($targetBlacklistData))
-            {
-                $this->logger->log(__METHOD__, "host IS blacklisted: " . $host, LOG_ERR);
-                return true;
-            }
-        } catch (Exception $e) {
-            $this->logger->log(__METHOD__, "exception while searching for blacklisted host " . $host . ": " . $e->getMessage(), LOG_ERR);
+        if($this->isBlacklistedIpAddress($host, 'IPv6'))
+        {
             return true;
         }
 
         //not blacklisted
-		$this->logger->log(__METHOD__, "host is NOT blacklisted: " . $host . "(" . $hostMd5 . ")", LOG_DEBUG);
+		$this->logger->log(__METHOD__, "host is NOT blacklisted: " . $host, LOG_DEBUG);
 		return false;
 	}
 
@@ -1678,5 +1775,124 @@ class TargetModel
         }
 
         return $numTargets;
+    }
+
+
+    public function getNumTargetHostsBlacklisted($where = NULL)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $numTargetsBlacklisted = null;
+
+        try {
+            $targetsBlacklistCollection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargetHostsBlacklist());
+
+            if ($where) {
+                $query = array(
+
+                );
+
+                $query['$or'] = array(
+                    array(
+                        Settings::getMongoKeyTargetHostsBlacklistAttrHost() => array(
+                            '$regex' => $where,
+                            '$options' => 'i'
+                        )
+                    ),
+                    array(
+                        Settings::getMongoKeyTargetHostsBlacklistAttrType() => array(
+                            '$regex' => $where,
+                            '$options' => 'i'
+                        )
+                    ),
+                    array(
+                        Settings::getMongoKeyTargetHostsBlacklistAttrComment() => array(
+                            '$regex' => $where,
+                            '$options' => 'i'
+                        )
+                    )
+                );
+
+                $numTargetsBlacklisted = $targetsBlacklistCollection->count($query);
+            }else {
+                $numTargetsBlacklisted = $targetsBlacklistCollection->count();
+            }
+        } catch (Exception $e) {
+            $this->logger->log(__METHOD__, "exception: " . $e->getMessage(), LOG_ERR);
+            die();
+        }
+
+        return $numTargetsBlacklisted;
+    }
+
+
+    //TODO: Parameter-Defaults löschen?
+    public function getTargetHostsBlacklisted($orderby = '_id', $orderDirection = 'asc', $limit = PHP_INT_MAX, $offset = 0, $where = NULL)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $targetHosts = array();
+
+        try {
+            $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargetHostsBlacklist());
+
+            $query = array(
+                '$query' => array()
+            );
+
+            if ($orderDirection == "asc") {
+                $query['$orderby'] = array(
+                    $orderby => 1
+                );
+            } else {
+                $query['$orderby'] = array(
+                    $orderby => -1
+                );
+            }
+
+            if ($where) {
+                $query['$query']['$or'] = array(
+                    array(
+                        Settings::getMongoKeyTargetHostsBlacklistAttrHost() => array(
+                            '$regex' => $where,
+                            '$options' => 'i'
+                        )
+                    ),
+                    array(
+                        Settings::getMongoKeyTargetHostsBlacklistAttrType() => array(
+                            '$regex' => $where,
+                            '$options' => 'i'
+                        )
+                    ),
+                    array(
+                        Settings::getMongoKeyTargetHostsBlacklistAttrComment() => array(
+                            '$regex' => $where,
+                            '$options' => 'i'
+                        )
+                    )
+                );
+            }
+
+            /** @var MongoCursor $cursor */
+            $cursor = $collection->find($query);
+            $cursor->skip($offset);
+            $cursor->limit($limit);
+
+            foreach ($cursor as $doc) {
+                $t = new TargetHostBlacklisted();
+                $t->setId($doc[Settings::getMongoKeyTargetHostsBlacklistAttrId()]);
+                $t->setHost($doc[Settings::getMongoKeyTargetHostsBlacklistAttrHost()]);
+                $t->setType($doc[Settings::getMongoKeyTargetHostsBlacklistAttrType()]);
+                $t->setComment($doc[Settings::getMongoKeyTargetHostsBlacklistAttrComment()]);
+
+                if ($t instanceof TargetHostBlacklisted) {
+                    $targetHosts[] = $t;
+                }
+            }
+        } catch (Exception $e) {
+            $this->logger->log(__METHOD__, "exception while searching for blacklisted target hosts: " . $e->getMessage(), LOG_ERR);
+        }
+
+        return $targetHosts;
     }
 }
