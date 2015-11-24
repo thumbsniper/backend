@@ -53,13 +53,13 @@ abstract class Settings
 	static private $redisDb;
 
     // GoogleAuth
-    static private $googleAuthEnabled;
+    static private $googleAuthEnabled = false;
     static private $googleAuthUrl;
     static private $googleClientId;
     static private $googleClientSecret;
 
     // TwitterAuth
-    static private $twitterAuthEnabled;
+    static private $twitterAuthEnabled = false;
     static private $twitterAuthRedirectUrl;
     static private $twitterAuthCallbackUrl;
     static private $twitterConsumerKey;
