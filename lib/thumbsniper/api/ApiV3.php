@@ -1048,11 +1048,11 @@ class ApiV3
 
 
 
-    public function agentGetThumbnailJob()
+    public function agentGetThumbnailJob($featuredEffects)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $jobData = $this->getImageModel()->getNextThumbnailJob();
+        $jobData = $this->getImageModel()->getNextThumbnailJob($featuredEffects);
 
         if (!$jobData) {
             $this->getLogger()->log(__METHOD__, "no target job", LOG_DEBUG);

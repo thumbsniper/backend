@@ -38,8 +38,8 @@ class ImageModel
     /** @var MongoDB */
     protected $mongoDB;
 
-	/** @var Client */
-	private $redis;
+    /** @var Client */
+    private $redis;
 
     /** @var Logger */
     protected $logger;
@@ -48,7 +48,7 @@ class ImageModel
     function __construct(MongoDB $mongoDB, Client $redis, Logger $logger)
     {
         $this->mongoDB = $mongoDB;
-	    $this->redis = $redis;
+        $this->redis = $redis;
         $this->logger = $logger;
 
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
@@ -300,26 +300,26 @@ class ImageModel
 
 
 
-	public function prepareCachedImage(Target $target, $branded = FALSE)
-	{
-		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+    public function prepareCachedImage(Target $target, $branded = FALSE)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-		$imageCacheKey = NULL;
+        $imageCacheKey = NULL;
 
-		if ($branded) {
-			$imageCacheKey = Settings::getRedisKeyImageCacheKeyBranded() . $target->getCurrentImage()->getId();
-		} else {
-			$imageCacheKey = Settings::getRedisKeyImageCacheKeyUnbranded() . $target->getCurrentImage()->getId();
-		}
+        if ($branded) {
+            $imageCacheKey = Settings::getRedisKeyImageCacheKeyBranded() . $target->getCurrentImage()->getId();
+        } else {
+            $imageCacheKey = Settings::getRedisKeyImageCacheKeyUnbranded() . $target->getCurrentImage()->getId();
+        }
 
-		if (!$this->redis->exists($imageCacheKey) || !$this->redis->exists(Settings::getRedisKeyImageCacheData() . $this->redis->get($imageCacheKey))) {
-			$this->logger->log(__METHOD__, "could not find cached image in Redis", LOG_DEBUG);
-			return $this->saveCachedImageToRedis($target->getCurrentImage(), $target, $branded);
-		} else {
-			$this->logger->log(__METHOD__, "found cached image in Redis", LOG_DEBUG);
-			return $this->redis->get($imageCacheKey);
-		}
-	}
+        if (!$this->redis->exists($imageCacheKey) || !$this->redis->exists(Settings::getRedisKeyImageCacheData() . $this->redis->get($imageCacheKey))) {
+            $this->logger->log(__METHOD__, "could not find cached image in Redis", LOG_DEBUG);
+            return $this->saveCachedImageToRedis($target->getCurrentImage(), $target, $branded);
+        } else {
+            $this->logger->log(__METHOD__, "found cached image in Redis", LOG_DEBUG);
+            return $this->redis->get($imageCacheKey);
+        }
+    }
 
 
 
@@ -353,91 +353,91 @@ class ImageModel
 
 
 
-	private function saveCachedImageToRedis(Image $image, Target $target, $branded = FALSE)
-	{
-		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+    private function saveCachedImageToRedis(Image $image, Target $target, $branded = FALSE)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-		$base64 = NULL;
+        $base64 = NULL;
 
-		$imageCacheKey = NULL;
-		$cacheKey = Helpers::genRandomString(32);
-		$imageDataKey = Settings::getRedisKeyImageCacheData() . $cacheKey;
+        $imageCacheKey = NULL;
+        $cacheKey = Helpers::genRandomString(32);
+        $imageDataKey = Settings::getRedisKeyImageCacheData() . $cacheKey;
 
-		if ($branded) {
-			$imageCacheKey = Settings::getRedisKeyImageCacheKeyBranded() . $image->getId();
-			$this->logger->log(__METHOD__, "caching branded image data (" . $image->getId() . ")", LOG_INFO);
-		} else {
-			$imageCacheKey = Settings::getRedisKeyImageCacheKeyUnbranded() . $image->getId();
-			$this->logger->log(__METHOD__, "caching unbranded image data (" . $image->getId() . ")", LOG_INFO);
-		}
+        if ($branded) {
+            $imageCacheKey = Settings::getRedisKeyImageCacheKeyBranded() . $image->getId();
+            $this->logger->log(__METHOD__, "caching branded image data (" . $image->getId() . ")", LOG_INFO);
+        } else {
+            $imageCacheKey = Settings::getRedisKeyImageCacheKeyUnbranded() . $image->getId();
+            $this->logger->log(__METHOD__, "caching unbranded image data (" . $image->getId() . ")", LOG_INFO);
+        }
 
-		try {
-			$imageDataBase64 = null;
+        try {
+            $imageDataBase64 = null;
 
-			if(strpos($image->getFileId(), THUMBNAILS_DIR) !== false)
-			{
-				//get from filesystem
+            if(strpos($image->getFileId(), THUMBNAILS_DIR) !== false)
+            {
+                //get from filesystem
 
-				$imagePath = THUMBNAILS_DIR .
-					substr($target->getId(), 0, 1) . "/" . substr($target->getId(), 1, 1) . "/" . substr($target->getId(), 2, 1) . "/" . substr($target->getId(), 3, 1) . "/" .
-					$target->getFileNameBase() . $image->getFileNameSuffix() . '.' . Settings::getImageFiletype($image->getEffect());
+                $imagePath = THUMBNAILS_DIR .
+                    substr($target->getId(), 0, 1) . "/" . substr($target->getId(), 1, 1) . "/" . substr($target->getId(), 2, 1) . "/" . substr($target->getId(), 3, 1) . "/" .
+                    $target->getFileNameBase() . $image->getFileNameSuffix() . '.' . Settings::getImageFiletype($image->getEffect());
 
-				$this->logger->log(__METHOD__, "retrieving thumbnail for image '". $image->getId() . "' from filesystem: " . $imagePath, LOG_DEBUG);
+                $this->logger->log(__METHOD__, "retrieving thumbnail for image '". $image->getId() . "' from filesystem: " . $imagePath, LOG_DEBUG);
 
-				$this->logger->log(__METHOD__, "image path: " . $imagePath, LOG_DEBUG);
+                $this->logger->log(__METHOD__, "image path: " . $imagePath, LOG_DEBUG);
 
-				if(!file_exists($imagePath) || !filesize($imagePath) > 0)
-				{
-					throw new \Exception("image missing: " . $image->getId());
-				}
+                if(!file_exists($imagePath) || !filesize($imagePath) > 0)
+                {
+                    throw new \Exception("image missing: " . $image->getId());
+                }
 
-				$imageData = file_get_contents($imagePath);
-				$imageDataBase64 = base64_encode($imageData);
-			}else
-			{
-				//use MongoDB
-				$this->logger->log(__METHOD__, "retrieving thumbnail for image '". $image->getId() . "' from MongoDB", LOG_DEBUG);
+                $imageData = file_get_contents($imagePath);
+                $imageDataBase64 = base64_encode($imageData);
+            }else
+            {
+                //use MongoDB
+                $this->logger->log(__METHOD__, "retrieving thumbnail for image '". $image->getId() . "' from MongoDB", LOG_DEBUG);
 
-				$grid = $this->mongoDB->getGridFS('thumbnails');
+                $grid = $this->mongoDB->getGridFS('thumbnails');
 
-				$query = array(
-					'filename' => $target->getFileNameBase() . $image->getFileNameSuffix() . '.' .$target->getFileNameSuffix()
-				);
+                $query = array(
+                    'filename' => $target->getFileNameBase() . $image->getFileNameSuffix() . '.' .$target->getFileNameSuffix()
+                );
 
-				$file = $grid->findOne($query);
-				$imageData = $file->getBytes();
-				$imageDataBase64 = base64_encode($imageData);
+                $file = $grid->findOne($query);
+                $imageData = $file->getBytes();
+                $imageDataBase64 = base64_encode($imageData);
 
-			}
+            }
 
-			if ($branded) {
-				$imageDataBase64 = $this->addWatermark($imageDataBase64, Settings::getImageFiletype($image->getEffect()));
-			}
+            if ($branded) {
+                $imageDataBase64 = $this->addWatermark($imageDataBase64, Settings::getImageFiletype($image->getEffect()));
+            }
 
-			$cachedImage = new CachedImage();
-			$cachedImage->setId($image->getId());
-			$cachedImage->setTargetId($target->getId());
-			$cachedImage->setImageData(utf8_encode($imageDataBase64));
-			$cachedImage->setTsCaptured($image->getTsLastUpdated());
-			$cachedImage->setWeapon($target->getWeapon());
-			$cachedImage->setSnipeDuration($target->getSnipeDuration());
-			$cachedImage->setFileType(Settings::getImageFiletype($image->getEffect()));
+            $cachedImage = new CachedImage();
+            $cachedImage->setId($image->getId());
+            $cachedImage->setTargetId($target->getId());
+            $cachedImage->setImageData(utf8_encode($imageDataBase64));
+            $cachedImage->setTsCaptured($image->getTsLastUpdated());
+            $cachedImage->setWeapon($target->getWeapon());
+            $cachedImage->setSnipeDuration($target->getSnipeDuration());
+            $cachedImage->setFileType(Settings::getImageFiletype($image->getEffect()));
 
-			$this->redis->set($imageDataKey, json_encode($cachedImage));
-			$this->redis->expire($imageDataKey, Settings::getRedisImageCacheExpire());
+            $this->redis->set($imageDataKey, json_encode($cachedImage));
+            $this->redis->expire($imageDataKey, Settings::getRedisImageCacheExpire());
 
-			//FIXME: nur schreiben, wenn Datei wirklich in Redis geschrieben wurde
+            //FIXME: nur schreiben, wenn Datei wirklich in Redis geschrieben wurde
 
-			$this->redis->set($imageCacheKey, $cacheKey);
-			$this->redis->expire($imageCacheKey, Settings::getRedisImageCacheExpire() - (Settings::getRedisImageCacheExpire() / 10)); // expires before cached image
+            $this->redis->set($imageCacheKey, $cacheKey);
+            $this->redis->expire($imageCacheKey, Settings::getRedisImageCacheExpire() - (Settings::getRedisImageCacheExpire() / 10)); // expires before cached image
 
-			return $cacheKey;
-		} catch (\Exception $e) {
-			$this->logger->log(__METHOD__, $e->getMessage(), LOG_ERR);
-		}
+            return $cacheKey;
+        } catch (\Exception $e) {
+            $this->logger->log(__METHOD__, $e->getMessage(), LOG_ERR);
+        }
 
-		return false;
-	}
+        return false;
+    }
 
 
 
@@ -445,36 +445,36 @@ class ImageModel
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-	    //FIXME: Fehler, wenn MasterImage nicht existiert
+        //FIXME: Fehler, wenn MasterImage nicht existiert
 
         $imageData = NULL;
 
-	    //$this->logger->log(__METHOD__, "fileId: " . $target->getFileId() . ", key: " . Settings::getRedisKeyTargetMasterImageData(), LOG_DEBUG);
+        //$this->logger->log(__METHOD__, "fileId: " . $target->getFileId() . ", key: " . Settings::getRedisKeyTargetMasterImageData(), LOG_DEBUG);
 
-	    if(!$target->getFileId())
-	    {
-		    //use Redis
-		    $this->logger->log(__METHOD__, "using Redis", LOG_DEBUG);
+        if(!$target->getFileId())
+        {
+            //use Redis
+            $this->logger->log(__METHOD__, "using Redis", LOG_DEBUG);
 
-		    $redisTargetMastImageKey = Settings::getRedisKeyTargetMasterImageData() . $target->getId();
+            $redisTargetMastImageKey = Settings::getRedisKeyTargetMasterImageData() . $target->getId();
 
-		    if ($this->redis->exists($redisTargetMastImageKey)) {
-			    $imageData = $this->redis->get($redisTargetMastImageKey);
-		    }
-	    }else
-	    {
-		    //use MongoDB
-		    $this->logger->log(__METHOD__, "using MongoDB", LOG_DEBUG);
+            if ($this->redis->exists($redisTargetMastImageKey)) {
+                $imageData = $this->redis->get($redisTargetMastImageKey);
+            }
+        }else
+        {
+            //use MongoDB
+            $this->logger->log(__METHOD__, "using MongoDB", LOG_DEBUG);
 
-		    $gridfs = $this->mongoDB->getGridFS('masters');
+            $gridfs = $this->mongoDB->getGridFS('masters');
 
-		    $query = array(
-			    '_id' => new MongoId($target->getFileId())
-		    );
+            $query = array(
+                '_id' => new MongoId($target->getFileId())
+            );
 
-		    $file = $gridfs->findOne($query);
-		    $imageData = base64_encode($file->getBytes());
-	    }
+            $file = $gridfs->findOne($query);
+            $imageData = base64_encode($file->getBytes());
+        }
 
         if ($imageData != NULL) {
             $this->logger->log(__METHOD__, "found master image data (" . $target->getId() . ")", LOG_DEBUG);
@@ -487,33 +487,33 @@ class ImageModel
 
 
 
-	public function getCachedImage($cacheKey)
-	{
-		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+    public function getCachedImage($cacheKey)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-		$cachedImage = NULL;
-		$imageData = NULL;
-		$imageDataKey = Settings::getRedisKeyImageCacheData() . $cacheKey;
-		$target = NULL;
+        $cachedImage = NULL;
+        $imageData = NULL;
+        $imageDataKey = Settings::getRedisKeyImageCacheData() . $cacheKey;
+        $target = NULL;
 
-		if ($this->redis->exists($imageDataKey))
-		{
-			$cachedImageData = $this->redis->get($imageDataKey);
-			$cachedImage = new CachedImage(json_decode($cachedImageData, true));
-			$cachedImage->setImageData(utf8_decode($cachedImage->getImageData()));
-			$cachedImage->setTtl($this->redis->ttl($imageDataKey) >= 0 ? $this->redis->ttl($imageDataKey) : null);
+        if ($this->redis->exists($imageDataKey))
+        {
+            $cachedImageData = $this->redis->get($imageDataKey);
+            $cachedImage = new CachedImage(json_decode($cachedImageData, true));
+            $cachedImage->setImageData(utf8_decode($cachedImage->getImageData()));
+            $cachedImage->setTtl($this->redis->ttl($imageDataKey) >= 0 ? $this->redis->ttl($imageDataKey) : null);
 
-			if($cachedImage instanceof CachedImage)
-			{
-				$this->logger->log(__METHOD__, "found cached image data (" . $cacheKey . ")", LOG_INFO);
+            if($cachedImage instanceof CachedImage)
+            {
+                $this->logger->log(__METHOD__, "found cached image data (" . $cacheKey . ")", LOG_INFO);
 
-				return $cachedImage;
-			}
-		}
+                return $cachedImage;
+            }
+        }
 
-		$this->logger->log(__METHOD__, "invalid base64 image data for cache key '" . $cacheKey . "'", LOG_ERR);
-		return false;
-	}
+        $this->logger->log(__METHOD__, "invalid base64 image data for cache key '" . $cacheKey . "'", LOG_ERR);
+        return false;
+    }
 
 
 
@@ -690,10 +690,10 @@ class ImageModel
         $this->deleteCachedImages($image->getId());
         $this->dequeue($image);
 
-		if(!Settings::isEnergySaveActive())
-		{
-			$this->incrementImagesUpdatedDailyStats();
-		}
+        if(!Settings::isEnergySaveActive())
+        {
+            $this->incrementImagesUpdatedDailyStats();
+        }
 
         $this->logger->log(__METHOD__, "updated image (" . $image->getId() . ")", LOG_INFO);
 
@@ -935,21 +935,35 @@ class ImageModel
 
 
 
-    public function getNextThumbnailJob()
+    public function getNextThumbnailJob($featuredEffects)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $imageId = null;
 
-		if(!Settings::isEnergySaveActive())
-		{
-			$this->incrementThumbnailAgentConnectionsDailyStats();
-		}
+        if(!Settings::isEnergySaveActive())
+        {
+            $this->incrementThumbnailAgentConnectionsDailyStats();
+        }
 
         try {
             $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionQueueJobsThumbnails());
 
+            $conditions = array();
+
+            foreach($featuredEffects as $effect)
+            {
+                $cond = array(
+                    'effect' => array(
+                        '$regex' => $effect
+                    )
+                );
+
+                $conditions[] = $cond;
+            }
+
             $query = array(
+                '$or' => $conditions
             );
 
             $fields = array(
@@ -1057,15 +1071,15 @@ class ImageModel
             if($forcedUpdate || !$image->getTsLastUpdated() ||
                 $image->getTsLastUpdated() < (time() - Helpers::getVariancedValue(Settings::getImageDefaultMaxAge(), Settings::getImageMaxAgeVariance()))) {
 
-	            $redisTargetMastImageKey = Settings::getRedisKeyTargetMasterImageData() . $target->getId();
+                $redisTargetMastImageKey = Settings::getRedisKeyTargetMasterImageData() . $target->getId();
 
-	            if($this->redis->exists($redisTargetMastImageKey))
-	            {
-		            // old -> enqeued
-		            $this->checkOut($image->getId());
-	            }else {
-		            $this->logger->log(__METHOD__, "image is not checked out (masterImage is missing)", LOG_DEBUG);
-	            }
+                if($this->redis->exists($redisTargetMastImageKey))
+                {
+                    // old -> enqeued
+                    $this->checkOut($image->getId());
+                }else {
+                    $this->logger->log(__METHOD__, "image is not checked out (masterImage is missing)", LOG_DEBUG);
+                }
                 return false;
             }else {
                 $this->logger->log(__METHOD__, "not checking out image", LOG_DEBUG);
@@ -1211,86 +1225,86 @@ class ImageModel
 
 
 
-	public function createImageFile(Target $target, Image $image, $imageBase64)
-	{
-		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+    public function createImageFile(Target $target, Image $image, $imageBase64)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-		$imgFileName = $target->getFileNameBase() . $image->getFileNameSuffix() . '.' . Settings::getImageFiletype($image->getEffect());
+        $imgFileName = $target->getFileNameBase() . $image->getFileNameSuffix() . '.' . Settings::getImageFiletype($image->getEffect());
 
-		$path = THUMBNAILS_DIR;
+        $path = THUMBNAILS_DIR;
 
-		try {
-			if(!is_dir(THUMBNAILS_DIR)) {
-				if(!mkdir(THUMBNAILS_DIR, 0770))
-				{
-					$this->logger->log(__METHOD__, "error: " . THUMBNAILS_DIR . " is missing", LOG_CRIT);
-					return false;
-				}
-			}
+        try {
+            if(!is_dir(THUMBNAILS_DIR)) {
+                if(!mkdir(THUMBNAILS_DIR, 0770))
+                {
+                    $this->logger->log(__METHOD__, "error: " . THUMBNAILS_DIR . " is missing", LOG_CRIT);
+                    return false;
+                }
+            }
 
-			$dirLevels = array(
-				substr($target->getId(), 0, 1),
-				substr($target->getId(), 1, 1),
-				substr($target->getId(), 2, 1),
-				substr($target->getId(), 3, 1)
-			);
+            $dirLevels = array(
+                substr($target->getId(), 0, 1),
+                substr($target->getId(), 1, 1),
+                substr($target->getId(), 2, 1),
+                substr($target->getId(), 3, 1)
+            );
 
-			foreach ($dirLevels as $dirLevel)
-			{
-				$path .= $dirLevel . "/";
+            foreach ($dirLevels as $dirLevel)
+            {
+                $path .= $dirLevel . "/";
 
-				if(!is_dir($path))
-				{
-					if(!mkdir($path, 0770))
-					{
-						$this->logger->log(__METHOD__, "error: " . $path . " is missing", LOG_CRIT);
-						return false;
-					}
-				}
-			}
+                if(!is_dir($path))
+                {
+                    if(!mkdir($path, 0770))
+                    {
+                        $this->logger->log(__METHOD__, "error: " . $path . " is missing", LOG_CRIT);
+                        return false;
+                    }
+                }
+            }
 
-			// add fileName to $path and $tmpPath
-			$path .= $imgFileName;
-			$tmpPath = $path . ".tmp";
+            // add fileName to $path and $tmpPath
+            $path .= $imgFileName;
+            $tmpPath = $path . ".tmp";
 
-			$this->logger->log(__METHOD__, "creating image file " . $path, LOG_INFO);
+            $this->logger->log(__METHOD__, "creating image file " . $path, LOG_INFO);
 
-			file_put_contents($tmpPath, base64_decode($imageBase64));
+            file_put_contents($tmpPath, base64_decode($imageBase64));
 
-			if(file_exists($path)) {
-				unlink($path);
-			}
+            if(file_exists($path)) {
+                unlink($path);
+            }
 
-			rename($tmpPath, $path);
-			chmod($path, 0640);
-		} catch (\Exception $e) {
-			$this->logger->log(__METHOD__, "error while creating image file: " . $e, LOG_ERR);
-			return false;
-		}
+            rename($tmpPath, $path);
+            chmod($path, 0640);
+        } catch (\Exception $e) {
+            $this->logger->log(__METHOD__, "error while creating image file: " . $e, LOG_ERR);
+            return false;
+        }
 
-		if ($this->imageFileExists($path)) {
-			$this->logger->log(__METHOD__, "image created successfully", LOG_DEBUG);
-			return $path;
-		} else {
-			$this->logger->log(__METHOD__, "created image not found in filesystem", LOG_ERR);
-			return false;
-		}
-	}
+        if ($this->imageFileExists($path)) {
+            $this->logger->log(__METHOD__, "image created successfully", LOG_DEBUG);
+            return $path;
+        } else {
+            $this->logger->log(__METHOD__, "created image not found in filesystem", LOG_ERR);
+            return false;
+        }
+    }
 
 
-	private function imageFileExists($fileName)
-	{
-		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+    private function imageFileExists($fileName)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-		$exists = file_exists($fileName);
-		$notEmpty = filesize($fileName) > 0 ? true : false;
+        $exists = file_exists($fileName);
+        $notEmpty = filesize($fileName) > 0 ? true : false;
 
-		if ($exists && $notEmpty) {
-			$this->logger->log(__METHOD__, "image exists: " . $fileName, LOG_INFO);
-		} else {
-			$this->logger->log(__METHOD__, "image missing: " . $fileName, LOG_ERR);
-		}
+        if ($exists && $notEmpty) {
+            $this->logger->log(__METHOD__, "image exists: " . $fileName, LOG_INFO);
+        } else {
+            $this->logger->log(__METHOD__, "image missing: " . $fileName, LOG_ERR);
+        }
 
-		return $exists;
-	}
+        return $exists;
+    }
 }

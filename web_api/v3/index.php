@@ -160,9 +160,13 @@ $slim->get('/agent/:apiAgentSecret/master/job/:mode/', function ($apiAgentSecret
     'mode'           => '(normal|longrun)'
 ));
 
-$slim->get('/agent/:apiAgentSecret/thumbnail/job/', function () use ($api)
+$slim->post('/agent/:apiAgentSecret/thumbnail/job/', function () use ($slim, $api)
 {
-    echo $api->agentGetThumbnailJob();
+    $body = $slim->request->getBody();
+    $jsonData = json_decode($body);
+    $featuredEffects = $jsonData['featuredEffects'];
+
+    echo $api->agentGetThumbnailJob($featuredEffects);
 })->conditions(array(
     'apiAgentSecret' => Settings::getApiAgentSecret()
 ));
