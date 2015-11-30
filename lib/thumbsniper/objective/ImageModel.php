@@ -29,6 +29,8 @@ use MongoDB;
 use MongoTimestamp;
 use MongoCursor;
 use MongoId;
+use MongoCollection;
+
 
 
 class ImageModel
@@ -1121,7 +1123,7 @@ class ImageModel
         //$this->logger->log(__METHOD__, "HUHUHU: " . print_r($imageData, true), LOG_DEBUG);
 
         if($image instanceof Image) {
-            $this->enqueue($image->getId());
+            $this->enqueue($image->getId(), $image->getEffect());
             //$this->logger->log(__METHOD__, "NEXTTARGET: " . print_r($target, true), LOG_ERR);
             return $image;
         }else {
@@ -1168,12 +1170,12 @@ class ImageModel
 
 
 
-    private function enqueue($imageId, $priority = 50)
+    private function enqueue($imageId, $effect, $priority = 50)
     {
         $this->logger->log(__METHOD__, '$imageId = ' . $imageId . ', $priority = ' . $priority, LOG_DEBUG);
 
         try {
-            $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionQueueJobsThumbnails());
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionQueueJobsThumbnails());
 
             $query = array(
                 '_id' => $imageId
@@ -1181,7 +1183,8 @@ class ImageModel
 
             $data = array(
                 'tsAdded' => new MongoTimestamp(),
-                'priority' => $priority
+                'priority' => $priority,
+                'effect' => $effect
             );
 
             $update = array(
