@@ -188,10 +188,11 @@ abstract class Settings
         90, 120, 150, 180, 200, 300
     );
 
+    //FIXME: don't enable "fade1" and "fade2" per default
     static private $imageEffects = array(
         'plain' => 'jpeg',
-//        'fade1' => 'png',
-//        'fade2' => 'png',
+        'fade1' => 'png',
+        'fade2' => 'png',
         'button1' => 'png',
         'curly' => 'png',
         'blur1' => 'png',

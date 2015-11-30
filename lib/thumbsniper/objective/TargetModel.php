@@ -598,7 +598,7 @@ class TargetModel
         if(!is_array($dnsRecords) || !count($dnsRecords) > 0)
         {
             $this->logger->log(__METHOD__, "could not resolve host to ip address: " . $host, LOG_ERR);
-            return true;
+            return false;
         }
 
         foreach($dnsRecords as $dnsRecord) {

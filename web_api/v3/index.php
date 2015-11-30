@@ -163,7 +163,7 @@ $slim->get('/agent/:apiAgentSecret/master/job/:mode/', function ($apiAgentSecret
 $slim->post('/agent/:apiAgentSecret/thumbnail/job/', function () use ($slim, $api)
 {
     $body = $slim->request->getBody();
-    $jsonData = json_decode($body);
+    $jsonData = json_decode($body, true);
     $featuredEffects = $jsonData['featuredEffects'];
 
     echo $api->agentGetThumbnailJob($featuredEffects);
