@@ -19,8 +19,8 @@
 
 define('DIRECTORY_ROOT', dirname(__DIR__));
 
-require_once(DIRECTORY_ROOT . '/config/config.inc.php');
-require_once(DIRECTORY_ROOT . '/config/config-panel.inc.php');
+require_once(DIRECTORY_ROOT . '/config/backend-config.inc.php');
+require_once(DIRECTORY_ROOT . '/config/panel-config.inc.php');
 
 use ThumbSniper\common\Settings;
 use ThumbSniper\frontend\Panel;

@@ -19,7 +19,7 @@
 
 define('DIRECTORY_ROOT', dirname(dirname(__DIR__)));
 
-require_once(DIRECTORY_ROOT . '/config/config.inc.php');
+require_once(DIRECTORY_ROOT . '/config/backend-config.inc.php');
 
 use ThumbSniper\common\Settings;
 use ThumbSniper\api\ApiV3;
