@@ -191,14 +191,17 @@ abstract class Settings
     //FIXME: don't enable "fade1" and "fade2" per default
     static private $imageEffects = array(
         'plain' => 'jpeg',
-        'fade1' => 'png',
-        'fade2' => 'png',
         'button1' => 'png',
         'curly' => 'png',
         'blur1' => 'png',
         'blur2' => 'png',
         'tornpaper1' => 'png',
         'polaroid1' => 'png'
+    );
+
+    static private $imageEffectsExtra = array(
+        'fade1' => array('png', false),
+        'fade2' => array('png', false)
     );
 
     static private $masterFiletype = 'png';
@@ -953,13 +956,20 @@ abstract class Settings
      */
     public static function getImageFiletype($effect)
     {
-        if(!array_key_exists($effect, self::$imageEffects))
+        if(array_key_exists($effect, self::getImageEffects()))
         {
-            return false;
-        }else
-        {
-            return self::$imageEffects[$effect];
+            return self::getImageEffects()[$effect];
         }
+
+        if(array_key_exists($effect, self::getImageEffectsExtra()))
+        {
+            if(self::getImageEffectsExtra()[$effect][1] == true)
+            {
+                return self::getImageEffectsExtra()[$effect][0];
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -2596,7 +2606,7 @@ abstract class Settings
     /**
      * @return array
      */
-    public static function getImageEffects()
+    protected static function getImageEffects()
     {
         return self::$imageEffects;
     }
@@ -2607,6 +2617,40 @@ abstract class Settings
     public static function setImageEffects($imageEffects)
     {
         self::$imageEffects = $imageEffects;
+    }
+
+    /**
+     * @return array
+     */
+    protected static function getImageEffectsExtra()
+    {
+        return self::$imageEffectsExtra;
+    }
+
+    /**
+     * @param array $imageEffectsExtra
+     */
+    public static function setImageEffectsExtra($imageEffectsExtra)
+    {
+        self::$imageEffectsExtra = $imageEffectsExtra;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getActiveImageEffects()
+    {
+        $effects = self::getImageEffects();
+
+        foreach(self::getImageEffectsExtra() as $key => $val)
+        {
+            if($val[1] == true)
+            {
+                $effects[$key] = $val[0];
+            }
+        }
+
+        return $effects;
     }
 
     /**

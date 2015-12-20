@@ -320,11 +320,11 @@ class ApiV3
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
-        if ($effect && is_string($effect) && in_array($effect, array_keys(Settings::getImageEffects()))) {
+        if($effect && is_string($effect) && in_array($effect, array_keys(Settings::getActiveImageEffects()))) {
             return $effect;
+        }else {
+            return null;
         }
-
-        return null;
     }
 
 
