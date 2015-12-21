@@ -595,9 +595,13 @@ class TargetModel
 
         $dnsRecords = dns_get_record($host,  $dnsType);
 
-        if(!is_array($dnsRecords) || !count($dnsRecords) > 0)
+        if(!is_array($dnsRecords))
         {
-            $this->logger->log(__METHOD__, "could not resolve host to ip address: " . $host, LOG_ERR);
+            $this->logger->log(__METHOD__, "could not resolve host to ip address: " . $host . " (" . $type . ")", LOG_ERR);
+            //$this->logger->log(__METHOD__, "dns_get_record: " . $host . ' - ' . print_r(dns_get_record($host), true), LOG_ERR);
+            return false;
+        }elseif(!count($dnsRecords) > 0)
+        {
             return false;
         }
 
