@@ -103,6 +103,12 @@ Settings::setApiHost('api.' . Settings::getDomain());
 Settings::setApiKeyExpire(31536000); // 1 year
 Settings::setApiAgentSecret('secret');
 
+// effects fade1 / fade2
+/*Settings::setImageEffectsExtra(array(
+    'fade1' => array('png', true),
+    'fade2' => array('png', true)
+));*/
+
 ///
 
 define('WEB_PANEL_DIR', DIRECTORY_ROOT . '/web_panel');
