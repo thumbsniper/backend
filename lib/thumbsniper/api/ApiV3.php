@@ -606,25 +606,29 @@ class ApiV3
 
         $output = array();
 
-        $targetPriority = Settings::getTargetDefaultPriority();
-        $imageMaxAge = Settings::getImageDefaultMaxAge();
+        //TODO: is it possible to combine the following if clauses?
 
-        if($this->account) {
-            $targetPriority = Settings::getTargetPriority($this->account->getApiKeyType());
-            $imageMaxAge = Settings::getImageMaxAge($this->account->getApiKeyType());
+        $targetIsBlacklisted = $this->getTargetModel()->isBlacklisted($this->target->getUrl());
+
+        if(!$targetIsBlacklisted) {
+            $targetPriority = Settings::getTargetDefaultPriority();
+            $imageMaxAge = Settings::getImageDefaultMaxAge();
+
+            if ($this->account) {
+                $targetPriority = Settings::getTargetPriority($this->account->getApiKeyType());
+                $imageMaxAge = Settings::getImageMaxAge($this->account->getApiKeyType());
+            }
+
+            $imageIsUpToDate = $this->getImageModel()->checkImageCurrentness($this->target, $this->target->getCurrentImage(), $this->forceUpdate);
+
+            if (!$imageIsUpToDate) {
+                $this->target->setForcedUpdate(true);
+            }
+
+            $this->getTargetModel()->checkTargetCurrentness($this->target, $targetPriority, $imageMaxAge);
         }
 
-	    $imageIsUpToDate = $this->getImageModel()->checkImageCurrentness($this->target, $this->target->getCurrentImage(), $this->forceUpdate);
-
-	    if(!$imageIsUpToDate)
-	    {
-		    $this->target->setForcedUpdate(true);
-	    }
-
-	    $this->getTargetModel()->checkTargetCurrentness($this->target, $targetPriority, $imageMaxAge);
-
-
-        if(!in_array($this->target->getUrl(), $this->frontendImageUrls) && $this->getTargetModel()->isBlacklisted($this->target->getUrl()))
+        if(!in_array($this->target->getUrl(), $this->frontendImageUrls) && $targetIsBlacklisted)
         {
             $this->getLogger()->log(__METHOD__, "target is blacklisted: " . $this->target->getUrl(), LOG_INFO);
             $output = $this->generateRobotsOutput();
