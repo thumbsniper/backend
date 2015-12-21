@@ -731,6 +731,7 @@ class ApiV3
 		if($output['status'] == "dummy" && $this->callback)
 		{
 			//don't track dummies with callback URL
+            //TODO: why not?
 		}else
 		{
 			if(!$violation && !Settings::isEnergySaveActive())
@@ -744,7 +745,9 @@ class ApiV3
 		}
 
         // don't count statistics for dummy images
-        if ($output['status'] != "dummy" && (strtoupper($this->httpRequestMethod) == "HEAD" || strtoupper($this->httpRequestMethod) == "GET"))
+        // UPDATE: why not?!
+        //if ($output['status'] != "dummy" && (strtoupper($this->httpRequestMethod) == "HEAD" || strtoupper($this->httpRequestMethod) == "GET"))
+        if (strtoupper($this->httpRequestMethod) == "HEAD" || strtoupper($this->httpRequestMethod) == "GET")
         {
             if($this->account) {
                 $this->getApiStatistics()->incrementApiKeyRequestStats($this->account);
