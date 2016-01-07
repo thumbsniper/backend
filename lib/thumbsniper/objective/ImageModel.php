@@ -646,6 +646,8 @@ class ImageModel
                 Settings::getMongoKeyImageAttrId() => $image->getId()
             );
 
+            //TODO: $unset fileId is just to repair existing data, because fileId is obsolete - 2016-01-07
+
             $update = array(
                 '$set' => array(
                     Settings::getMongoKeyImageAttrTsLastUpdated() => new MongoTimestamp($image->getTsLastUpdated())
