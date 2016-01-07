@@ -67,7 +67,7 @@ class ImageModel
 
         $image->setId(isset($data[Settings::getMongoKeyImageAttrId()]) ? $data[Settings::getMongoKeyImageAttrId()] : null);
         $image->setTargetId(isset($data[Settings::getMongoKeyImageAttrTargetId()]) ? $data[Settings::getMongoKeyImageAttrTargetId()] : null);
-        $image->setFileId(isset($data[Settings::getMongoKeyImageAttrFileId()]) ? $data[Settings::getMongoKeyImageAttrFileId()] : null);
+        //$image->setFileId(isset($data[Settings::getMongoKeyImageAttrFileId()]) ? $data[Settings::getMongoKeyImageAttrFileId()] : null);
         $image->setWidth(isset($data[Settings::getMongoKeyImageAttrWidth()]) ? $data[Settings::getMongoKeyImageAttrWidth()] : null);
         $image->setEffect(isset($data[Settings::getMongoKeyImageAttrEffect()]) ? $data[Settings::getMongoKeyImageAttrEffect()] : null);
         $image->setFileNameSuffix(isset($data[Settings::getMongoKeyImageAttrFileNameSuffix()]) ? $data[Settings::getMongoKeyImageAttrFileNameSuffix()] : null);
@@ -374,41 +374,23 @@ class ImageModel
         try {
             $imageDataBase64 = null;
 
-            if(strpos($image->getFileId(), THUMBNAILS_DIR) !== false)
+            //get from filesystem
+
+            $imagePath = THUMBNAILS_DIR .
+                substr($target->getId(), 0, 1) . "/" . substr($target->getId(), 1, 1) . "/" . substr($target->getId(), 2, 1) . "/" . substr($target->getId(), 3, 1) . "/" .
+                $target->getFileNameBase() . $image->getFileNameSuffix() . '.' . Settings::getImageFiletype($image->getEffect());
+
+            $this->logger->log(__METHOD__, "retrieving thumbnail for image '". $image->getId() . "' from filesystem: " . $imagePath, LOG_DEBUG);
+
+            $this->logger->log(__METHOD__, "image path: " . $imagePath, LOG_DEBUG);
+
+            if(!file_exists($imagePath) || !filesize($imagePath) > 0)
             {
-                //get from filesystem
-
-                $imagePath = THUMBNAILS_DIR .
-                    substr($target->getId(), 0, 1) . "/" . substr($target->getId(), 1, 1) . "/" . substr($target->getId(), 2, 1) . "/" . substr($target->getId(), 3, 1) . "/" .
-                    $target->getFileNameBase() . $image->getFileNameSuffix() . '.' . Settings::getImageFiletype($image->getEffect());
-
-                $this->logger->log(__METHOD__, "retrieving thumbnail for image '". $image->getId() . "' from filesystem: " . $imagePath, LOG_DEBUG);
-
-                $this->logger->log(__METHOD__, "image path: " . $imagePath, LOG_DEBUG);
-
-                if(!file_exists($imagePath) || !filesize($imagePath) > 0)
-                {
-                    throw new \Exception("image missing: " . $image->getId());
-                }
-
-                $imageData = file_get_contents($imagePath);
-                $imageDataBase64 = base64_encode($imageData);
-            }else
-            {
-                //use MongoDB
-                $this->logger->log(__METHOD__, "retrieving thumbnail for image '". $image->getId() . "' from MongoDB", LOG_DEBUG);
-
-                $grid = $this->mongoDB->getGridFS('thumbnails');
-
-                $query = array(
-                    'filename' => $target->getFileNameBase() . $image->getFileNameSuffix() . '.' .$target->getFileNameSuffix()
-                );
-
-                $file = $grid->findOne($query);
-                $imageData = $file->getBytes();
-                $imageDataBase64 = base64_encode($imageData);
-
+                throw new \Exception("image missing: " . $image->getId());
             }
+
+            $imageData = file_get_contents($imagePath);
+            $imageDataBase64 = base64_encode($imageData);
 
             if ($branded) {
                 $imageDataBase64 = $this->addWatermark($imageDataBase64, Settings::getImageFiletype($image->getEffect()));
@@ -448,8 +430,6 @@ class ImageModel
         //FIXME: Fehler, wenn MasterImage nicht existiert
 
         $imageData = NULL;
-
-        //$this->logger->log(__METHOD__, "fileId: " . $target->getFileId() . ", key: " . Settings::getRedisKeyTargetMasterImageData(), LOG_DEBUG);
 
         if(!$target->getFileId())
         {
@@ -655,7 +635,7 @@ class ImageModel
 
 
 
-    public function commit(Image $image, $fileId)
+    public function commit(Image $image)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
@@ -668,8 +648,10 @@ class ImageModel
 
             $update = array(
                 '$set' => array(
-                    Settings::getMongoKeyImageAttrTsLastUpdated() => new MongoTimestamp($image->getTsLastUpdated()),
-                    Settings::getMongoKeyImageAttrFileId() => $fileId
+                    Settings::getMongoKeyImageAttrTsLastUpdated() => new MongoTimestamp($image->getTsLastUpdated())
+                ),
+                '$unset' => array(
+                    Settings::getMongoKeyImageAttrFileId() => ''
                 ),
                 '$inc' => array(
                     Settings::getMongoKeyImageAttrCounterUpdated() => 1

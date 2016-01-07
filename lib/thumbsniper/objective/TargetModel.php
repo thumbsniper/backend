@@ -826,7 +826,7 @@ class TargetModel
 			$imagePath = $this->imageModel->createImageFile($target, $image, $imageData_base64);
 
 			if ($imagePath) {
-				$this->imageModel->commit($image, $imagePath);
+				$this->imageModel->commit($image);
 			} else {
 				$this->logger->log(__METHOD__, "not committing image " . $image->getId(), LOG_ERR);
 			}
