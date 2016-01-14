@@ -80,7 +80,8 @@ class Mongo
                 $this->client = $client;
                 $this->db = $db;
 
-                $this->init();
+		//TODO: find a well-performing way to create indexes if they don't yet exist.
+                //$this->init();
 
                 $this->logger->log(__METHOD__, "created new MongoDB connection", LOG_DEBUG);
             } catch (\Exception $e) {
