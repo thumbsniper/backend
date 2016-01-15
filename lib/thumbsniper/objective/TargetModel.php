@@ -32,6 +32,7 @@ use MongoCursor;
 use MongoCollection;
 use MongoId;
 use Exception;
+use ErrorException;
 
 
 
@@ -593,7 +594,26 @@ class TargetModel
                 return false;
         }
 
-        $dnsRecords = dns_get_record($host,  $dnsType);
+        $dnsRecords = null;
+
+        set_error_handler(function($errno, $errstr, $errfile, $errline, array $errcontext) {
+            // error was suppressed with the @-operator
+            if (0 === error_reporting()) {
+                return false;
+            }
+
+            throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+        });
+
+        try
+        {
+            $dnsRecords = dns_get_record($host,  $dnsType);
+        }catch (ErrorException $e)
+        {
+            $this->logger->log(__METHOD__, "Exception during dns_get_record for " . $host . " (" . $type . ")", LOG_ERR);
+        }
+
+        restore_error_handler();
 
         if(!is_array($dnsRecords))
         {
