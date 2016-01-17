@@ -72,8 +72,8 @@ RUN cat /etc/php5/fpm/php-fpm.conf.default | \
 COPY config/php-fpm.conf.include /root/php-fpm.conf.include
 RUN cat /root/php-fpm.conf.include >> /etc/php5/fpm/php-fpm.conf
 
-RUN git clone https://github.com/thumbsniper/backend.git /opt/thumbsniper 
-#	&& cd /opt/thumbsniper && git checkout v0.8.6
+RUN git clone https://github.com/thumbsniper/backend.git /opt/thumbsniper \
+	&& cd /opt/thumbsniper && git checkout v0.8.7
 
 RUN composer --working-dir=/opt/thumbsniper update
 
