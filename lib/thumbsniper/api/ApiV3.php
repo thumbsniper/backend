@@ -232,6 +232,12 @@ class ApiV3
             $encodedPath = str_replace(strtoupper($strToEncode), urlencode(strtoupper($strToEncode)), $encodedPath);
         }
 
+        if(!isset($urlparts['scheme']))
+        {
+            $this->getLogger()->log(__METHOD__, "invalid URL scheme", LOG_ERR);
+            return false;
+        }
+
         $urlBase = strtolower($urlparts['scheme']) . "://" . strtolower(idn_to_ascii($urlparts['host']));
         $url = $urlBase . $encodedPath;
 
