@@ -236,7 +236,18 @@ class ApiStatistics
         $piwikTracker = new \PiwikTracker($idSite = Settings::getPiwikSiteId());
 
         $piwikTracker->setTokenAuth(Settings::getPiwikTokenAuth());
-        $piwikTracker->setIp($_SERVER['REMOTE_ADDR']);
+
+        //TODO: find a better way to detect a reverse-proxied IP address
+        if(array_key_exists('HTTP_X_REAL_IP', $_SERVER))
+        {
+            $piwikTracker->setIp($_SERVER['HTTP_X_REAL_IP']);
+        }elseif(array_key_exists('HTTP_X_FORWARDED_FOR'))
+        {
+            $piwikTracker->setIp($_SERVER['HTTP_X_FORWARDED_FOR']);
+        }else
+        {
+            $piwikTracker->setIp($_SERVER['REMOTE_ADDR']);
+        }
 
         if ($referrer) {
             /** @var ReferrerDeeplink $deeplink */
