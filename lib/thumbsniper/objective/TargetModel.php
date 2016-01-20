@@ -1489,8 +1489,6 @@ class TargetModel
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $now = time();
-
         try {
             $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
 
