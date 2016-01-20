@@ -253,9 +253,11 @@ class ApiStatistics
             /** @var ReferrerDeeplink $deeplink */
             $deeplink = $referrer->getCurrentDeeplink();
 
-            //TODO: ist es okay, den Referrer als VisitorId zu verwenden?
-            $piwikTracker->setUserId(substr(md5($deeplink->getUrl()), 0, 16));
-            $piwikTracker->setUrlReferrer($deeplink->getUrl());
+            if($deeplink instanceof ReferrerDeeplink) {
+                //TODO: ist es okay, den Referrer als VisitorId zu verwenden?
+                $piwikTracker->setUserId(substr(md5($deeplink->getUrl()), 0, 16));
+                $piwikTracker->setUrlReferrer($deeplink->getUrl());
+            }
         }
 
         $piwikTracker->setUrl($target->getUrl());
