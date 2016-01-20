@@ -241,7 +241,7 @@ class ApiStatistics
         if(array_key_exists('HTTP_X_REAL_IP', $_SERVER))
         {
             $piwikTracker->setIp($_SERVER['HTTP_X_REAL_IP']);
-        }elseif(array_key_exists('HTTP_X_FORWARDED_FOR'))
+        }elseif(array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER))
         {
             $piwikTracker->setIp($_SERVER['HTTP_X_FORWARDED_FOR']);
         }else
