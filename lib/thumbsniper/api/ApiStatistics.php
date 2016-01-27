@@ -236,6 +236,7 @@ class ApiStatistics
         $piwikTracker = new \PiwikTracker($idSite = Settings::getPiwikSiteId());
 
         $piwikTracker->setTokenAuth(Settings::getPiwikTokenAuth());
+        $piwikTracker->disableSendImageResponse();
 
         //TODO: find a better way to detect a reverse-proxied IP address
         if(array_key_exists('HTTP_X_REAL_IP', $_SERVER))
