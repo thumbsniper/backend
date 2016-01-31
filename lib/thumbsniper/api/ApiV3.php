@@ -192,13 +192,19 @@ class ApiV3
 
         $urlparts = parse_url($url);
 
-        if(!is_array($urlparts))
-        {
+        if(!is_array($urlparts)) {
             $this->getLogger()->log(__METHOD__, "invalid URL (invalid URL parts)", LOG_ERR);
+            return false;
+        }elseif(!isset($urlparts['scheme'])) {
+            $this->getLogger()->log(__METHOD__, "invalid URL (invalid URL parts - invalid URL scheme)", LOG_ERR);
+            return false;
+        }elseif(!isset($urlparts['host']))
+        {
+            $this->getLogger()->log(__METHOD__, "invalid URL (invalid URL parts - host missing)", LOG_ERR);
             return false;
         }
 
-        if(isset($urlparts['host']) && Helpers::isPrivateIpAddress($urlparts['host']))
+        if(Helpers::isPrivateIpAddress($urlparts['host']))
         {
             $this->getLogger()->log(__METHOD__, "invalid URL (host " . $urlparts['host'] . " is a private IP address)", LOG_ERR);
             return false;
@@ -230,12 +236,6 @@ class ApiV3
         {
             $encodedPath = str_replace(strtolower($strToEncode), urlencode(strtolower($strToEncode)), $encodedPath);
             $encodedPath = str_replace(strtoupper($strToEncode), urlencode(strtoupper($strToEncode)), $encodedPath);
-        }
-
-        if(!isset($urlparts['scheme']))
-        {
-            $this->getLogger()->log(__METHOD__, "invalid URL scheme", LOG_ERR);
-            return false;
         }
 
         $urlBase = strtolower($urlparts['scheme']) . "://" . strtolower(idn_to_ascii($urlparts['host']));
@@ -775,7 +775,7 @@ class ApiV3
             if ($output['status'] == "dummy") {
                 $slimResponse->setOutput($this->callback . "(" . json_encode(array("url" => "wait")) . ")");
             } else {
-	            $slimResponse->setOutput($this->callback . "(" . json_encode(array("url" => $output['redirectUrl'])) . ")");
+	            $slimResponse->setOutput($this->callback . "(" . json_encode(array("url" => $output['redirectUrl'] . (isset($output['newTargetUrl']) ? $output['newTargetUrl'] : ""))) . ")");
             }
         } else {
 	        $slimResponse->setRedirect(array($output['redirectUrl'] . (isset($output['newTargetUrl']) ? $output['newTargetUrl'] : ""), 307));
