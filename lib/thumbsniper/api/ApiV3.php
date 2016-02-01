@@ -773,9 +773,9 @@ class ApiV3
             $slimResponse->setContentType('application/json');
 
             if ($output['status'] == "dummy") {
-                $slimResponse->setOutput($this->callback . "(" . json_encode(array("url" => "wait")) . ")");
+                $slimResponse->setOutput($this->callback . "(" . json_encode(array("status" => $output['status'], "url" => $output['redirectUrl'] . (isset($output['newTargetUrl']) ? $output['newTargetUrl'] : ""))) . ")");
             } else {
-	            $slimResponse->setOutput($this->callback . "(" . json_encode(array("url" => $output['redirectUrl'])) . ")");
+	            $slimResponse->setOutput($this->callback . "(" . json_encode(array("status" => $output['status'], "url" => $output['redirectUrl'] . (isset($output['newTargetUrl']) ? $output['newTargetUrl'] : ""))) . ")");
             }
         } else {
 	        $slimResponse->setRedirect(array($output['redirectUrl'] . (isset($output['newTargetUrl']) ? $output['newTargetUrl'] : ""), 307));
