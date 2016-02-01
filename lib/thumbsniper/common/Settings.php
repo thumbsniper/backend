@@ -327,6 +327,7 @@ abstract class Settings
     static private $mongoKeyImageAttrTargetId = "targetId";
     static private $mongoKeyImageAttrFileId = "fileId";
     static private $mongoKeyImageAttrWidth = "width";
+    static private $mongoKeyImageAttrHeight = "height";
     static private $mongoKeyImageAttrEffect = "effect";
     static private $mongoKeyImageAttrFileNameSuffix = "fileNameSuffix";
     static private $mongoKeyImageAttrTsAdded = "tsAdded";
@@ -1778,6 +1779,14 @@ abstract class Settings
     public static function getMongoKeyImageAttrWidth()
     {
         return self::$mongoKeyImageAttrWidth;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyImageAttrHeight()
+    {
+        return self::$mongoKeyImageAttrHeight;
     }
 
     /**

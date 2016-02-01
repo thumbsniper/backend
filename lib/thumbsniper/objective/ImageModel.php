@@ -69,6 +69,7 @@ class ImageModel
         $image->setTargetId(isset($data[Settings::getMongoKeyImageAttrTargetId()]) ? $data[Settings::getMongoKeyImageAttrTargetId()] : null);
         //$image->setFileId(isset($data[Settings::getMongoKeyImageAttrFileId()]) ? $data[Settings::getMongoKeyImageAttrFileId()] : null);
         $image->setWidth(isset($data[Settings::getMongoKeyImageAttrWidth()]) ? $data[Settings::getMongoKeyImageAttrWidth()] : null);
+        $image->setHeight(isset($data[Settings::getMongoKeyImageAttrHeight()]) ? $data[Settings::getMongoKeyImageAttrHeight()] : null);
         $image->setEffect(isset($data[Settings::getMongoKeyImageAttrEffect()]) ? $data[Settings::getMongoKeyImageAttrEffect()] : null);
         $image->setFileNameSuffix(isset($data[Settings::getMongoKeyImageAttrFileNameSuffix()]) ? $data[Settings::getMongoKeyImageAttrFileNameSuffix()] : null);
         $image->setTsLastRequested(isset($data[Settings::getMongoKeyImageAttrTsLastRequested()]) ? $data[Settings::getMongoKeyImageAttrTsLastRequested()] : null);
@@ -650,7 +651,8 @@ class ImageModel
 
             $update = array(
                 '$set' => array(
-                    Settings::getMongoKeyImageAttrTsLastUpdated() => new MongoTimestamp($image->getTsLastUpdated())
+                    Settings::getMongoKeyImageAttrTsLastUpdated() => new MongoTimestamp($image->getTsLastUpdated()),
+                    Settings::getMongoKeyImageAttrHeight() => $image->getHeight()
                 ),
                 '$unset' => array(
                     Settings::getMongoKeyImageAttrFileId() => ''
