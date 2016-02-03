@@ -770,12 +770,24 @@ class ApiV3
         }
 
         if ($this->callback) {
+
+            $jsonOutputArray = array(
+                "status" => $output['status'],
+                "url" => $output['redirectUrl'] . (isset($output['newTargetUrl']) ? $output['newTargetUrl'] : "")
+            );
+
+            if($this->target->getCurrentImage()->getWidth()) {
+                $jsonOutputArray['width'] = (int) $this->target->getCurrentImage()->getWidth();
+
+                // set height on if width is set
+                if($this->target->getCurrentImage()->getHeight()) {
+                    $jsonOutputArray['height'] = (int) $this->target->getCurrentImage()->getHeight();
+                }
+            }
+
             $slimResponse->setContentType('application/json');
             $slimResponse->setOutput($this->callback . "(" .
-                json_encode(array(
-                    "status" => $output['status'],
-                    "url" => $output['redirectUrl'] . (isset($output['newTargetUrl']) ? $output['newTargetUrl'] : "")
-                )) . ")");
+                json_encode($jsonOutputArray) . ")");
         } else {
             $slimResponse->setRedirect(array($output['redirectUrl'] . (isset($output['newTargetUrl']) ? $output['newTargetUrl'] : ""), 307));
         }
