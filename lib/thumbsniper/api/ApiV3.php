@@ -779,6 +779,8 @@ class ApiV3
             if($this->target->getCurrentImage()->getWidth()) {
                 $jsonOutputArray['width'] = (int) $this->target->getCurrentImage()->getWidth();
 
+                //TODO: If an image does not exist yet, no height is available. This needs to be fetched somewhere else.
+
                 // set height on if width is set
                 if($this->target->getCurrentImage()->getHeight()) {
                     $jsonOutputArray['height'] = (int) $this->target->getCurrentImage()->getHeight();
