@@ -542,6 +542,39 @@ class ReferrerModel
     }
 
 
+    public function removeTargetMappings(Target $target)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        try {
+            $referrerCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionReferrers());
+
+            $targetData = array(
+                'id' => $target->getId()
+            );
+
+            $referrerQuery = array(
+                'targets.id' => array(
+                    '$eq' => $target->getId()
+                ));
+
+            $referrerUpdate = array(
+                '$pull' => array(
+                    'targets' => $targetData
+                ));
+
+            if($referrerCollection->update($referrerQuery, $referrerUpdate)) {
+                $this->logger->log(__METHOD__, "removed target " . $target->getId() . " from referrers", LOG_DEBUG);
+                return true;
+            }
+
+        } catch (Exception $e) {
+            $this->logger->log(__METHOD__, "exception while removing target " . $target->getId() . " from referrers: " . $e->getMessage(), LOG_ERR);
+        }
+
+        return false;
+    }
+
 
     // what referrers link to a target?
     public function getTargetReferrers($targetId, $accountId = NULL, $orderby, $orderDirection, $limit, $offset, $where)

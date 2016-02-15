@@ -1283,7 +1283,11 @@ class ImageModel
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $exists = file_exists($fileName);
-        $notEmpty = filesize($fileName) > 0 ? true : false;
+        $notEmpty = false;
+
+        if($exists) {
+            $notEmpty = filesize($fileName) > 0 ? true : false;
+        }
 
         if ($exists && $notEmpty) {
             $this->logger->log(__METHOD__, "image exists: " . $fileName, LOG_INFO);
@@ -1292,5 +1296,98 @@ class ImageModel
         }
 
         return $exists;
+    }
+
+
+    public function deleteImageFile(Target $target, Image $image)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $imgFileName = $target->getFileNameBase() . $image->getFileNameSuffix() . '.' . Settings::getImageFiletype($image->getEffect());
+
+        $path = THUMBNAILS_DIR;
+
+        try {
+            if(!is_dir(THUMBNAILS_DIR)) {
+                $this->logger->log(__METHOD__, "error: " . THUMBNAILS_DIR . " is missing", LOG_CRIT);
+                return false;
+            }
+
+            $dirLevels = array(
+                substr($target->getId(), 0, 1),
+                substr($target->getId(), 1, 1),
+                substr($target->getId(), 2, 1),
+                substr($target->getId(), 3, 1)
+            );
+
+            foreach ($dirLevels as $dirLevel)
+            {
+                $path .= $dirLevel . "/";
+            }
+
+            // add fileName to $path and $tmpPath
+            $path .= $imgFileName;
+
+            $this->logger->log(__METHOD__, "removing image file " . $path, LOG_INFO);
+
+            if(file_exists($path)) {
+                unlink($path);
+            }
+        } catch (\Exception $e) {
+            $this->logger->log(__METHOD__, "error while removing image file: " . $e, LOG_ERR);
+            return false;
+        }
+
+        if ($this->imageFileExists($path)) {
+            $this->logger->log(__METHOD__, "could not remove image file", LOG_ERR);
+            return false;
+        } else {
+            $this->logger->log(__METHOD__, "image file " . $path . " does not exist", LOG_DEBUG);
+            return true;
+        }
+    }
+
+
+    public function delete(Target $target, Image $image)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $this->deleteCachedImages($image->getId());
+        $this->deleteImageFile($target, $image);
+
+        try {
+            $imageCollection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionImages());
+
+            $query = array(
+                Settings::getMongoKeyImageAttrId() => $image->getId()
+            );
+
+            $options = array(
+                'justOne' => true
+            );
+
+            $result = $imageCollection->remove($query, $options);
+
+            if(is_array($result)) {
+                //$this->logger->log(__METHOD__, print_r($result, true), LOG_DEBUG);
+
+                if($result['ok'] == true) {
+                    if($result['n'] > 0) {
+                        $this->logger->log(__METHOD__, "image removed: " . $image->getId(), LOG_INFO);
+                    }else {
+                        $this->logger->log(__METHOD__, "no image was removed (ok): " . $image->getId(), LOG_INFO);
+                    }
+                    return true;
+                }else {
+                    $this->logger->log(__METHOD__, "could not remove image " . $image->getId() . ": " . $result['err'] . " - " . $result['errmsg'], LOG_ERR);
+                    return false;
+                }
+            }
+        } catch (\Exception $e) {
+            $this->logger->log(__METHOD__, "exception while removing image " . $image->getId() . ": " . $e->getMessage(), LOG_ERR);
+            return false;
+        }
+
+        return false;
     }
 }
