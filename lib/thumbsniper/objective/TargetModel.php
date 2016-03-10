@@ -1928,8 +1928,9 @@ class TargetModel
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $target = $this->getById($targetId);
-        $images = $this->imageModel->getImages($target->getId());
 
+        // delete target's images
+        $images = $this->imageModel->getImages($target->getId());
         if(!empty($images)) {
             /** @var Image $image */
             foreach($images as $image)
@@ -1945,10 +1946,13 @@ class TargetModel
             return false;
         }
 
+        // remove referrer mappings
         $this->referrerModel->removeTargetMappings($target);
 
         //TODO: remove target from other collections
+        //TODO: dequeue master image
 
+        // remove target
         try {
             $targetCollection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
 
