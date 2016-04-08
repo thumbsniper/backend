@@ -28,6 +28,12 @@ mongo --host $MONGO_HOST --port $MONGO_PORT --eval "
 		]})"
 
 
+### adjust thumbnails directory permissions
+
+chown www-data:www-data /opt/thumbsniper/web_images/thumbnails
+chmod u+rwx /opt/thumbsniper/web_images/thumbnails
+chmod g+rx /opt/thumbsniper/web_images/thumbnails
+
 
 ### Finally: run Apache in foreground
 
