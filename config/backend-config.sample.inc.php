@@ -26,13 +26,13 @@ use ThumbSniper\common\Settings;
 Settings::setDomain('example.com');
 
 // MongoDB
-Settings::setMongoHost("thumbsniper-mongo.docker");
+Settings::setMongoHost("mongo");
 Settings::setMongoUser("thumbsniper");
 Settings::setMongoPass('secret');
 Settings::setMongoDb("thumbsniper");
 
 // Redis
-Settings::setRedisHost("thumbsniper-redis.docker");
+Settings::setRedisHost("redis");
 Settings::setRedisDb(0);
 
 // Google Auth
