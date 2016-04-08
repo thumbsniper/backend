@@ -76,7 +76,7 @@ RUN a2enmod access_compat expires headers remoteip rewrite
 RUN a2enconf https remoteip rewrite
 RUN a2ensite 000-default api img panel
 
-RUN git clone https://github.com/thumbsniper/backend.git /opt/thumbsniper # && cd /opt/thumbsniper && git checkout v0.9.3
+RUN git clone -b v0.9.4 https://github.com/thumbsniper/backend.git /opt/thumbsniper
 
 RUN composer --working-dir=/opt/thumbsniper update
 
