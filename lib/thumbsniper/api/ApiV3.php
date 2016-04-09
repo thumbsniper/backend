@@ -704,6 +704,7 @@ class ApiV3
 
             $output = $this->processThumbnailRequest();
         }else {
+            //TODO: What should we do if a request is a violation, but validation of width and/or effect also fails?
             $output = $this->generateViolationOutput($this->validateWidth($width), $this->validateEffect($effect));
         }
 
