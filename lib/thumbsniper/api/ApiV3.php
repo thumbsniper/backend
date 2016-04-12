@@ -628,7 +628,18 @@ class ApiV3
             $imageIsUpToDate = $this->getImageModel()->checkImageCurrentness($this->target, $this->target->getCurrentImage(), $this->forceUpdate);
 
             if (!$imageIsUpToDate) {
-                $this->target->setForcedUpdate(true);
+                $redisTargetMastImageKey = Settings::getRedisKeyTargetMasterImageData() . $this->target->getId();
+
+                if($this->redis->exists($redisTargetMastImageKey))
+                {
+                    // old -> enqueued
+                    $this->logger->log(__METHOD__, "checking out image " . $this->target->getCurrentImage()->getId() .  " (masterImage in Redis)", LOG_DEBUG);
+                    $this->getImageModel()->checkOut($this->target->getCurrentImage()->getId());
+                }else {
+                    $this->logger->log(__METHOD__, "image is not checked out (masterImage is missing)", LOG_DEBUG);
+                    $this->logger->log(__METHOD__, "enabling forced update for target " . $this->target->getId(), LOG_DEBUG);
+                    $this->target->setForcedUpdate(true);
+                }
             }
 
             $this->getTargetModel()->checkTargetCurrentness($this->target, $targetPriority, $imageMaxAge);

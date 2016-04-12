@@ -1056,19 +1056,7 @@ class ImageModel
 
             if($forcedUpdate || !$image->getTsLastUpdated() ||
                 $image->getTsLastUpdated() < (time() - Helpers::getVariancedValue(Settings::getImageDefaultMaxAge(), Settings::getImageMaxAgeVariance()))) {
-
-                $redisTargetMastImageKey = Settings::getRedisKeyTargetMasterImageData() . $target->getId();
-
-                if($this->redis->exists($redisTargetMastImageKey))
-                {
-                    // old -> enqeued
-                    $this->checkOut($image->getId());
-                }else {
-                    $this->logger->log(__METHOD__, "image is not checked out (masterImage is missing)", LOG_DEBUG);
-                }
                 return false;
-            }else {
-                $this->logger->log(__METHOD__, "not checking out image", LOG_DEBUG);
             }
         }
 
