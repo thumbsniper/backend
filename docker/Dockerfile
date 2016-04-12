@@ -29,7 +29,8 @@ RUN pecl install \
 	imagick \
 	mongo
 
-RUN curl -L https://pecl.php.net/get/redis-2.2.7.tgz >> /tmp/redis.tgz \
+#RUN curl -L https://pecl.php.net/get/redis-2.2.7.tgz > /tmp/redis.tgz \
+RUN curl -L https://pecl.php.net/get/redis > /tmp/redis.tgz \
 	&& mkdir /usr/src/php/ext/redis \
 	&& tar -xf /tmp/redis.tgz -C /usr/src/php/ext/redis --strip-components 1 \
 	&& rm /tmp/redis.tgz 
