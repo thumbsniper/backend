@@ -1346,6 +1346,12 @@ class TargetModel
                             $this->checkOut($target->getId(), 'longrun', $priority);
                             // old -> enqeued
                             return false;
+                        }else {
+                            //TODO: give failed targets another chance when tsRobotsCheck is expired
+//                            if($target->getTsRobotsCheck() < (time() - Helpers::getVariancedValue(Settings::getRobotsCheckMaxAge(), Settings::getRobotsMaxAgeVariance()))) {
+//                                $this->checkOut($target->getId(), 'normal', $priority);
+//                                return false;
+//                            }
                         }
                     }
                 }elseif(!$target->isRobotsAllowed() && $target->getTsRobotsCheck() && $target->getTsRobotsCheck() < (time() - Helpers::getVariancedValue(Settings::getRobotsCheckMaxAge(), Settings::getRobotsMaxAgeVariance()))) {
