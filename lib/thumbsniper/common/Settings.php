@@ -123,6 +123,8 @@ abstract class Settings
     static private $imageMaxAgeVariance = 10;
     static private $robotsCheckMaxAge = 2592000; // 30 days
     static private $robotsMaxAgeVariance = 10;
+    
+    static private $targetLastFailExpiry = 2592000; // 30 days
 
     static private $targetDefaultPriority = 10;
     static private $targetPriorities = array(
@@ -297,6 +299,7 @@ abstract class Settings
     static private $mongoKeyTargetAttrTsAdded = "tsAdded";
     static private $mongoKeyTargetAttrTsLastUpdated = "tsLastUpdated";
     static private $mongoKeyTargetAttrTsCheckedOut = "tsCheckedOut";
+    static private $mongoKeyTargetAttrTsLastFailed = "tsLastFailed";
     static private $mongoKeyTargetAttrCounterCheckedOut = "counterCheckedOut";
     static private $mongoKeyTargetAttrCounterUpdated = "counterUpdated";
     static private $mongoKeyTargetAttrCounterFailed = "counterFailed";
@@ -1093,6 +1096,14 @@ abstract class Settings
     public static function getRobotsMaxAgeVariance()
     {
         return self::$robotsMaxAgeVariance;
+    }
+
+    /**
+     * @return int
+     */
+    public static function getTargetLastFailExpiry()
+    {
+        return self::$targetLastFailExpiry;
     }
 
     /**
@@ -2147,6 +2158,14 @@ abstract class Settings
     public static function getMongoKeyTargetAttrTsLastRequested()
     {
         return self::$mongoKeyTargetAttrTsLastRequested;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyTargetAttrTsLastFailed()
+    {
+        return self::$mongoKeyTargetAttrTsLastFailed;
     }
 
     /**

@@ -125,6 +125,17 @@ class TargetModel
         }
         $target->setTsLastRequested($tsLastRequested);
 
+        $tsLastFailed = null;
+        if(isset($data[Settings::getMongoKeyTargetAttrTsLastFailed()]))
+        {
+            if($data[Settings::getMongoKeyTargetAttrTsLastFailed()] instanceof MongoTimestamp) {
+                /** @var MongoTimestamp $mongoTs */
+                $mongoTs = $data[Settings::getMongoKeyTargetAttrTsLastFailed()];
+                $tsLastFailed = $mongoTs->sec;
+            }
+        }
+        $target->setTsLastFailed($tsLastFailed);
+
         //TODO: add more ts
 
         return $target;
@@ -881,7 +892,8 @@ class TargetModel
             Settings::getMongoKeyTargetAttrForcedUpdate() => "",
             Settings::getMongoKeyTargetAttrLastErrorMessage() => "",
 	        // fileId löschen, da Redis das masterImage nur temporär speichert
-	        Settings::getMongoKeyTargetAttrFileId() => ""
+	        Settings::getMongoKeyTargetAttrFileId() => "",
+            Settings::getMongoKeyTargetAttrTsLastFailed() => "",
         );
 
         if($target->getMimeType()) {
@@ -931,7 +943,8 @@ class TargetModel
             '$set' => array(
                 Settings::getMongoKeyTargetAttrRobotsAllowed() => $target->isRobotsAllowed(),
                 Settings::getMongoKeyTargetAttrTsRobotsCheck() => $target->getTsRobotsCheck(),
-	            Settings::getMongoKeyTargetAttrLastErrorMessage() => $target->getLastErrorMessage()
+	            Settings::getMongoKeyTargetAttrLastErrorMessage() => $target->getLastErrorMessage(),
+                Settings::getMongoKeyTargetAttrTsLastFailed() => new MongoTimestamp()
             ),
             '$unset' => array(
                 Settings::getMongoKeyTargetAttrTsCheckedOut() => "",
@@ -1277,7 +1290,8 @@ class TargetModel
                 Settings::getMongoKeyTargetAttrCounterFailed() => 0
             ),
 	        '$unset' => array(
-		        Settings::getMongoKeyTargetAttrLastErrorMessage() => ''
+		        Settings::getMongoKeyTargetAttrLastErrorMessage() => '',
+                Settings::getMongoKeyTargetAttrTsLastFailed() => ''
 	        )
         );
 
@@ -1347,11 +1361,11 @@ class TargetModel
                             // old -> enqeued
                             return false;
                         }else {
-                            //TODO: give failed targets another chance when tsRobotsCheck is expired
-//                            if($target->getTsRobotsCheck() < (time() - Helpers::getVariancedValue(Settings::getRobotsCheckMaxAge(), Settings::getRobotsMaxAgeVariance()))) {
-//                                $this->checkOut($target->getId(), 'normal', $priority);
-//                                return false;
-//                            }
+                            //give failed targets another chance when tsLastFailed is expired
+                            if($target->getTsLastFailed() && $target->getTsLastFailed() < (time() - Settings::getTargetLastFailExpiry())) {
+                                $this->checkOut($target->getId(), 'normal', $priority);
+                                return false;
+                            }
                         }
                     }
                 }elseif(!$target->isRobotsAllowed() && $target->getTsRobotsCheck() && $target->getTsRobotsCheck() < (time() - Helpers::getVariancedValue(Settings::getRobotsCheckMaxAge(), Settings::getRobotsMaxAgeVariance()))) {
