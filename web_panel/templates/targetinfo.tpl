@@ -130,6 +130,12 @@
                                     <td>{$target->getLastErrorMessage()}</td>
                                 </tr>
                                 {/if}
+                                {if !is_null($target->getTsLastFailed())}
+                                    <tr>
+                                        <td>last failed</td>
+                                        <td>{$target->getTsLastFailed()|date_format:"%d.%m.%Y %H:%M:%S"}</td>
+                                    </tr>
+                                {/if}
                                 <tr>
                                     <td>blacklisted</td>
                                     <td>{if $isBlacklisted == true}yes{else}no{/if}</td>
