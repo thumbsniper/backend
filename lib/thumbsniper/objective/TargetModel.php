@@ -1362,7 +1362,8 @@ class TargetModel
                             return false;
                         }else {
                             //give failed targets another chance when tsLastFailed is expired
-                            if($target->getTsLastFailed() && $target->getTsLastFailed() < (time() - Settings::getTargetLastFailExpiry())) {
+                            if(!$target->getTsLastFailed() || ($target->getTsLastFailed() && $target->getTsLastFailed() < (time() - Settings::getTargetLastFailExpiry()))) {
+                                $this->resetTargetFailures($target->getId());
                                 $this->checkOut($target->getId(), 'normal', $priority);
                                 return false;
                             }
