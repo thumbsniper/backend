@@ -819,11 +819,11 @@ class TargetModel
 
 		$this->logger->log(__METHOD__, $target->getId() . " master image size: " . strlen($imageBase64), LOG_DEBUG);
 
-		$redisTargetMastImageKey = Settings::getRedisKeyTargetMasterImageData() . $target->getId();
+		$redisTargetMasterImageKey = Settings::getRedisKeyTargetMasterImageData() . $target->getId();
 
 		try {
-			if ($this->redis->set($redisTargetMastImageKey, $imageBase64) &&
-				$this->redis->expire($redisTargetMastImageKey, Settings::getRedisMasterImageExpire())
+			if ($this->redis->set($redisTargetMasterImageKey, $imageBase64) &&
+				$this->redis->expire($redisTargetMasterImageKey, Settings::getRedisMasterImageExpire())
 			) {
 				$this->logger->log(__METHOD__, "cached masterImage file (target " . $target->getId() . ")", LOG_INFO);
 			} else {
@@ -1638,16 +1638,26 @@ class TargetModel
         return false;
     }
 
-    
-    
-	public function deleteMasterImage(Target $target)
-	{
-		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-		//TODO: implement: purge cached masterImage from Redis
 
-		return false;
-	}
+    public function deleteMasterImage(Target $target)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $redisTargetMasterImageKey = Settings::getRedisKeyTargetMasterImageData() . $target->getId();
+
+        try {
+            if ($this->redis->exists($redisTargetMasterImageKey)) {
+                $this->logger->log(__METHOD__, "deleting cached masterImage (target " . $target->getId() . ")", LOG_INFO);
+                $this->redis->del($redisTargetMasterImageKey);
+            }
+        }catch (\Exception $e) {
+            $this->logger->log(__METHOD__, "exception while deleting cached masterImage file (target " . $target->getId() . ")", LOG_ERR);
+            return false;
+        }
+
+        return false;
+    }
 
 
 
