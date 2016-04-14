@@ -67,7 +67,6 @@ class ImageModel
 
         $image->setId(isset($data[Settings::getMongoKeyImageAttrId()]) ? $data[Settings::getMongoKeyImageAttrId()] : null);
         $image->setTargetId(isset($data[Settings::getMongoKeyImageAttrTargetId()]) ? $data[Settings::getMongoKeyImageAttrTargetId()] : null);
-        //$image->setFileId(isset($data[Settings::getMongoKeyImageAttrFileId()]) ? $data[Settings::getMongoKeyImageAttrFileId()] : null);
         $image->setWidth(isset($data[Settings::getMongoKeyImageAttrWidth()]) ? $data[Settings::getMongoKeyImageAttrWidth()] : null);
         $image->setHeight(isset($data[Settings::getMongoKeyImageAttrHeight()]) ? $data[Settings::getMongoKeyImageAttrHeight()] : null);
         $image->setEffect(isset($data[Settings::getMongoKeyImageAttrEffect()]) ? $data[Settings::getMongoKeyImageAttrEffect()] : null);
@@ -432,29 +431,10 @@ class ImageModel
 
         $imageData = NULL;
 
-        if(!$target->getFileId())
-        {
-            //use Redis
-            $this->logger->log(__METHOD__, "using Redis", LOG_DEBUG);
+        $redisTargetMastImageKey = Settings::getRedisKeyTargetMasterImageData() . $target->getId();
 
-            $redisTargetMastImageKey = Settings::getRedisKeyTargetMasterImageData() . $target->getId();
-
-            if ($this->redis->exists($redisTargetMastImageKey)) {
-                $imageData = $this->redis->get($redisTargetMastImageKey);
-            }
-        }else
-        {
-            //use MongoDB
-            $this->logger->log(__METHOD__, "using MongoDB", LOG_DEBUG);
-
-            $gridfs = $this->mongoDB->getGridFS('masters');
-
-            $query = array(
-                '_id' => new MongoId($target->getFileId())
-            );
-
-            $file = $gridfs->findOne($query);
-            $imageData = base64_encode($file->getBytes());
+        if ($this->redis->exists($redisTargetMastImageKey)) {
+            $imageData = $this->redis->get($redisTargetMastImageKey);
         }
 
         if ($imageData != NULL) {
@@ -647,15 +627,10 @@ class ImageModel
                 Settings::getMongoKeyImageAttrId() => $image->getId()
             );
 
-            //TODO: $unset fileId is just to repair existing data, because fileId is obsolete - 2016-01-07
-
             $update = array(
                 '$set' => array(
                     Settings::getMongoKeyImageAttrTsLastUpdated() => new MongoTimestamp($image->getTsLastUpdated()),
                     Settings::getMongoKeyImageAttrHeight() => $image->getHeight()
-                ),
-                '$unset' => array(
-                    Settings::getMongoKeyImageAttrFileId() => ''
                 ),
                 '$inc' => array(
                     Settings::getMongoKeyImageAttrCounterUpdated() => 1

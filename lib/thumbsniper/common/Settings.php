@@ -295,7 +295,6 @@ abstract class Settings
     static private $mongoKeyTargetAttrUrl = "url";
     static private $mongoKeyTargetAttrFileNameBase = "fileNameBase";
     static private $mongoKeyTargetAttrFileNameSuffix = "fileNameSuffix";
-    static private $mongoKeyTargetAttrFileId = "fileId";
     static private $mongoKeyTargetAttrTsAdded = "tsAdded";
     static private $mongoKeyTargetAttrTsLastUpdated = "tsLastUpdated";
     static private $mongoKeyTargetAttrTsCheckedOut = "tsCheckedOut";
@@ -328,7 +327,6 @@ abstract class Settings
     static private $mongoCollectionImages = "images";
     static private $mongoKeyImageAttrId = "_id";
     static private $mongoKeyImageAttrTargetId = "targetId";
-    static private $mongoKeyImageAttrFileId = "fileId";
     static private $mongoKeyImageAttrWidth = "width";
     static private $mongoKeyImageAttrHeight = "height";
     static private $mongoKeyImageAttrEffect = "effect";
@@ -1907,14 +1905,6 @@ abstract class Settings
     /**
      * @return string
      */
-    public static function getMongoKeyTargetAttrFileId()
-    {
-        return self::$mongoKeyTargetAttrFileId;
-    }
-
-    /**
-     * @return string
-     */
     public static function getMongoKeyTargetAttrTsLastUpdated()
     {
         return self::$mongoKeyTargetAttrTsLastUpdated;
@@ -2268,14 +2258,6 @@ abstract class Settings
     public static function getImageDefaultMaxAge()
     {
         return self::$imageDefaultMaxAge;
-    }
-
-    /**
-     * @return string
-     */
-    public static function getMongoKeyImageAttrFileId()
-    {
-        return self::$mongoKeyImageAttrFileId;
     }
 
     /**

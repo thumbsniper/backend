@@ -628,9 +628,9 @@ class ApiV3
             $imageIsUpToDate = $this->getImageModel()->checkImageCurrentness($this->target, $this->target->getCurrentImage(), $this->forceUpdate);
 
             if (!$imageIsUpToDate) {
-                $redisTargetMastImageKey = Settings::getRedisKeyTargetMasterImageData() . $this->target->getId();
+                $redisTargetMasterImageKey = Settings::getRedisKeyTargetMasterImageData() . $this->target->getId();
 
-                if($this->redis->exists($redisTargetMastImageKey))
+                if($this->redis->exists($redisTargetMasterImageKey))
                 {
                     // old -> enqueued
                     $this->logger->log(__METHOD__, "checking out image " . $this->target->getCurrentImage()->getId() .  " (masterImage in Redis)", LOG_DEBUG);
@@ -1109,12 +1109,12 @@ class ApiV3
         //TODO: ist nur ein Versuch. Ist das hier zu umständlich?
         $target = $this->getTargetModel()->getById($image->getTargetId());
 
-	    $redisTargetMastImageKey = Settings::getRedisKeyTargetMasterImageData() . $target->getId();
+	    $redisTargetMasterImageKey = Settings::getRedisKeyTargetMasterImageData() . $target->getId();
 
-	    if(!$target->getFileId() && !$this->getRedis()->exists($redisTargetMastImageKey))
+	    if(!$this->getRedis()->exists($redisTargetMasterImageKey))
 	    {
 		    $this->getImageModel()->dequeue($image);
-		    $this->getLogger()->log(__METHOD__, "missing fileId in target " . $target->getId(), LOG_ERR);
+		    $this->getLogger()->log(__METHOD__, "missing redisTargetMasterImageKey for target " . $target->getId(), LOG_ERR);
 		    return $this->getCalculatedAgentSleepDuration('thumbnail');
 	    }
 

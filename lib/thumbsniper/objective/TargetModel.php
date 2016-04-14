@@ -74,7 +74,6 @@ class TargetModel
 
         $target->setId(isset($data[Settings::getMongoKeyTargetAttrId()]) ? $data[Settings::getMongoKeyTargetAttrId()] : null);
         $target->setUrl(isset($data[Settings::getMongoKeyTargetAttrUrl()]) ? $data[Settings::getMongoKeyTargetAttrUrl()] : null);
-		$target->setFileId(isset($data[Settings::getMongoKeyTargetAttrFileId()]) ? $data[Settings::getMongoKeyTargetAttrFileId()] : null);
         $target->setFileNameBase(isset($data[Settings::getMongoKeyTargetAttrFileNameBase()]) ? $data[Settings::getMongoKeyTargetAttrFileNameBase()] : null);
         $target->setFileNameSuffix(isset($data[Settings::getMongoKeyTargetAttrFileNameSuffix()]) ? $data[Settings::getMongoKeyTargetAttrFileNameSuffix()] : null);
         $target->setTsCheckedOut(isset($data[Settings::getMongoKeyTargetAttrTsCheckedOut()]) ? $data[Settings::getMongoKeyTargetAttrTsCheckedOut()] : null);
@@ -891,8 +890,6 @@ class TargetModel
             Settings::getMongoKeyTargetAttrTsCheckedOut() => "",
             Settings::getMongoKeyTargetAttrForcedUpdate() => "",
             Settings::getMongoKeyTargetAttrLastErrorMessage() => "",
-	        // fileId löschen, da Redis das masterImage nur temporär speichert
-	        Settings::getMongoKeyTargetAttrFileId() => "",
             Settings::getMongoKeyTargetAttrTsLastFailed() => "",
         );
 
@@ -1641,70 +1638,13 @@ class TargetModel
         return false;
     }
 
-
-	//TODO: delete from Redis
+    
+    
 	public function deleteMasterImage(Target $target)
 	{
 		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-		//TODO: löschen aus Redis ohne FileId: umbauen
-
-		if($target->getFileId())
-		{
-			if(strpos($target->getFileId(), Settings::getRedisKeyTargetMasterImageData()) !== false)
-			{
-				//use Redis
-
-				if(!$this->redis->del($target->getFileId()))
-				{
-					$this->logger->log(__METHOD__, "error while deleting fileId: " . $target->getFileId() . " from Redis (not updated)", LOG_ERR);
-					return false;
-				}
-			}else
-			{
-				//use MongoDB
-
-				$gridfs = $this->mongoDB->getGridFS('masters');
-
-				$deleteResult = $gridfs->delete(new MongoId($target->getFileId()));
-
-				if(!isset($deleteResult['ok']) || !$deleteResult['ok'] || !isset($deleteResult['n']) || !$deleteResult['n'] > 0)
-				{
-					$this->logger->log(__METHOD__, "error while deleting fileId: " . $target->getFileId() . " (not updated)", LOG_ERR);
-					return false;
-				}
-			}
-
-			try
-			{
-				$collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
-
-				$query = array(
-					Settings::getMongoKeyTargetAttrId() => $target->getId()
-				);
-
-				$update = array(
-					'$unset' => array(
-						Settings::getMongoKeyTargetAttrFileId() => ''
-					)
-				);
-
-				if($collection->update($query, $update))
-				{
-					$this->logger->log(__METHOD__, "deleted master image of target " . $target->getId(), LOG_INFO);
-
-					return true;
-				}
-			}catch(Exception $e)
-			{
-				$this->logger->log(__METHOD__, "could not delete master image of target " . $target->getId() . ": " . $e->getMessage(), LOG_DEBUG);
-
-				return false;
-			}
-		}else {
-			$this->logger->log(__METHOD__, "no master image of target " . $target->getId() . " exists", LOG_INFO);
-			return true;
-		}
+		//TODO: implement: purge cached masterImage from Redis
 
 		return false;
 	}
