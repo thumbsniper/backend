@@ -289,7 +289,7 @@
 <script src="../bower_components/metisMenu/dist/metisMenu.min.js"></script>
 
 <!-- Morris Charts JavaScript -->
-<script src="../bower_components/raphael/raphael-min.js"></script>
+<script src="../bower_components/raphael/raphael.min.js"></script>
 <script src="../bower_components/morrisjs/morris.min.js"></script>
 
 <!-- DataTables JavaScript -->
