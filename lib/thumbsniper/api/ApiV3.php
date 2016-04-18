@@ -1255,6 +1255,7 @@ class ApiV3
     public function setForceDebug($forceDebug)
     {
         $this->forceDebug = $forceDebug;
+        $this->getLogger()->setForceDebug($forceDebug);
     }
     
 

@@ -147,4 +147,12 @@ class Logger
             $counter++;
         }
     }
+
+    /**
+     * @param boolean $forceDebug
+     */
+    public function setForceDebug($forceDebug)
+    {
+        $this->forceDebug = $forceDebug;
+    }
 }
