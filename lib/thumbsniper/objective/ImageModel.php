@@ -587,7 +587,7 @@ class ImageModel
     }
 
 
-
+    //TODO: this shouldn't be named "dequeue", just "removeCheckout". Real "dequeue" needs to be implemented, if it doesn't already exist.
     public function dequeue(Image $image)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
