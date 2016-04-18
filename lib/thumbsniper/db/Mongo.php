@@ -424,26 +424,7 @@ class Mongo
         {
         }
 
-
-
-        //IMAGES_CACHE
-        $imagesCacheCollection = new \MongoCollection($this->db, 'images_cache');
-        $imagesCacheCollection->createIndex(
-            array(
-                'tsAdded' => true
-            ),
-            array(
-                'expireAfterSeconds' => Settings::getMongoImageCacheExpire()
-            )
-        );
-        $imagesCacheCollection->createIndex(
-            array(
-                'imageId' => true,
-                'branded' => true
-            )
-        );
-
-
+        
         //QUEUE_JOBS_MASTERS
         $queueJobsMasterCollection = new \MongoCollection($this->db, 'queue_jobs_masters');
         $queueJobsMasterCollection->createIndex(
