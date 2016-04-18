@@ -1251,7 +1251,7 @@ class ImageModel
         if ($exists && $notEmpty) {
             $this->logger->log(__METHOD__, "image exists: " . $fileName, LOG_INFO);
         } else {
-            $this->logger->log(__METHOD__, "image missing: " . $fileName, LOG_INFO);
+            $this->logger->log(__METHOD__, "image does not exist: " . $fileName, LOG_INFO);
         }
 
         return $exists;
