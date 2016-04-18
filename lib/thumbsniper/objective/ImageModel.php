@@ -1298,10 +1298,10 @@ class ImageModel
         }
 
         if ($this->imageFileExists($path)) {
-            $this->logger->log(__METHOD__, "could not remove image file", LOG_ERR);
+            $this->logger->log(__METHOD__, "(double check) could not remove image file", LOG_ERR);
             return false;
         } else {
-            $this->logger->log(__METHOD__, "image file " . $path . " does not exist", LOG_DEBUG);
+            $this->logger->log(__METHOD__, "(double check) image file " . $path . " does not exist", LOG_DEBUG);
             return true;
         }
     }
