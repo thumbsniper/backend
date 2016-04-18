@@ -53,6 +53,8 @@ class TargetModel
     /** @var ReferrerModel */
     private $referrerModel;
 
+    /** @var UserAgentModel */
+    private $userAgentModel;
 
 
     function __construct(MongoDB $mongoDB, Client $redis, Logger $logger)
@@ -60,8 +62,11 @@ class TargetModel
         $this->mongoDB = $mongoDB;
 		$this->redis = $redis;
         $this->logger = $logger;
+
+        //TODO: initialize if required only
 		$this->imageModel = new ImageModel($this->mongoDB, $this->redis, $this->logger);
         $this->referrerModel = new ReferrerModel($this->mongoDB, $this->logger);
+        $this->userAgentModel = new UserAgentModel($this->mongoDB, $this->logger);
 
 		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 	} // function
@@ -1954,7 +1959,8 @@ class TargetModel
         // remove referrer mappings
         $this->referrerModel->removeTargetMappings($target);
 
-        //TODO: remove target from other collections
+        // remove from user agents
+        $this->userAgentModel->removeTargetMapping($target);
 
         //dequeue master image
         $this->dequeue($targetId);
