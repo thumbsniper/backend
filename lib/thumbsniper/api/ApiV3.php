@@ -954,23 +954,10 @@ class ApiV3
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $collection = new \MongoCollection($this->getMongoDB(), 'configuration');
-
-        $query = array(
-            '_id' => 'live',
-        );
-
-        $update = array(
-            '$setOnInsert' => array(
-                'agentLastSleepDuration_' . $type => 1
-            )
-        );
-
-        $options = array(
-            'upsert' => true
-        );
-
-        $collection->update($query, $update, $options);
+        if(!$this->getRedis()->exists(Settings::getRedisKeyAgentLastSleepDurationPrefix() . $type))
+        {
+            $this->getRedis()->set(Settings::getRedisKeyAgentLastSleepDurationPrefix() . $type, 1);
+        }
     }
 
 
@@ -978,31 +965,9 @@ class ApiV3
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $collection = new \MongoCollection($this->getMongoDB(), 'configuration');
-
-        $query = array(
-            '_id' => 'live',
-            '$or' => array(
-                array(
-                    'agentLastSleepDuration_' . $type => array(
-                        '$exists' => false
-                    )
-                ),
-                array(
-                    'agentLastSleepDuration_' . $type => array(
-                        '$lt' => Settings::getAgentMaxSleepDuration()
-                    )
-                )
-            )
-        );
-
-        $update = array(
-            '$inc' => array(
-                'agentLastSleepDuration_' . $type => 1
-            )
-        );
-
-        $collection->update($query, $update);
+        if(intval($this->getRedis()->get(Settings::getRedisKeyAgentLastSleepDurationPrefix() . $type)) < Settings::getAgentMaxSleepDuration()) {
+            $this->getRedis()->incr(Settings::getRedisKeyAgentLastSleepDurationPrefix() . $type);
+        }
     }
 
 
@@ -1010,21 +975,9 @@ class ApiV3
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $collection = new \MongoCollection($this->getMongoDB(), 'configuration');
-
-        $query = array(
-            '_id' => 'live',
-            'agentLastSleepDuration_' . $type => array(
-                '$gt' => 0
-            )
-        );
-
-        $update = array(
-            '$inc' => array(
-                'agentLastSleepDuration_' . $type => -1
-            )
-        );
-        $collection->update($query, $update);
+        if(intval($this->getRedis()->get(Settings::getRedisKeyAgentLastSleepDurationPrefix() . $type)) > 0) {
+            $this->getRedis()->decr(Settings::getRedisKeyAgentLastSleepDurationPrefix() . $type);
+        }
     }
 
 
@@ -1036,19 +989,18 @@ class ApiV3
 
         $this->initAgentSleepDuration($type);
 
-        $collection = new \MongoCollection($this->getMongoDB(), 'configuration');
+        $sleep = $this->getRedis()->get(Settings::getRedisKeyAgentLastSleepDurationPrefix() . $type);
 
-        $configData = $collection->findOne(array('_id' => 'live'), array('agentLastSleepDuration_' . $type => true));
-
-        if(is_array($configData) && isset($configData['agentLastSleepDuration_' . $type]) && is_numeric($configData['agentLastSleepDuration_' . $type])) {
-            $sleepDuration = intval($configData['agentLastSleepDuration_' . $type]);
+        if($sleep) {
+            $sleepDuration = intval($sleep);
         }
 
         $this->incrementAgentSleepDuration($type);
 
         $this->getLogger()->log(__METHOD__, "agent (" . $type . ") shall sleep for " . $sleepDuration . " seconds", LOG_DEBUG);
 
-        return $sleepDuration;
+        //make sure that no negative value is returned
+        return $sleepDuration >= 0 ? $sleepDuration : 0;
     }
 
 

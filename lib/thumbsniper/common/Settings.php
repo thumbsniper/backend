@@ -358,6 +358,9 @@ abstract class Settings
 
     // STATISTICS
     static private $mongoCollectionStatistics = "statistics";
+    
+    // CONFIGURATION
+    static private $redisKeyAgentLastSleepDurationPrefix = "agent:lastsleepduration:";
 
 
     /**
@@ -2708,5 +2711,13 @@ abstract class Settings
     public static function getMongoKeyTargetHostsBlacklistAttrComment()
     {
         return self::$mongoKeyTargetHostsBlacklistAttrComment;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getRedisKeyAgentLastSleepDurationPrefix()
+    {
+        return self::$redisKeyAgentLastSleepDurationPrefix;
     }
 }
