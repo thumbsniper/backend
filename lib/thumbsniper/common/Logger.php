@@ -66,7 +66,8 @@ class Logger
         */
 
         if ($this->forceDebug) {
-            $this->logToArray($method, $msg, $severity);
+            //FIXME: disabled logToArray: PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 80 bytes)
+            //$this->logToArray($method, $msg, $severity);
         }
 
         if ($this->forceDebug == false && $severity != NULL && $severity > Settings::getLogSeverity()) {
