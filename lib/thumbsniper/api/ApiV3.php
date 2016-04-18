@@ -1248,6 +1248,15 @@ class ApiV3
         return $output;
     }
 
+    
+    /**
+     * @param mixed $forceDebug
+     */
+    public function setForceDebug($forceDebug)
+    {
+        $this->forceDebug = $forceDebug;
+    }
+    
 
     protected function getMongoDB()
     {
