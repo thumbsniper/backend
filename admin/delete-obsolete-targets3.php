@@ -37,7 +37,7 @@ class DeleteObsoleteTargets extends ApiV3
         $imageModel = $this->getImageModel();
         $referrerModel = $this->getReferrerModel();
 
-        $target = $targetModel->getById("7ef706377f986e46520a1cdabf2cdda6");
+        $target = $targetModel->getById("ebdf941b3f326055fa09a21da659c31f");
 
         $targetModel->delete($target->getId());
     }

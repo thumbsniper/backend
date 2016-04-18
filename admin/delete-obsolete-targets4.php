@@ -39,7 +39,8 @@ class DeleteObsoleteTargets extends ApiV3
         try {
             $collection = new MongoCollection($this->getMongoDB(), Settings::getMongoCollectionTargets());
             $td = new DateTime();
-            $td->modify('-8 months');
+            $td->modify('-10 months');
+            $td->modify('+6.7 days');
 
             $query = array(
                 Settings::getMongoKeyTargetAttrTsLastRequested() => array(
@@ -57,29 +58,17 @@ class DeleteObsoleteTargets extends ApiV3
                 $t = $targetModel->getById($doc[Settings::getMongoKeyTargetAttrId()]);
 
                 if ($t instanceof Target) {
-                    $images = $imageModel->getImages($t->getId());
-
-                    if(!empty($images)) {
-                        continue;
-//                        /** @var Image $image */
-//                        foreach($images as $image)
-//                        {
-//                            if($image->getTsLastUpdated()) {
-//                                echo "  IMAGE  - " . date("d.m.Y H:i:s", $image->getTsLastRequested()) . " - " . $image->getId() . "\n";
-////                                if($imageModel->deleteImageFile($t, $image))
-////                                {
-////                                    $imageModel->delete($t, $image);
-////                                }
-//                            }
-//                        }
-//                        echo "=======================\n";
-                    }else {
-                        echo "* TARGET - " . date("d.m.Y H:i:s", $t->getTsLastRequested()) . " - " . $t->getUrl() . " (" . $t->getId() . ")\n";
-                        $this->setForceDebug(true);
-                        $targetModel->delete($t->getId());
-                        $this->setForceDebug(false);
-                        echo "=======================\n";
-                    }
+                    echo "* TARGET - " . date("d.m.Y H:i:s", $t->getTsLastRequested()) . " - " . $t->getUrl() . " (" . $t->getId() . ")\n";
+//                    $images = $imageModel->getImages($t->getId());
+//                    echo "\n";
+//                    print_r($t);
+//                    print_r($images);
+//                    echo "\n";
+                    $this->setForceDebug(true);
+                    $targetModel->delete($t->getId());
+                    $this->setForceDebug(false);
+                    echo "=======================\n";
+//                    break;
                 }
             }
 
