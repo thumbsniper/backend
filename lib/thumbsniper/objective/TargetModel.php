@@ -50,6 +50,9 @@ class TargetModel
     /** @var ImageModel */
 	private $imageModel;
 
+    /** @var ReferrerModel */
+    private $referrerModel;
+
 
 
     function __construct(MongoDB $mongoDB, Client $redis, Logger $logger)
@@ -58,6 +61,7 @@ class TargetModel
 		$this->redis = $redis;
         $this->logger = $logger;
 		$this->imageModel = new ImageModel($this->mongoDB, $this->redis, $this->logger);
+        $this->referrerModel = new ReferrerModel($this->mongoDB, $this->logger);
 
 		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 	} // function
@@ -1887,5 +1891,70 @@ class TargetModel
         }
 
         return $targetHosts;
+    }
+
+
+    public function delete($targetId)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $target = $this->getById($targetId);
+
+        // delete target's images
+        $images = $this->imageModel->getImages($target->getId());
+        if(!empty($images)) {
+            /** @var Image $image */
+            foreach($images as $image)
+            {
+                $this->imageModel->delete($target, $image);
+            }
+        }
+
+        //double-check that no images are left
+        $images = $this->imageModel->getImages($target->getId());
+        if(!empty($images)) {
+            $this->logger->log(__METHOD__, "could not remove all associated images for target: " . $target->getId(), LOG_ERR);
+            return false;
+        }
+
+        // remove referrer mappings
+        $this->referrerModel->removeTargetMappings($target);
+
+        //TODO: remove target from other collections
+        //TODO: dequeue master image
+
+        // remove target
+        try {
+            $targetCollection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
+
+            $query = array(
+                Settings::getMongoKeyTargetAttrId() => $target->getId()
+            );
+
+            $options = array(
+                'justOne' => true
+            );
+
+            $result = $targetCollection->remove($query, $options);
+
+            if(is_array($result)) {
+                if($result['ok'] == true) {
+                    if($result['n'] > 0) {
+                        $this->logger->log(__METHOD__, "target removed: " . $target->getId(), LOG_INFO);
+                    }else {
+                        $this->logger->log(__METHOD__, "no target was removed (ok): " . $target->getId(), LOG_INFO);
+                    }
+                    return true;
+                }else {
+                    $this->logger->log(__METHOD__, "could not remove target " . $target->getId() . ": " . $result['err'] . " - " . $result['errmsg'], LOG_ERR);
+                    return false;
+                }
+            }
+        } catch (\Exception $e) {
+            $this->logger->log(__METHOD__, "exception while removing target " . $target->getId() . ": " . $e->getMessage(), LOG_ERR);
+            return false;
+        }
+
+        return false;
     }
 }
