@@ -261,6 +261,42 @@ class UserAgentModel
 
 
 
+    public function removeTargetMapping(Target $target)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        try {
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionUserAgents());
+
+            $targetData = array(
+                'id' => $target->getId()
+            );
+
+            $userAgentQuery = array(
+                'targets.id' => array(
+                    '$eq' => $target->getId()
+                ));
+
+            $userAgentUpdate = array(
+                '$pull' => array(
+                    'targets' => $targetData
+                ));
+
+            if($collection->update($userAgentQuery, $userAgentUpdate)) {
+                $this->logger->log(__METHOD__, "removed target " . $target->getId() . " from user agents", LOG_DEBUG);
+                return true;
+            }
+
+        } catch (Exception $e) {
+            $this->logger->log(__METHOD__, "exception while removing target " . $target->getId() . " from user agents: " . $e->getMessage(), LOG_ERR);
+        }
+
+        //TODO: result auswerten
+        return true;
+    }
+
+
+
     // what referrers link to a target?
     public function getTargetUserAgents($targetId, $accountId = NULL, $orderby, $orderDirection, $limit, $offset, $where)
     {
