@@ -1506,6 +1506,40 @@ class TargetModel
     }
 
 
+    public function dequeue($targetId)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        try {
+            $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionQueueJobsMasters());
+
+            $query = array(
+                Settings::getMongoKeyTargetAttrId() => $targetId
+            );
+
+            $result = $collection->remove($query);
+
+            if(is_array($result)) {
+                if($result['ok'] == true) {
+                    if($result['n'] > 0) {
+                        $this->logger->log(__METHOD__, "target removed: " . $targetId, LOG_INFO);
+                    }else {
+                        $this->logger->log(__METHOD__, "no target was removed (ok): " . $targetId, LOG_INFO);
+                    }
+                    return true;
+                }else {
+                    $this->logger->log(__METHOD__, "could not remove target " . $targetId . ": " . $result['err'] . " - " . $result['errmsg'], LOG_ERR);
+                    return false;
+                }
+            }
+
+        } catch (\Exception $e) {
+            $this->logger->log(__METHOD__, "exception while dequeuing target " . $targetId . ": " . $e->getMessage(), LOG_ERR);
+        }
+    }
+
+
+
 
     public function updateTargetRequestStats($targetId)
     {
@@ -1921,7 +1955,9 @@ class TargetModel
         $this->referrerModel->removeTargetMappings($target);
 
         //TODO: remove target from other collections
-        //TODO: dequeue master image
+
+        //dequeue master image
+        $this->dequeue($targetId);
 
         // remove target
         try {
