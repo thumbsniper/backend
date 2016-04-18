@@ -1246,7 +1246,7 @@ class ImageModel
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $exists = file_exists($fileName);
-        $notEmpty = filesize($fileName) > 0 ? true : false;
+        $notEmpty = @filesize($fileName) > 0 ? true : false;
 
         if ($exists && $notEmpty) {
             $this->logger->log(__METHOD__, "image exists: " . $fileName, LOG_INFO);
