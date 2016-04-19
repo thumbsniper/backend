@@ -25,7 +25,6 @@ require_once(DIRECTORY_ROOT . '/config/backend-config.inc.php');
 use ThumbSniper\common\Settings;
 use ThumbSniper\api\ApiV3;
 use ThumbSniper\shared\Target;
-use ThumbSniper\shared\Image;
 
 
 
@@ -40,7 +39,7 @@ class DeleteObsoleteTargets extends ApiV3
             $collection = new MongoCollection($this->getMongoDB(), Settings::getMongoCollectionTargets());
             $td = new DateTime();
             $td->modify('-10 months');
-            $td->modify('+6.7 days');
+            $td->modify('+7 days');
 
             $query = array(
                 Settings::getMongoKeyTargetAttrTsLastRequested() => array(
@@ -52,13 +51,14 @@ class DeleteObsoleteTargets extends ApiV3
                 Settings::getMongoKeyTargetAttrId() => true
             );
 
+            $numTargets = $collection->count($query);
             $cursor = $collection->find($query, $fields);
 
             foreach ($cursor as $doc) {
                 $t = $targetModel->getById($doc[Settings::getMongoKeyTargetAttrId()]);
 
                 if ($t instanceof Target) {
-                    echo "* TARGET - " . date("d.m.Y H:i:s", $t->getTsLastRequested()) . " - " . $t->getUrl() . " (" . $t->getId() . ")\n";
+                    echo "(" . $numTargets . ") TARGET - " . date("d.m.Y H:i:s", $t->getTsLastRequested()) . " - " . $t->getUrl() . " (" . $t->getId() . ")\n";
 //                    $images = $imageModel->getImages($t->getId());
 //                    echo "\n";
 //                    print_r($t);
@@ -69,6 +69,7 @@ class DeleteObsoleteTargets extends ApiV3
                     $this->setForceDebug(false);
                     echo "=======================\n";
 //                    break;
+                    $numTargets--;
                 }
             }
 
