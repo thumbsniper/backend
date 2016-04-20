@@ -30,9 +30,9 @@ use MongoDB;
 use MongoTimestamp;
 use MongoCursor;
 use MongoCollection;
-use MongoId;
 use Exception;
 use ErrorException;
+use Net_DNS2_Resolver;
 
 
 
@@ -600,11 +600,13 @@ class TargetModel
         {
             case "IPv4":
                 $dnsType = DNS_A;
+                $dnsType2 = 'A';
                 $ipKey = "ip";
                 break;
 
             case "IPv6":
                 $dnsType = DNS_AAAA;
+                $dnsType2 = 'AAAA';
                 $ipKey = "ipv6";
                 break;
 
@@ -614,7 +616,8 @@ class TargetModel
         }
 
         $dnsRecords = null;
-
+        $dnsRecords2 = null;
+        
         set_error_handler(function($errno, $errstr, $errfile, $errline, array $errcontext) {
             // error was suppressed with the @-operator
             if (0 === error_reporting()) {
@@ -627,6 +630,13 @@ class TargetModel
         try
         {
             $dnsRecords = dns_get_record($host,  $dnsType);
+
+//            $r = new Net_DNS2_Resolver(array(
+//                'nameservers' => array('8.8.8.8')
+//            ));
+//            $dnsRecords2 = $r->query($host, $dnsType2);
+
+
         }catch (ErrorException $e)
         {
             $this->logger->log(__METHOD__, "Exception during dns_get_record for " . $host . " (" . $type . ")", LOG_ERR);
@@ -634,6 +644,8 @@ class TargetModel
 
         restore_error_handler();
 
+//        $this->logger->log(__METHOD__, "DNS: " . print_r($dnsRecords2, true), LOG_ERR);
+        
         if(!is_array($dnsRecords))
         {
             $this->logger->log(__METHOD__, "could not resolve host to ip address: " . $host . " (" . $type . ")", LOG_ERR);
@@ -643,7 +655,7 @@ class TargetModel
         {
             return false;
         }
-
+        
         foreach($dnsRecords as $dnsRecord) {
             if (!array_key_exists($ipKey, $dnsRecord)) {
                 continue;
@@ -697,15 +709,15 @@ class TargetModel
             return true;
         }
 
-        if($this->isBlacklistedIpAddress($host, 'IPv4'))
-        {
-            return true;
-        }
-
-        if($this->isBlacklistedIpAddress($host, 'IPv6'))
-        {
-            return true;
-        }
+//        if($this->isBlacklistedIpAddress($host, 'IPv4'))
+//        {
+//            return true;
+//        }
+//
+//        if($this->isBlacklistedIpAddress($host, 'IPv6'))
+//        {
+//            return true;
+//        }
 
         //not blacklisted
 		$this->logger->log(__METHOD__, "host is NOT blacklisted: " . $host, LOG_DEBUG);

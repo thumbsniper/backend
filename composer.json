@@ -19,7 +19,8 @@
     "smarty/smarty": "v3.1.21",
     "abraham/twitteroauth": "0.5.1",
     "slim/slim": "2.6.2",
-    "predis/predis": "v1.0.1"
+    "predis/predis": "v1.0.1",
+    "pear/net_dns2": "1.4.1"
   },
   "autoload": {
     "psr-4": {"ThumbSniper\\": "lib/thumbsniper"}
