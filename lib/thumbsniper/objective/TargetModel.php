@@ -30,9 +30,9 @@ use MongoDB;
 use MongoTimestamp;
 use MongoCursor;
 use MongoCollection;
+use MongoId;
 use Exception;
 use ErrorException;
-use Net_DNS2_Resolver;
 
 
 
@@ -592,18 +592,20 @@ class TargetModel
 
 
     //TODO: validate $type
-    public function isBlacklistedIpAddress($host, $type)
+    private function isBlacklistedIpAddress($host, $type)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         switch($type)
         {
             case "IPv4":
-                $dnsType = 'A';
+                $dnsType = DNS_A;
+                $ipKey = "ip";
                 break;
 
             case "IPv6":
-                $dnsType = 'AAAA';
+                $dnsType = DNS_AAAA;
+                $ipKey = "ipv6";
                 break;
 
             default:
@@ -613,30 +615,37 @@ class TargetModel
 
         $dnsRecords = null;
 
+        set_error_handler(function($errno, $errstr, $errfile, $errline, array $errcontext) {
+            // error was suppressed with the @-operator
+            if (0 === error_reporting()) {
+                return false;
+            }
+
+            throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+        });
+
         try
         {
-            $r = new Net_DNS2_Resolver(array(
-                'nameservers' => array('8.8.8.8')
-            ));
-            $dnsRecords = $r->query($host, $dnsType);
-
-
-        }catch (Exception $e)
+            $dnsRecords = dns_get_record($host,  $dnsType);
+        }catch (ErrorException $e)
         {
             $this->logger->log(__METHOD__, "Exception during dns_get_record for " . $host . " (" . $type . ")", LOG_ERR);
         }
 
-        if(!$dnsRecords || !is_array($dnsRecords->answer))
+        restore_error_handler();
+
+        if(!is_array($dnsRecords))
         {
             $this->logger->log(__METHOD__, "could not resolve host to ip address: " . $host . " (" . $type . ")", LOG_ERR);
+            //$this->logger->log(__METHOD__, "dns_get_record: " . $host . ' - ' . print_r(dns_get_record($host), true), LOG_ERR);
             return false;
-        }elseif(!count($dnsRecords->answer) > 0)
+        }elseif(!count($dnsRecords) > 0)
         {
             return false;
         }
-        
-        foreach($dnsRecords->answer as $dnsRecord) {
-            if(!isset($dnsRecord->address)) {
+
+        foreach($dnsRecords as $dnsRecord) {
+            if (!array_key_exists($ipKey, $dnsRecord)) {
                 continue;
             }
 
@@ -644,17 +653,17 @@ class TargetModel
                 $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargetHostsBlacklist());
 
                 $query = array(
-                    Settings::getMongoKeyTargetHostsBlacklistAttrHost() => $dnsRecord->address,
+                    Settings::getMongoKeyTargetHostsBlacklistAttrHost() => $dnsRecord[$ipKey],
                     Settings::getMongoKeyTargetHostsBlacklistAttrType() => $type
                 );
 
                 $targetBlacklistData = $collection->findOne($query);
 
                 if (is_array($targetBlacklistData)) {
-                    $this->logger->log(__METHOD__, "IP address is blacklisted: " . $host . " (IP " . $dnsRecord->address . ")", LOG_ERR);
+                    $this->logger->log(__METHOD__, "IP address is blacklisted: " . $host . " (IP " . $dnsRecord[$ipKey] . ")", LOG_ERR);
                     return true;
                 }else {
-                    $this->logger->log(__METHOD__, "IP address is not blacklisted: " . $host . " (IP " . $dnsRecord->address . ")", LOG_DEBUG);
+                    $this->logger->log(__METHOD__, "IP address is not blacklisted: " . $host . " (IP " . $dnsRecord[$ipKey] . ")", LOG_DEBUG);
                 }
             } catch (Exception $e) {
                 $this->logger->log(__METHOD__, "exception while searching for blacklisted IP address for " . $host . ": " . $e->getMessage(), LOG_ERR);
