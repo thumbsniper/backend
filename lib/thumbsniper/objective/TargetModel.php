@@ -623,7 +623,7 @@ class TargetModel
 
         }catch (Exception $e)
         {
-            $this->logger->log(__METHOD__, "Exception during dns_get_record for " . $host . " (" . $type . ")", LOG_ERR);
+            $this->logger->log(__METHOD__, "Exception during Net_DNS2_Resolver for " . $host . " (" . $type . ")", LOG_ERR);
         }
 
         if(!$dnsRecords || !is_array($dnsRecords->answer))
