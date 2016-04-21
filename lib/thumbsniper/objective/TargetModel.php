@@ -32,7 +32,6 @@ use MongoCursor;
 use MongoCollection;
 use Exception;
 use ErrorException;
-use Net_DNS2_Resolver;
 
 
 
@@ -41,14 +40,14 @@ class TargetModel
     /** @var MongoDB */
     protected $mongoDB;
 
-    /** @var Client */
-    private $redis;
+	/** @var Client */
+	private $redis;
 
     /** @var Logger */
     protected $logger;
 
     /** @var ImageModel */
-    private $imageModel;
+	private $imageModel;
 
     /** @var ReferrerModel */
     private $referrerModel;
@@ -58,18 +57,18 @@ class TargetModel
 
 
     function __construct(MongoDB $mongoDB, Client $redis, Logger $logger)
-    {
+	{
         $this->mongoDB = $mongoDB;
-        $this->redis = $redis;
+		$this->redis = $redis;
         $this->logger = $logger;
 
         //TODO: initialize if required only
-        $this->imageModel = new ImageModel($this->mongoDB, $this->redis, $this->logger);
+		$this->imageModel = new ImageModel($this->mongoDB, $this->redis, $this->logger);
         $this->referrerModel = new ReferrerModel($this->mongoDB, $this->logger);
         $this->userAgentModel = new UserAgentModel($this->mongoDB, $this->logger);
 
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
-    } // function
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	} // function
 
 
 
@@ -96,8 +95,8 @@ class TargetModel
         $target->setWeapon(isset($data[Settings::getMongoKeyTargetAttrWeapon()]) ? $data[Settings::getMongoKeyTargetAttrWeapon()] : null);
         $target->setForcedUpdate(isset($data[Settings::getMongoKeyTargetAttrForcedUpdate()]) ? $data[Settings::getMongoKeyTargetAttrForcedUpdate()] : null);
         $target->setNumRequests(isset($data[Settings::getMongoKeyTargetAttrNumRequests()]) ? $data[Settings::getMongoKeyTargetAttrNumRequests()] : 0);
-        $target->setLastErrorMessage(isset($data[Settings::getMongoKeyTargetAttrLastErrorMessage()]) ? $data[Settings::getMongoKeyTargetAttrLastErrorMessage()] : null);
-        $target->setCensored(isset($data[Settings::getMongoKeyTargetAttrCensored()]) ? $data[Settings::getMongoKeyTargetAttrCensored()] : false);
+	    $target->setLastErrorMessage(isset($data[Settings::getMongoKeyTargetAttrLastErrorMessage()]) ? $data[Settings::getMongoKeyTargetAttrLastErrorMessage()] : null);
+	    $target->setCensored(isset($data[Settings::getMongoKeyTargetAttrCensored()]) ? $data[Settings::getMongoKeyTargetAttrCensored()] : false);
         $target->setMimeType(isset($data[Settings::getMongoKeyTargetAttrMimeType()]) ? $data[Settings::getMongoKeyTargetAttrMimeType()] : false);
 
         $tsAdded = null;
@@ -151,17 +150,17 @@ class TargetModel
 
 
 
-    private function calculateId($url)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	private function calculateId($url)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        return md5(Settings::getTargetIdPrefix() . $url);
-    }
+		return md5(Settings::getTargetIdPrefix() . $url);
+	}
 
 
-    public function getById($id)
-    {
-        $this->logger->log(__METHOD__, "id=" . $id, LOG_DEBUG);
+	public function getById($id)
+	{
+		$this->logger->log(__METHOD__, "id=" . $id, LOG_DEBUG);
 
         $target = null;
 
@@ -181,27 +180,27 @@ class TargetModel
             die();
         }
 
-        return $target;
-    }
+		return $target;
+	}
 
 
 
-    public function getOrCreateByUrl($url, $width, $effect)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	public function getOrCreateByUrl($url, $width, $effect)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $target = NULL;
+		$target = NULL;
 
-        $targetId = $this->calculateId($url);
-        $target = $this->getById($targetId);
+		$targetId = $this->calculateId($url);
+		$target = $this->getById($targetId);
 
-        do {
-            $this->logger->log(__METHOD__, "start loop", LOG_DEBUG);
+		do {
+			$this->logger->log(__METHOD__, "start loop", LOG_DEBUG);
 
-            if (!$target instanceof Target) {
-                $this->logger->log(__METHOD__, "creating new target record (" . $url . ")", LOG_DEBUG);
+			if (!$target instanceof Target) {
+				$this->logger->log(__METHOD__, "creating new target record (" . $url . ")", LOG_DEBUG);
 
-                try {
+				try {
                     $targetCollection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
 
                     $targetQuery = array(
@@ -235,34 +234,34 @@ class TargetModel
                         }
                     }
 
-                    $this->incrementNewTargetsDailyStats();
-                } catch (Exception $e) {
-                    $this->logger->log(__METHOD__, "exception while creating target " . $url . ": " . $e->getMessage() . "(Code: " . $e->getCode() . ")", LOG_ERR);
-                }
+					$this->incrementNewTargetsDailyStats();
+				} catch (Exception $e) {
+					$this->logger->log(__METHOD__, "exception while creating target " . $url . ": " . $e->getMessage() . "(Code: " . $e->getCode() . ")", LOG_ERR);
+				}
 
-                $target = $this->getById($targetId);
-            }
-        }while(!$target instanceof Target);
-        $this->logger->log(__METHOD__, "end loop", LOG_DEBUG);
+				$target = $this->getById($targetId);
+			}
+		}while(!$target instanceof Target);
+		$this->logger->log(__METHOD__, "end loop", LOG_DEBUG);
 
-        $currentImage = $this->imageModel->getOrCreate($targetId, $width, $effect);
+		$currentImage = $this->imageModel->getOrCreate($targetId, $width, $effect);
 
-        if($currentImage instanceof Image)
-        {
-            $target->setCurrentImage($currentImage);
-        } else
-        {
-            $this->logger->log(__METHOD__, "invalid image", LOG_ERR);
-            return false;
-        }
+		if($currentImage instanceof Image)
+		{
+			$target->setCurrentImage($currentImage);
+		} else
+		{
+			$this->logger->log(__METHOD__, "invalid image", LOG_ERR);
+			return false;
+		}
 
-        return $target instanceof Target ? $target : false;
-    }
+		return $target instanceof Target ? $target : false;
+	}
 
 
 
-    private function getTsCheckedOut($targetId)
-    {
+	private function getTsCheckedOut($targetId)
+	{
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
@@ -293,7 +292,7 @@ class TargetModel
         }
 
         return $tsCheckedOut;
-    }
+	}
 
 
 
@@ -317,13 +316,13 @@ class TargetModel
 
 
 
-    public function getNumTargets($where = NULL)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	public function getNumTargets($where = NULL)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $numTargets = null;
+		$numTargets = null;
 
-        try {
+		try {
             $targetCollection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
 
             if($where)
@@ -336,21 +335,21 @@ class TargetModel
             }else {
                 $numTargets = $targetCollection->count();
             }
-        } catch (Exception $e) {
-            $this->logger->log(__METHOD__, "exception: " . $e->getMessage(), LOG_DEBUG);
-            die();
-        }
+		} catch (Exception $e) {
+			$this->logger->log(__METHOD__, "exception: " . $e->getMessage(), LOG_DEBUG);
+			die();
+		}
 
-        return $numTargets;
-    }
+		return $numTargets;
+	}
 
 
 
-    public function getNumTargetsByAccount($accountId, $where = NULL)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	public function getNumTargetsByAccount($accountId, $where = NULL)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $numTargets = 0;
+		$numTargets = 0;
 
         //TODO: Suche mit $where eingrenzen
 
@@ -392,16 +391,16 @@ class TargetModel
             $this->logger->log(__METHOD__, "could not find targets of account " . $accountId . ": " . $e->getMessage(), LOG_DEBUG);
         }
 
-        return $numTargets;
-    }
+		return $numTargets;
+	}
 
 
-    //TODO: Parameter-Defaults löschen?
-    public function getTargets($orderby = '_id', $orderDirection = 'asc', $limit = PHP_INT_MAX, $offset = 0, $where = NULL)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	//TODO: Parameter-Defaults löschen?
+	public function getTargets($orderby = '_id', $orderDirection = 'asc', $limit = PHP_INT_MAX, $offset = 0, $where = NULL)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $targets = array();
+		$targets = array();
 
         try {
             $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
@@ -460,18 +459,18 @@ class TargetModel
             $this->logger->log(__METHOD__, "exception while searching for targets: " . $e->getMessage(), LOG_ERR);
         }
 
-        return $targets;
-    }
+		return $targets;
+	}
 
 
 
-    //TODO: Parameter-Defaults löschen?
-    public function getTargetsByAccount($accountId, $orderby = 'id', $orderDirection = 'asc', $limit = PHP_INT_MAX, $offset = 0, $where = NULL)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	//TODO: Parameter-Defaults löschen?
+	public function getTargetsByAccount($accountId, $orderby = 'id', $orderDirection = 'asc', $limit = PHP_INT_MAX, $offset = 0, $where = NULL)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $targetIds = array();
-        $targets = array();
+		$targets = array();
 
         //TODO: $search and order and limit
 
@@ -522,30 +521,30 @@ class TargetModel
             $this->logger->log(__METHOD__, "could not find targets of account " . $accountId . ": " . $e->getMessage(), LOG_DEBUG);
         }
 
-        return $targets;
-    }
+		return $targets;
+	}
 
 
 
-    private function isTargetCheckedOut($targetId)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	private function isTargetCheckedOut($targetId)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $tsCheckedOut = $this->getTsCheckedOut($targetId);
 
-        if ($tsCheckedOut != NULL) {
-            if (!$this->isEnqueued($targetId) && $tsCheckedOut < (time() - Settings::getCheckoutExpire())) {
-                $this->logger->log(__METHOD__, "target " . $targetId . ": checkout expired (not enqueued)", LOG_INFO);
-                $this->removeCheckOut($targetId);
-                return false;
-            } else {
-                $this->logger->log(__METHOD__, "target " . $targetId . " is already checked out and enqueued", LOG_DEBUG);
-                return true;
-            }
-        }else {
+		if ($tsCheckedOut != NULL) {
+			if (!$this->isEnqueued($targetId) && $tsCheckedOut < (time() - Settings::getCheckoutExpire())) {
+				$this->logger->log(__METHOD__, "target " . $targetId . ": checkout expired (not enqueued)", LOG_INFO);
+				$this->removeCheckOut($targetId);
+				return false;
+			} else {
+				$this->logger->log(__METHOD__, "target " . $targetId . " is already checked out and enqueued", LOG_DEBUG);
+				return true;
+			}
+		}else {
             return false;
         }
-    }
+	}
 
 
     private function isBlacklistedDomain($host)
@@ -592,18 +591,20 @@ class TargetModel
 
 
     //TODO: validate $type
-    public function isBlacklistedIpAddress($host, $type)
+    private function isBlacklistedIpAddress($host, $type)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         switch($type)
         {
             case "IPv4":
-                $dnsType = 'A';
+                $dnsType = DNS_A;
+                $ipKey = "ip";
                 break;
 
             case "IPv6":
-                $dnsType = 'AAAA';
+                $dnsType = DNS_AAAA;
+                $ipKey = "ipv6";
                 break;
 
             default:
@@ -613,30 +614,37 @@ class TargetModel
 
         $dnsRecords = null;
 
+        set_error_handler(function($errno, $errstr, $errfile, $errline, array $errcontext) {
+            // error was suppressed with the @-operator
+            if (0 === error_reporting()) {
+                return false;
+            }
+
+            throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+        });
+
         try
         {
-            $r = new Net_DNS2_Resolver(array(
-                'nameservers' => array('8.8.8.8')
-            ));
-            $dnsRecords = $r->query($host, $dnsType);
-
-
-        }catch (Exception $e)
+            $dnsRecords = dns_get_record($host,  $dnsType);
+        }catch (ErrorException $e)
         {
             $this->logger->log(__METHOD__, "Exception during dns_get_record for " . $host . " (" . $type . ")", LOG_ERR);
         }
 
-        if(!$dnsRecords || !is_array($dnsRecords->answer))
+        restore_error_handler();
+
+        if(!is_array($dnsRecords))
         {
             $this->logger->log(__METHOD__, "could not resolve host to ip address: " . $host . " (" . $type . ")", LOG_ERR);
+            //$this->logger->log(__METHOD__, "dns_get_record: " . $host . ' - ' . print_r(dns_get_record($host), true), LOG_ERR);
             return false;
-        }elseif(!count($dnsRecords->answer) > 0)
+        }elseif(!count($dnsRecords) > 0)
         {
             return false;
         }
 
-        foreach($dnsRecords->answer as $dnsRecord) {
-            if(!isset($dnsRecord->address)) {
+        foreach($dnsRecords as $dnsRecord) {
+            if (!array_key_exists($ipKey, $dnsRecord)) {
                 continue;
             }
 
@@ -644,17 +652,17 @@ class TargetModel
                 $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargetHostsBlacklist());
 
                 $query = array(
-                    Settings::getMongoKeyTargetHostsBlacklistAttrHost() => $dnsRecord->address,
+                    Settings::getMongoKeyTargetHostsBlacklistAttrHost() => $dnsRecord[$ipKey],
                     Settings::getMongoKeyTargetHostsBlacklistAttrType() => $type
                 );
 
                 $targetBlacklistData = $collection->findOne($query);
 
                 if (is_array($targetBlacklistData)) {
-                    $this->logger->log(__METHOD__, "IP address is blacklisted: " . $host . " (IP " . $dnsRecord->address . ")", LOG_ERR);
+                    $this->logger->log(__METHOD__, "IP address is blacklisted: " . $host . " (IP " . $dnsRecord[$ipKey] . ")", LOG_ERR);
                     return true;
                 }else {
-                    $this->logger->log(__METHOD__, "IP address is not blacklisted: " . $host . " (IP " . $dnsRecord->address . ")", LOG_DEBUG);
+                    $this->logger->log(__METHOD__, "IP address is not blacklisted: " . $host . " (IP " . $dnsRecord[$ipKey] . ")", LOG_DEBUG);
                 }
             } catch (Exception $e) {
                 $this->logger->log(__METHOD__, "exception while searching for blacklisted IP address for " . $host . ": " . $e->getMessage(), LOG_ERR);
@@ -666,16 +674,16 @@ class TargetModel
     }
 
 
-    public function isBlacklisted($url)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	public function isBlacklisted($url)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $urlParts = parse_url($url);
-        $host = NULL;
+		$urlParts = parse_url($url);
+		$host = NULL;
 
-        if (!empty($urlParts['host'])) {
-            $host = strtolower($urlParts['host']);
-        }
+		if (!empty($urlParts['host'])) {
+			$host = strtolower($urlParts['host']);
+		}
 
         if(!$host)
         {
@@ -699,26 +707,26 @@ class TargetModel
         }
 
         //not blacklisted
-        $this->logger->log(__METHOD__, "host is NOT blacklisted: " . $host, LOG_DEBUG);
-        return false;
-    }
+		$this->logger->log(__METHOD__, "host is NOT blacklisted: " . $host, LOG_DEBUG);
+		return false;
+	}
 
 
 
-    public function getQueueSizeJobTargetNormal()
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	public function getQueueSizeJobTargetNormal()
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         return $this->getMasterJobQueueSize('normal');
-    }
+	}
 
 
-    public function getQueueSizeJobTargetLongrun()
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	public function getQueueSizeJobTargetLongrun()
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         return $this->getMasterJobQueueSize('longrun');
-    }
+	}
 
 
 
@@ -728,10 +736,10 @@ class TargetModel
 
         $target = null;
 
-        if(!Settings::isEnergySaveActive())
-        {
-            $this->incrementMasterAgentConnectionsDailyStats($mode);
-        }
+		if(!Settings::isEnergySaveActive())
+		{
+			$this->incrementMasterAgentConnectionsDailyStats($mode);
+		}
 
         try {
             $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionQueueJobsMasters());
@@ -764,8 +772,8 @@ class TargetModel
         if($target instanceof Target) {
             //$this->logger->log(__METHOD__, "NEXTTARGET: " . print_r($target, true), LOG_ERR);
 
-            //reset lastErrorMessage
-            $target->setLastErrorMessage(null);
+	        //reset lastErrorMessage
+	        $target->setLastErrorMessage(null);
 
             return $target;
         }else {
@@ -802,73 +810,73 @@ class TargetModel
 
 
 
-    public function commitMasterImage(Target $target, $mode)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	public function commitMasterImage(Target $target, $mode)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        //FIXME: hier muss bestimmt alles repariert werden.
-        // Ziel ist es, das masterImage als base64 zu bekommen.
+		//FIXME: hier muss bestimmt alles repariert werden.
+		// Ziel ist es, das masterImage als base64 zu bekommen.
 
-        $imageBase64 = $target->getMasterImage();
+		$imageBase64 = $target->getMasterImage();
 
-        if(!$imageBase64)
-        {
-            $this->logger->log(__METHOD__, "invalid base64 data for target " . $target->getId(), LOG_ERR);
-            return false;
-        }
+		if(!$imageBase64)
+		{
+			$this->logger->log(__METHOD__, "invalid base64 data for target " . $target->getId(), LOG_ERR);
+			return false;
+		}
 
-        $this->logger->log(__METHOD__, $target->getId() . " master image size: " . strlen($imageBase64), LOG_DEBUG);
+		$this->logger->log(__METHOD__, $target->getId() . " master image size: " . strlen($imageBase64), LOG_DEBUG);
 
-        $redisTargetMasterImageKey = Settings::getRedisKeyTargetMasterImageData() . $target->getId();
+		$redisTargetMasterImageKey = Settings::getRedisKeyTargetMasterImageData() . $target->getId();
 
-        try {
-            if ($this->redis->set($redisTargetMasterImageKey, $imageBase64) &&
-                $this->redis->expire($redisTargetMasterImageKey, Settings::getRedisMasterImageExpire())
-            ) {
-                $this->logger->log(__METHOD__, "cached masterImage file (target " . $target->getId() . ")", LOG_INFO);
-            } else {
-                $this->logger->log(__METHOD__, "error while caching masterImage file (target " . $target->getId() . ")", LOG_ERR);
-                return false;
-            }
-        }catch (\Exception $e) {
-            $this->logger->log(__METHOD__, "exception while caching masterImage file (target " . $target->getId() . ")", LOG_ERR);
-            return false;
-        }
+		try {
+			if ($this->redis->set($redisTargetMasterImageKey, $imageBase64) &&
+				$this->redis->expire($redisTargetMasterImageKey, Settings::getRedisMasterImageExpire())
+			) {
+				$this->logger->log(__METHOD__, "cached masterImage file (target " . $target->getId() . ")", LOG_INFO);
+			} else {
+				$this->logger->log(__METHOD__, "error while caching masterImage file (target " . $target->getId() . ")", LOG_ERR);
+				return false;
+			}
+		}catch (\Exception $e) {
+			$this->logger->log(__METHOD__, "exception while caching masterImage file (target " . $target->getId() . ")", LOG_ERR);
+			return false;
+		}
 
-        return $this->commit($target, $mode);
-    }
-
-
-
-    public function commitThumbnails(Target $target)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
-
-        foreach ($target->getImages() as $image) {
-            if (!$image instanceof Image) {
-                $this->logger->log(__METHOD__, "invalid image", LOG_ERR);
-                continue;
-            }
-
-            $this->logger->log(__METHOD__, "processing image " . $image->getId(), LOG_DEBUG);
-            $imageData_base64 = $image->getImageData();
-
-            $imagePath = $this->imageModel->createImageFile($target, $image, $imageData_base64);
-
-            if ($imagePath) {
-                $this->imageModel->commit($image);
-            } else {
-                $this->logger->log(__METHOD__, "not committing image " . $image->getId(), LOG_ERR);
-            }
-
-            //FIXME: return code
-        }
-    }
+		return $this->commit($target, $mode);
+	}
 
 
-    private function commit(Target $target, $mode)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+	public function commitThumbnails(Target $target)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+		foreach ($target->getImages() as $image) {
+			if (!$image instanceof Image) {
+				$this->logger->log(__METHOD__, "invalid image", LOG_ERR);
+				continue;
+			}
+
+			$this->logger->log(__METHOD__, "processing image " . $image->getId(), LOG_DEBUG);
+			$imageData_base64 = $image->getImageData();
+
+			$imagePath = $this->imageModel->createImageFile($target, $image, $imageData_base64);
+
+			if ($imagePath) {
+				$this->imageModel->commit($image);
+			} else {
+				$this->logger->log(__METHOD__, "not committing image " . $image->getId(), LOG_ERR);
+			}
+
+			//FIXME: return code
+		}
+	}
+
+
+	private function commit(Target $target, $mode)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
 
@@ -910,23 +918,23 @@ class TargetModel
 
         if($collection->update($query, $update)) {
             //$this->dequeue($target->getId());
-            if(!Settings::isEnergySaveActive())
-            {
-                $this->incrementTargetsUpdatedDailyStats($mode);
-            }
+			if(!Settings::isEnergySaveActive())
+			{
+				$this->incrementTargetsUpdatedDailyStats($mode);
+			}
 
             $this->logger->log(__METHOD__, "updated target (" . $target->getId() . ")", LOG_INFO);
             return true;
         }else {
             //TODO
         }
-    }
+	}
 
 
 
-    public function failedMasterImage(Target $target, $mode)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	public function failedMasterImage(Target $target, $mode)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
 
@@ -940,7 +948,7 @@ class TargetModel
             '$set' => array(
                 Settings::getMongoKeyTargetAttrRobotsAllowed() => $target->isRobotsAllowed(),
                 Settings::getMongoKeyTargetAttrTsRobotsCheck() => $target->getTsRobotsCheck(),
-                Settings::getMongoKeyTargetAttrLastErrorMessage() => $target->getLastErrorMessage(),
+	            Settings::getMongoKeyTargetAttrLastErrorMessage() => $target->getLastErrorMessage(),
                 Settings::getMongoKeyTargetAttrTsLastFailed() => new MongoTimestamp()
             ),
             '$unset' => array(
@@ -956,31 +964,31 @@ class TargetModel
             );
         }else {
             $this->incrementTargetsForbiddenDailyStats($mode);
-            $this->deleteMasterImage($target);
-            //TODO: delete images
+	        $this->deleteMasterImage($target);
+	        //TODO: delete images
         }
 
         $result = $collection->update($query, $update);
 
-        if(is_array($result) && $result['updatedExisting'] && $result['ok'])
-        {
-            $this->logger->log(__METHOD__, "updated target (" . $target->getId() . ")", LOG_INFO);
-        }else
-        {
-            $this->logger->log(__METHOD__, "failed to update target (" . $target->getId() . ")", LOG_INFO);
-        }
+		if(is_array($result) && $result['updatedExisting'] && $result['ok'])
+		{
+			$this->logger->log(__METHOD__, "updated target (" . $target->getId() . ")", LOG_INFO);
+		}else
+		{
+			$this->logger->log(__METHOD__, "failed to update target (" . $target->getId() . ")", LOG_INFO);
+		}
 
-        return true;
-    }
+		return true;
+	}
 
 
 
-    // to what targets does a referrer link?
-    public function getReferrerTargets($referrerId, $accountId = NULL, $orderby, $orderDirection, $limit, $offset, $where)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	// to what targets does a referrer link?
+	public function getReferrerTargets($referrerId, $accountId = NULL, $orderby, $orderDirection, $limit, $offset, $where)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $targets = array();
+		$targets = array();
 
         try {
             $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
@@ -1052,14 +1060,14 @@ class TargetModel
 
         //$this->logger->log(__METHOD__, "targets: " . print_r($targets, true), LOG_ERR);
 
-        return $targets;
-    }
+		return $targets;
+	}
 
 
 
-    public function getNumReferrerTargets($referrerId, $accountId, $where)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	public function getNumReferrerTargets($referrerId, $accountId, $where)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $numTargets = 0;
 
@@ -1091,13 +1099,13 @@ class TargetModel
             $this->logger->log(__METHOD__, "could not find targets of referrer " . $referrerId . ": " . $e->getMessage(), LOG_DEBUG);
         }
 
-        return $numTargets;
-    }
+		return $numTargets;
+	}
 
 
-    private function incrementNewTargetsDailyStats()
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	private function incrementNewTargetsDailyStats()
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $now = time();
         $today = date("Y-m-d", $now);
@@ -1126,12 +1134,12 @@ class TargetModel
         } catch (Exception $e) {
             $this->logger->log(__METHOD__, "exception while incrementing new targets daily: " . $e->getMessage(), LOG_ERR);
         }
-    }
+	}
 
 
-    private function incrementTargetsUpdatedDailyStats($mode)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	private function incrementTargetsUpdatedDailyStats($mode)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $now = time();
         $today = date("Y-m-d", $now);
@@ -1160,12 +1168,12 @@ class TargetModel
         } catch (Exception $e) {
             $this->logger->log(__METHOD__, "exception while incrementing updated targets daily (" . $mode . "): " . $e->getMessage(), LOG_ERR);
         }
-    }
+	}
 
 
-    private function incrementTargetsFailedDailyStats($mode)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	private function incrementTargetsFailedDailyStats($mode)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $now = time();
         $today = date("Y-m-d", $now);
@@ -1194,12 +1202,12 @@ class TargetModel
         } catch (Exception $e) {
             $this->logger->log(__METHOD__, "exception while incrementing failed targets daily (" . $mode . "): " . $e->getMessage(), LOG_ERR);
         }
-    }
+	}
 
 
-    private function incrementTargetsForbiddenDailyStats($mode)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	private function incrementTargetsForbiddenDailyStats($mode)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $now = time();
         $today = date("Y-m-d", $now);
@@ -1228,15 +1236,15 @@ class TargetModel
         } catch (Exception $e) {
             $this->logger->log(__METHOD__, "exception while incrementing forbidden targets daily (" . $mode . "): " . $e->getMessage(), LOG_ERR);
         }
-    }
+	}
 
 
 
-    public function getFailedTargets()
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	public function getFailedTargets()
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $failedTargets = array();
+		$failedTargets = array();
 
         try {
             $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
@@ -1268,13 +1276,13 @@ class TargetModel
             $this->logger->log(__METHOD__, "exception while searching for targets: " . $e->getMessage(), LOG_ERR);
         }
 
-        return $failedTargets;
-    }
+		return $failedTargets;
+	}
 
 
-    public function resetTargetFailures($targetId)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+	public function resetTargetFailures($targetId)
+	{
+		$this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
 
@@ -1286,14 +1294,14 @@ class TargetModel
             '$set' => array(
                 Settings::getMongoKeyTargetAttrCounterFailed() => 0
             ),
-            '$unset' => array(
-                Settings::getMongoKeyTargetAttrLastErrorMessage() => '',
+	        '$unset' => array(
+		        Settings::getMongoKeyTargetAttrLastErrorMessage() => '',
                 Settings::getMongoKeyTargetAttrTsLastFailed() => ''
-            )
+	        )
         );
 
         return $collection->update($query, $update);
-    }
+	}
 
 
 
