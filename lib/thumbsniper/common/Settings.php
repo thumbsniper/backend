@@ -230,6 +230,7 @@ abstract class Settings
 
 	static private $redisMasterImageExpire = 3600; // 1 hour until master image expires
 	static private $redisImageCacheExpire = 28800; // 8 hours
+    static private $amazonS3presignedUrlExpire = '+8 hours'; // must match $redisImageCacheExpire
 
     // AMAZON S3
     /** @var bool */
@@ -354,6 +355,9 @@ abstract class Settings
 	static private $redisKeyImageCacheKeyBranded = "transient:key:image:cache:key:branded:"; // + imageId
 	static private $redisKeyImageCacheKeyUnbranded = "transient:key:image:cache:key:unbranded:"; // + imageId
 
+    //TODO: differ between branded and unbranded
+    static private $redisKeyImageAmazonS3url = "transient:key:image:amazons3url:"; // . $targetId . $imageId
+    
     // USERAGENT
     static private $mongoCollectionUserAgents = "useragents";
     static private $mongoCollectionUserAgentsBlacklist = "useragents_blacklist";
@@ -2832,5 +2836,29 @@ abstract class Settings
     public static function getMongoKeyImageAttrAmazonS3url()
     {
         return self::$mongoKeyImageAttrAmazonS3url;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getRedisKeyImageAmazonS3url()
+    {
+        return self::$redisKeyImageAmazonS3url;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getAmazonS3presignedUrlExpire()
+    {
+        return self::$amazonS3presignedUrlExpire;
+    }
+
+    /**
+     * @param string $amazonS3presignedUrlExpire
+     */
+    public static function setAmazonS3presignedUrlExpire($amazonS3presignedUrlExpire)
+    {
+        self::$amazonS3presignedUrlExpire = $amazonS3presignedUrlExpire;
     }
 }

@@ -23,6 +23,7 @@ require_once('vendor/autoload.php');
 
 
 use Predis\Client;
+use Slim\Helper\Set;
 use ThumbSniper\account\Account;
 use ThumbSniper\account\AccountModel;
 use ThumbSniper\account\OauthModel;
@@ -655,31 +656,46 @@ class ApiV3
 
             $output['status'] = "ok";
 
-            //TODO: ist diese if-Abrage ok? Mögliche Kombinationen prüfen
-            if (Settings::isImageWatermarksEnabled() == false ||
-                ($this->account && (!$this->account->getMaxDailyRequests() || $this->account->getRequestStats() < $this->account->getMaxDailyRequests()))
-//                    || (!isset($this->account) && ($this->referrer && $this->referrer->isWhitelisted()))) {
-            ) {
 
-                $this->getLogger()->log(__METHOD__, "using unbranded image for target " . $this->target->getId(), LOG_DEBUG);
-                $imageCacheKey = $this->getImageModel()->prepareCachedImage($this->target, false);
-            } else {
-                $this->getLogger()->log(__METHOD__, "using branded image for target " . $this->target->getId(), LOG_DEBUG);
-                $imageCacheKey = $this->getImageModel()->prepareCachedImage($this->target, true);
-            }
+            if(Settings::isAmazonS3enabled() && $this->target->getCurrentImage()->getAmazonS3url())
+            {
+                //TODO: differ between branded and unbranded images
 
-            $this->getLogger()->log(__METHOD__, "imageCacheKey: " . $imageCacheKey, LOG_DEBUG);
+                $this->getLogger()->log(__METHOD__, "using S3 presigned image URL for target " . $this->target->getId(), LOG_DEBUG);
+                $url = $this->getImageModel()->getAmazonS3presignedUrl($this->target);
 
-            if ($imageCacheKey) {
-                $output['redirectUrl'] = $this->httpProtocol . "://" . $this->getRandomImageServer() . "/image/" . $imageCacheKey . "." . Settings::getImageFiletype($this->target->getCurrentImage()->getEffect());
-
-                if ($this->forceDebug) {
-                    $output['redirectUrl'] .= "?otnDebug";
+                if($url) {
+                    $output['redirectUrl'] = $url;
+                }else {
+                    //FIXME: error handling
                 }
-                $this->getLogger()->log(__METHOD__, "cached image found: " . $output['redirectUrl'], LOG_DEBUG);
-            } else {
-                $this->getLogger()->log(__METHOD__, "no cached image found.", LOG_INFO);
-                $output = $this->generateDummyOutput();
+            }else {
+                //TODO: ist diese if-Abrage ok? Mögliche Kombinationen prüfen
+                if (Settings::isImageWatermarksEnabled() == false ||
+                    ($this->account && (!$this->account->getMaxDailyRequests() || $this->account->getRequestStats() < $this->account->getMaxDailyRequests()))
+//                    || (!isset($this->account) && ($this->referrer && $this->referrer->isWhitelisted()))) {
+                ) {
+
+                    $this->getLogger()->log(__METHOD__, "using unbranded image for target " . $this->target->getId(), LOG_DEBUG);
+                    $imageCacheKey = $this->getImageModel()->prepareCachedImage($this->target, false);
+                } else {
+                    $this->getLogger()->log(__METHOD__, "using branded image for target " . $this->target->getId(), LOG_DEBUG);
+                    $imageCacheKey = $this->getImageModel()->prepareCachedImage($this->target, true);
+                }
+
+                $this->getLogger()->log(__METHOD__, "imageCacheKey: " . $imageCacheKey, LOG_DEBUG);
+
+                if ($imageCacheKey) {
+                    $output['redirectUrl'] = $this->httpProtocol . "://" . $this->getRandomImageServer() . "/image/" . $imageCacheKey . "." . Settings::getImageFiletype($this->target->getCurrentImage()->getEffect());
+
+                    if ($this->forceDebug) {
+                        $output['redirectUrl'] .= "?otnDebug";
+                    }
+                    $this->getLogger()->log(__METHOD__, "cached image found: " . $output['redirectUrl'], LOG_DEBUG);
+                } else {
+                    $this->getLogger()->log(__METHOD__, "no cached image found.", LOG_INFO);
+                    $output = $this->generateDummyOutput();
+                }
             }
 
         } else {

@@ -84,6 +84,12 @@
                 					<td style="vertical-align: middle;">filename suffix:</td>
                 					<td style="vertical-align: middle;">{$image->getFileNameSuffix()}</td>
             					</tr>
+                                                {if $image->getAmazonS3url()}
+                                                <tr>
+                                                    <td style="vertical-align: middle;">Amazon S3:</td>
+                                                    <td style="vertical-align: middle;"><a href="{$image->getAmazonS3url()}" target="_blank">URL</a></td>
+                                                </tr>
+                                                {/if}
                                                 <tr>
                                                         <td style="vertical-align: middle;">added</td>
                                                         <td style="vertical-align: middle;">{$image->getTsAdded()|date_format:"%d.%m.%Y %H:%M:%S"}</td>

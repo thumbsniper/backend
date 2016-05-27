@@ -19,6 +19,7 @@
 
 namespace ThumbSniper\objective;
 
+use Guzzle\Http\Message\RequestFactory;
 use Predis\Client;
 use ThumbSniper\common\Helpers;
 use ThumbSniper\common\Logger;
@@ -31,6 +32,7 @@ use MongoCursor;
 use MongoCollection;
 use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
+use Exception;
 
 
 class ImageModel
@@ -299,6 +301,55 @@ class ImageModel
         return $stats;
     }
 
+
+    //TODO: use branded and unbranded images
+    public function getAmazonS3presignedUrl(Target $target)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $redisKey = Settings::getRedisKeyImageAmazonS3url() . $target->getId() . $target->getCurrentImage()->getId();
+        $resultUrl = null;
+
+        if ($this->redis->exists($redisKey)) {
+            $resultUrl = $this->redis->get($redisKey);
+        }else {
+            $imgFileName = $target->getFileNameBase() . $target->getCurrentImage()->getFileNameSuffix() . '.'
+                . Settings::getImageFiletype($target->getCurrentImage()->getEffect());
+
+            try {
+                // Instantiate the S3 client with your AWS credentials
+                $client = S3Client::factory(array(
+                    'region' => Settings::getAmazonS3region(),
+                    'credentials' => array(
+                        'key' => Settings::getAmazonS3credentialsKey(),
+                        'secret' => Settings::getAmazonS3credentialsSecret(),
+                        'signature' => Settings::getAmazonS3credentialsSignature(),
+                    )
+                ));
+
+                $rf = RequestFactory::getInstance();
+
+                $rf->create(
+                    'GET',
+                    $client->getBaseUrl() . '/' . Settings::getAmazonS3bucketThumbnails() . '/' . $imgFileName
+                )->setClient($client);
+
+                $url = $client->createPresignedUrl($client->get(Settings::getAmazonS3bucketThumbnails() . '/' . $imgFileName), Settings::getAmazonS3presignedUrlExpire());
+
+                if($url) {
+                    $this->redis->set($redisKey, $url);
+                    $this->redis->expire($redisKey, Settings::getRedisImageCacheExpire());
+                    $resultUrl = $url;
+                }else {
+                    $this->logger->log(__METHOD__, "Invalid S3 pre-signed URL", LOG_ERR);
+                }
+            } catch (Exception $e) {
+                $this->logger->log(__METHOD__, "Exception during creation of S3 pre-signed URL: " . $e->getMessage(), LOG_ERR);
+            }
+        }
+        
+        return $resultUrl;
+    }
 
 
     public function prepareCachedImage(Target $target, $branded = FALSE)
