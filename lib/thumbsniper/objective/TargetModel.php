@@ -863,6 +863,10 @@ class TargetModel
 
 			$imagePath = $this->imageModel->createImageFile($target, $image, $imageData_base64);
 
+            if(Settings::isAmazonS3enabled()) {
+                $this->imageModel->putS3($target, $image, $imageData_base64);
+            }
+            
 			if ($imagePath) {
 				$this->imageModel->commit($image);
 			} else {

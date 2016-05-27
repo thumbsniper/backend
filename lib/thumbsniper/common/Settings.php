@@ -231,6 +231,15 @@ abstract class Settings
 	static private $redisMasterImageExpire = 3600; // 1 hour until master image expires
 	static private $redisImageCacheExpire = 28800; // 8 hours
 
+    // AMAZON S3
+    /** @var bool */
+    static private $amazonS3enabled = false;
+    static private $amazonS3region;
+    static private $amazonS3credentialsKey;
+    static private $amazonS3credentialsSecret;
+    static private $amazonS3credentialsSignature;
+    static private $amazonS3bucketThumbnails;
+    
 
     // OAUTH
     //MongoDB
@@ -361,7 +370,6 @@ abstract class Settings
     
     // CONFIGURATION
     static private $redisKeyAgentLastSleepDurationPrefix = "agent:lastsleepduration:";
-
 
     /**
      * @return mixed
@@ -2719,5 +2727,101 @@ abstract class Settings
     public static function getRedisKeyAgentLastSleepDurationPrefix()
     {
         return self::$redisKeyAgentLastSleepDurationPrefix;
+    }
+
+    /**
+     * @return boolean
+     */
+    public static function isAmazonS3enabled()
+    {
+        return self::$amazonS3enabled;
+    }
+
+    /**
+     * @param boolean $amazonS3enabled
+     */
+    public static function setAmazonS3enabled($amazonS3enabled)
+    {
+        self::$amazonS3enabled = $amazonS3enabled;
+    }
+
+    /**
+     * @return mixed
+     */
+    public static function getAmazonS3region()
+    {
+        return self::$amazonS3region;
+    }
+
+    /**
+     * @param mixed $amazonS3region
+     */
+    public static function setAmazonS3region($amazonS3region)
+    {
+        self::$amazonS3region = $amazonS3region;
+    }
+
+    /**
+     * @return mixed
+     */
+    public static function getAmazonS3credentialsKey()
+    {
+        return self::$amazonS3credentialsKey;
+    }
+
+    /**
+     * @param mixed $amazonS3credentialsKey
+     */
+    public static function setAmazonS3credentialsKey($amazonS3credentialsKey)
+    {
+        self::$amazonS3credentialsKey = $amazonS3credentialsKey;
+    }
+
+    /**
+     * @return mixed
+     */
+    public static function getAmazonS3credentialsSecret()
+    {
+        return self::$amazonS3credentialsSecret;
+    }
+
+    /**
+     * @param mixed $amazonS3credentialsSecret
+     */
+    public static function setAmazonS3credentialsSecret($amazonS3credentialsSecret)
+    {
+        self::$amazonS3credentialsSecret = $amazonS3credentialsSecret;
+    }
+
+    /**
+     * @return mixed
+     */
+    public static function getAmazonS3credentialsSignature()
+    {
+        return self::$amazonS3credentialsSignature;
+    }
+
+    /**
+     * @param mixed $amazonS3credentialsSignature
+     */
+    public static function setAmazonS3credentialsSignature($amazonS3credentialsSignature)
+    {
+        self::$amazonS3credentialsSignature = $amazonS3credentialsSignature;
+    }
+
+    /**
+     * @return mixed
+     */
+    public static function getAmazonS3bucketThumbnails()
+    {
+        return self::$amazonS3bucketThumbnails;
+    }
+
+    /**
+     * @param mixed $amazonS3bucketThumbnails
+     */
+    public static function setAmazonS3bucketThumbnails($amazonS3bucketThumbnails)
+    {
+        self::$amazonS3bucketThumbnails = $amazonS3bucketThumbnails;
     }
 }

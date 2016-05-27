@@ -103,6 +103,14 @@ Settings::setApiHost('api.' . Settings::getDomain());
 Settings::setApiKeyExpire(31536000); // 1 year
 Settings::setApiAgentSecret('secret');
 
+// Amazon S3
+Settings::setAmazonS3enabled(false);
+Settings::setAmazonS3region('eu-central-1');
+Settings::setAmazonS3credentialsKey('my-amazon-key');
+Settings::setAmazonS3credentialsSecret('secret');
+Settings::setAmazonS3credentialsSignature('v4');
+Settings::setAmazonS3bucketThumbnails('my-thumbnails-bucket');
+
 // effects fade1 / fade2
 /*Settings::setImageEffectsExtra(array(
     'fade1' => array('png', true),

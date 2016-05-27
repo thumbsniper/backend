@@ -28,9 +28,9 @@ use ThumbSniper\shared\Target;
 use MongoDB;
 use MongoTimestamp;
 use MongoCursor;
-use MongoId;
 use MongoCollection;
-
+use Aws\S3\S3Client;
+use Aws\S3\Exception\S3Exception;
 
 
 class ImageModel
@@ -1239,6 +1239,50 @@ class ImageModel
             return false;
         }
     }
+
+
+
+    public function putS3(Target $target, Image $image, $imageBase64)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $imgFileName = $target->getFileNameBase() . $image->getFileNameSuffix() . '.' . Settings::getImageFiletype($image->getEffect());
+        $resultUrl = null;
+
+        try {
+            // Instantiate the S3 client with your AWS credentials
+            $client = S3Client::factory(array(
+                'region' => Settings::getAmazonS3region(),
+                'credentials' => array(
+                    'key'    => Settings::getAmazonS3credentialsKey(),
+                    'secret' => Settings::getAmazonS3credentialsSecret(),
+                    'signature' => Settings::getAmazonS3credentialsSignature(),
+                )
+            ));
+
+            // Upload an object to Amazon S3
+            $result = $client->putObject(array(
+                'Bucket' => Settings::getAmazonS3bucketThumbnails(),
+                'Key'    => $imgFileName,
+                'Body'   => base64_decode($imageBase64),
+                'ContentType'  => 'image/' . Settings::getImageFiletype($image->getEffect()),
+                'ACL'          => 'private',
+            ));
+
+            if($result && isset($result['ObjectURL'])) {
+                $resultUrl = $result['ObjectURL'];
+            }
+        } catch (S3Exception $e) {
+            $this->logger->log(__METHOD__, "Exception during S3 upload: " . $e->getMessage(), LOG_ERR);
+        }
+
+        if($resultUrl) {
+            $this->logger->log(__METHOD__, "S3 upload successful", LOG_ERR);
+        }
+
+        return $resultUrl;
+    }
+
 
 
     private function imageFileExists($fileName)
