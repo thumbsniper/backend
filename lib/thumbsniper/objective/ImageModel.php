@@ -77,6 +77,7 @@ class ImageModel
         $image->setCounterCheckedOut(isset($data[Settings::getMongoKeyImageAttrCounterCheckedOut()]) ? $data[Settings::getMongoKeyImageAttrCounterCheckedOut()] : 0);
         $image->setCounterUpdated(isset($data[Settings::getMongoKeyImageAttrCounterUpdated()]) ? $data[Settings::getMongoKeyImageAttrCounterUpdated()] : 0);
         $image->setNumRequests(isset($data[Settings::getMongoKeyImageAttrNumRequests()]) ? $data[Settings::getMongoKeyImageAttrNumRequests()] : 0);
+        $image->setLocalPath(isset($data[Settings::getMongoKeyImageAttrLocalPath()]) ? $data[Settings::getMongoKeyImageAttrLocalPath()] : null);
         $image->setAmazonS3url(isset($data[Settings::getMongoKeyImageAttrAmazonS3url()]) ? $data[Settings::getMongoKeyImageAttrAmazonS3url()] : null);
         
         $tsAdded = null;
@@ -334,11 +335,11 @@ class ImageModel
                     $client->getBaseUrl() . '/' . Settings::getAmazonS3bucketThumbnails() . '/' . $imgFileName
                 )->setClient($client);
 
-                $url = $client->createPresignedUrl($client->get(Settings::getAmazonS3bucketThumbnails() . '/' . $imgFileName), Settings::getAmazonS3presignedUrlExpire());
+                $url = $client->createPresignedUrl($client->get(Settings::getAmazonS3bucketThumbnails() . '/' . $imgFileName), Settings::getAmazonS3presignedUrlExpireStr());
 
                 if($url) {
                     $this->redis->set($redisKey, $url);
-                    $this->redis->expire($redisKey, Settings::getRedisImageCacheExpire());
+                    $this->redis->expire($redisKey, Settings::getAmazonS3presignedUrlExpireSeconds());
                     $resultUrl = $url;
                 }else {
                     $this->logger->log(__METHOD__, "Invalid S3 pre-signed URL", LOG_ERR);
@@ -428,12 +429,18 @@ class ImageModel
 
             //get from filesystem
 
-            $imagePath = THUMBNAILS_DIR .
-                substr($target->getId(), 0, 1) . "/" . substr($target->getId(), 1, 1) . "/" . substr($target->getId(), 2, 1) . "/" . substr($target->getId(), 3, 1) . "/" .
-                $target->getFileNameBase() . $image->getFileNameSuffix() . '.' . Settings::getImageFiletype($image->getEffect());
+            $imagePath = THUMBNAILS_DIR;
 
+            //TODO: This is a workaround for images without the localPath attribute
+            
+            if($image->getLocalPath()) {
+                $imagePath.= $image->getLocalPath();
+            }else {
+                $imagePath .= substr($target->getId(), 0, 1) . "/" . substr($target->getId(), 1, 1) . "/" . substr($target->getId(), 2, 1) . "/" . substr($target->getId(), 3, 1) . "/" .
+                    $target->getFileNameBase() . $image->getFileNameSuffix() . '.' . Settings::getImageFiletype($image->getEffect());
+            }
+            
             $this->logger->log(__METHOD__, "retrieving thumbnail for image '". $image->getId() . "' from filesystem: " . $imagePath, LOG_DEBUG);
-
             $this->logger->log(__METHOD__, "image path: " . $imagePath, LOG_DEBUG);
 
             if(!file_exists($imagePath) || !filesize($imagePath) > 0)
@@ -688,7 +695,12 @@ class ImageModel
                     Settings::getMongoKeyImageAttrCounterUpdated() => 1
                 )
             );
-            
+
+            //TODO: should we delete local file during an image commit that doesn't contain a local path?
+            if($image->getLocalPath()) {
+                $update['$set'][Settings::getMongoKeyImageAttrLocalPath()] = $image->getLocalPath();
+            }
+
             //TODO: should we delete AmazonS3 object during an image commit that doesn't contain an Amazon S3 url?
             if($image->getAmazonS3url()) {
                 $update['$set'][Settings::getMongoKeyImageAttrAmazonS3url()] = $image->getAmazonS3url();
@@ -1240,10 +1252,10 @@ class ImageModel
         $path = THUMBNAILS_DIR;
 
         try {
-            if(!is_dir(THUMBNAILS_DIR)) {
-                if(!mkdir(THUMBNAILS_DIR, 0770))
+            if(!is_dir($path)) {
+                if(!mkdir($path, 0770))
                 {
-                    $this->logger->log(__METHOD__, "error: " . THUMBNAILS_DIR . " is missing", LOG_CRIT);
+                    $this->logger->log(__METHOD__, "error: " . $path . " is missing", LOG_CRIT);
                     return false;
                 }
             }
@@ -1290,7 +1302,10 @@ class ImageModel
 
         if ($this->imageFileExists($path)) {
             $this->logger->log(__METHOD__, "image created successfully", LOG_DEBUG);
-            return $path;
+
+            $relativePath = str_replace(THUMBNAILS_DIR, "", $path);
+
+            return $relativePath;
         } else {
             $this->logger->log(__METHOD__, "created image not found in filesystem", LOG_ERR);
             return false;
@@ -1363,30 +1378,33 @@ class ImageModel
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $imgFileName = $target->getFileNameBase() . $image->getFileNameSuffix() . '.' . Settings::getImageFiletype($image->getEffect());
-
         $path = THUMBNAILS_DIR;
 
         try {
-            if(!is_dir(THUMBNAILS_DIR)) {
-                $this->logger->log(__METHOD__, "error: " . THUMBNAILS_DIR . " is missing", LOG_CRIT);
+            if(!is_dir($path)) {
+                $this->logger->log(__METHOD__, "error: " . $path . " is missing", LOG_CRIT);
                 return false;
             }
 
-            $dirLevels = array(
-                substr($target->getId(), 0, 1),
-                substr($target->getId(), 1, 1),
-                substr($target->getId(), 2, 1),
-                substr($target->getId(), 3, 1)
-            );
+            //TODO: This is a workaround for images without the localPath attribute
+            if($image->getLocalPath()) {
+                $path.= $image->getLocalPath();
+            }else {
+                $dirLevels = array(
+                    substr($target->getId(), 0, 1),
+                    substr($target->getId(), 1, 1),
+                    substr($target->getId(), 2, 1),
+                    substr($target->getId(), 3, 1)
+                );
 
-            foreach ($dirLevels as $dirLevel)
-            {
-                $path .= $dirLevel . "/";
+                foreach ($dirLevels as $dirLevel) {
+                    $path .= $dirLevel . "/";
+                }
+
+                // add fileName to $path and $tmpPath
+                $imgFileName = $target->getFileNameBase() . $image->getFileNameSuffix() . '.' . Settings::getImageFiletype($image->getEffect());
+                $path .= $imgFileName;
             }
-
-            // add fileName to $path and $tmpPath
-            $path .= $imgFileName;
             
             if ($this->imageFileExists($path)) {
                 $this->logger->log(__METHOD__, "removing image file " . $path, LOG_INFO);

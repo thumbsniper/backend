@@ -103,6 +103,9 @@ Settings::setApiHost('api.' . Settings::getDomain());
 Settings::setApiKeyExpire(31536000); // 1 year
 Settings::setApiAgentSecret('secret');
 
+// Local image storage
+Settings::setLocalThumbnailStorageEnabled(true);
+
 // Amazon S3
 Settings::setAmazonS3enabled(false);
 Settings::setAmazonS3region('eu-central-1');

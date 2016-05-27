@@ -229,9 +229,15 @@ abstract class Settings
     // EXPIRY
 
 	static private $redisMasterImageExpire = 3600; // 1 hour until master image expires
+    //TODO: use separate expire property for Amazon S3 (don't use the redis cache expire anymore)
 	static private $redisImageCacheExpire = 28800; // 8 hours
-    static private $amazonS3presignedUrlExpire = '+8 hours'; // must match $redisImageCacheExpire
+    static private $amazonS3presignedUrlExpireSeconds = 28800; // 8 hours
+    static private $amazonS3presignedUrlExpireStr = '+8 hours'; // must match $redisImageCacheExpire
 
+    // LOCAL STORAGE
+    /** @var bool */
+    static private $localThumbnailStorageEnabled = true;
+    
     // AMAZON S3
     /** @var bool */
     static private $amazonS3enabled = false;
@@ -349,6 +355,7 @@ abstract class Settings
     static private $mongoKeyImageAttrCounterUpdated = "counterUpdated";
     static private $mongoKeyImageAttrNumRequests = "numRequests";
     static private $mongoKeyImageAttrNumRequestsDaily = "numRequestsDaily";
+    static private $mongoKeyImageAttrLocalPath = "localPath";
     static private $mongoKeyImageAttrAmazonS3url = "amazonS3url";
     
 	static private $redisKeyImageCacheData = "transient:key:image:cache:data:"; // . $imageId
@@ -2849,16 +2856,56 @@ abstract class Settings
     /**
      * @return string
      */
-    public static function getAmazonS3presignedUrlExpire()
+    public static function getMongoKeyImageAttrLocalPath()
     {
-        return self::$amazonS3presignedUrlExpire;
+        return self::$mongoKeyImageAttrLocalPath;
     }
 
     /**
-     * @param string $amazonS3presignedUrlExpire
+     * @return boolean
      */
-    public static function setAmazonS3presignedUrlExpire($amazonS3presignedUrlExpire)
+    public static function isLocalThumbnailStorageEnabled()
     {
-        self::$amazonS3presignedUrlExpire = $amazonS3presignedUrlExpire;
+        return self::$localThumbnailStorageEnabled;
+    }
+
+    /**
+     * @param boolean $localThumbnailStorageEnabled
+     */
+    public static function setLocalThumbnailStorageEnabled($localThumbnailStorageEnabled)
+    {
+        self::$localThumbnailStorageEnabled = $localThumbnailStorageEnabled;
+    }
+
+    /**
+     * @return int
+     */
+    public static function getAmazonS3presignedUrlExpireSeconds()
+    {
+        return self::$amazonS3presignedUrlExpireSeconds;
+    }
+
+    /**
+     * @param int $amazonS3presignedUrlExpireSeconds
+     */
+    public static function setAmazonS3presignedUrlExpireSeconds($amazonS3presignedUrlExpireSeconds)
+    {
+        self::$amazonS3presignedUrlExpireSeconds = $amazonS3presignedUrlExpireSeconds;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getAmazonS3presignedUrlExpireStr()
+    {
+        return self::$amazonS3presignedUrlExpireStr;
+    }
+
+    /**
+     * @param string $amazonS3presignedUrlExpireStr
+     */
+    public static function setAmazonS3presignedUrlExpireStr($amazonS3presignedUrlExpireStr)
+    {
+        self::$amazonS3presignedUrlExpireStr = $amazonS3presignedUrlExpireStr;
     }
 }

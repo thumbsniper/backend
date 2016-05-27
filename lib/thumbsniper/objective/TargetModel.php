@@ -859,6 +859,10 @@ class TargetModel
 			}
 
 			$this->logger->log(__METHOD__, "processing image " . $image->getId(), LOG_DEBUG);
+            
+            $amazonS3success = false;
+            $localStorageSuccess = false;
+            
 			$imageData_base64 = $image->getImageData();
 
             if(Settings::isAmazonS3enabled()) {
@@ -866,6 +870,7 @@ class TargetModel
 
                 if($amazonS3url) {
                     $image->setAmazonS3url($amazonS3url);
+                    $amazonS3success = true;
                 }else {
                     //TODO: should we proceed with local storage or cancel the image commit?
                     $this->logger->log(__METHOD__, "Amazon S3 upload failed. Not committing image " . $image->getId(), LOG_ERR);
@@ -873,10 +878,21 @@ class TargetModel
                 }
             }
             
-			$imagePath = $this->imageModel->createImageFile($target, $image, $imageData_base64);
+            if(Settings::isLocalThumbnailStorageEnabled()) {
+                $imagePath = $this->imageModel->createImageFile($target, $image, $imageData_base64);
+
+                if ($imagePath) {
+                    $image->setLocalPath($imagePath);
+                    $localStorageSuccess = true;
+                }else {
+                    //TODO: should we proceed or cancel the image commit?
+                    $this->logger->log(__METHOD__, "Local storage failed. Not committing image " . $image->getId(), LOG_ERR);
+                    return false;
+                }
+            }
             
-			if ($imagePath) {
-				$this->imageModel->commit($image);
+			if ($amazonS3success || $localStorageSuccess) {
+                $this->imageModel->commit($image);
 			} else {
 				$this->logger->log(__METHOD__, "not committing image " . $image->getId(), LOG_ERR);
 			}
