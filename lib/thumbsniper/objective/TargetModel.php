@@ -861,11 +861,19 @@ class TargetModel
 			$this->logger->log(__METHOD__, "processing image " . $image->getId(), LOG_DEBUG);
 			$imageData_base64 = $image->getImageData();
 
-			$imagePath = $this->imageModel->createImageFile($target, $image, $imageData_base64);
-
             if(Settings::isAmazonS3enabled()) {
-                $this->imageModel->putS3($target, $image, $imageData_base64);
+                $amazonS3url = $this->imageModel->putS3($target, $image, $imageData_base64);
+
+                if($amazonS3url) {
+                    $image->setAmazonS3url($amazonS3url);
+                }else {
+                    //TODO: should we proceed with local storage or cancel the image commit?
+                    $this->logger->log(__METHOD__, "Amazon S3 upload failed. Not committing image " . $image->getId(), LOG_ERR);
+                    return false;
+                }
             }
+            
+			$imagePath = $this->imageModel->createImageFile($target, $image, $imageData_base64);
             
 			if ($imagePath) {
 				$this->imageModel->commit($image);

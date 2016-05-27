@@ -75,7 +75,8 @@ class ImageModel
         $image->setCounterCheckedOut(isset($data[Settings::getMongoKeyImageAttrCounterCheckedOut()]) ? $data[Settings::getMongoKeyImageAttrCounterCheckedOut()] : 0);
         $image->setCounterUpdated(isset($data[Settings::getMongoKeyImageAttrCounterUpdated()]) ? $data[Settings::getMongoKeyImageAttrCounterUpdated()] : 0);
         $image->setNumRequests(isset($data[Settings::getMongoKeyImageAttrNumRequests()]) ? $data[Settings::getMongoKeyImageAttrNumRequests()] : 0);
-
+        $image->setAmazonS3url(isset($data[Settings::getMongoKeyImageAttrAmazonS3url()]) ? $data[Settings::getMongoKeyImageAttrAmazonS3url()] : null);
+        
         $tsAdded = null;
         if(isset($data[Settings::getMongoKeyImageAttrTsAdded()]))
         {
@@ -636,6 +637,11 @@ class ImageModel
                     Settings::getMongoKeyImageAttrCounterUpdated() => 1
                 )
             );
+            
+            //TODO: should we delete AmazonS3 object during an image commit that doesn't contain an Amazon S3 url?
+            if($image->getAmazonS3url()) {
+                $update['$set'][Settings::getMongoKeyImageAttrAmazonS3url()] = $image->getAmazonS3url();
+            }
 
             if($collection->update($query, $update))
             {

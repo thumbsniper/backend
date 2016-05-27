@@ -348,7 +348,8 @@ abstract class Settings
     static private $mongoKeyImageAttrCounterUpdated = "counterUpdated";
     static private $mongoKeyImageAttrNumRequests = "numRequests";
     static private $mongoKeyImageAttrNumRequestsDaily = "numRequestsDaily";
-
+    static private $mongoKeyImageAttrAmazonS3url = "amazonS3url";
+    
 	static private $redisKeyImageCacheData = "transient:key:image:cache:data:"; // . $imageId
 	static private $redisKeyImageCacheKeyBranded = "transient:key:image:cache:key:branded:"; // + imageId
 	static private $redisKeyImageCacheKeyUnbranded = "transient:key:image:cache:key:unbranded:"; // + imageId
@@ -2823,5 +2824,13 @@ abstract class Settings
     public static function setAmazonS3bucketThumbnails($amazonS3bucketThumbnails)
     {
         self::$amazonS3bucketThumbnails = $amazonS3bucketThumbnails;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyImageAttrAmazonS3url()
+    {
+        return self::$mongoKeyImageAttrAmazonS3url;
     }
 }
