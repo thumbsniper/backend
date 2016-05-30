@@ -38,8 +38,8 @@ class DeleteObsoleteTargets extends ApiV3
         try {
             $collection = new MongoCollection($this->getMongoDB(), Settings::getMongoCollectionTargets());
             $td = new DateTime();
-            $td->modify('-10 months');
-            $td->modify('+7 days');
+            $td->modify('-12 months');
+            $td->modify('+27 days');
 
             $query = array(
                 Settings::getMongoKeyTargetAttrTsLastRequested() => array(
@@ -52,8 +52,10 @@ class DeleteObsoleteTargets extends ApiV3
             );
 
             $numTargets = $collection->count($query);
-            $cursor = $collection->find($query, $fields);
+            echo "num target to delete: " . $numTargets . "\n";
 
+            $cursor = $collection->find($query, $fields);
+            
             foreach ($cursor as $doc) {
                 $t = $targetModel->getById($doc[Settings::getMongoKeyTargetAttrId()]);
 

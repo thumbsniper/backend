@@ -402,6 +402,9 @@ class ImageModel
             $this->redis->del($imageCacheKeyUnbranded);
             $this->logger->log(__METHOD__, "deleted unbranded image cache key for " . $imageId, LOG_INFO);
         }
+        
+        //TODO: return code auswerten
+        return true;
     }
 
 
@@ -667,9 +670,11 @@ class ImageModel
             if($collection->update($query, $update))
             {
                 $this->logger->log(__METHOD__, "image " . $image->getId() . " dequeued successfully", LOG_INFO);
+                return true;
             }
         } catch (\Exception $e) {
             $this->logger->log(__METHOD__, "exception while dequeuing image " . $image->getId() . ": " . $e->getMessage(), LOG_ERR);
+            return false;
         }
     }
 
@@ -1379,7 +1384,7 @@ class ImageModel
     }
 
 
-    public function deleteImageFile(Target $target, Image $image)
+    private function deleteLocalImageFile(Target $target, Image $image)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
@@ -1430,12 +1435,46 @@ class ImageModel
     }
 
 
+    private function deleteAmazonS3ImageFile(Target $target, Image $image)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        try {
+            $imgFileName = $target->getFileNameBase() . $image->getFileNameSuffix() . '.' . Settings::getImageFiletype($image->getEffect());
+
+            // Instantiate the S3 client with your AWS credentials
+            $client = S3Client::factory(array(
+                'region' => Settings::getAmazonS3region(),
+                'credentials' => array(
+                    'key' => Settings::getAmazonS3credentialsKey(),
+                    'secret' => Settings::getAmazonS3credentialsSecret(),
+                    'signature' => Settings::getAmazonS3credentialsSignature(),
+                )
+            ));
+
+            $result = $client->deleteObject(array(
+                'Bucket' => Settings::getAmazonS3bucketThumbnails(),
+                'Key'    => $imgFileName
+            ));
+
+            //$this->logger->log(__METHOD__, "result: " . print_r($result, true), LOG_ERR);
+
+            //TODO: result auswerten
+            return true;
+        } catch (S3Exception $e) {
+            $this->logger->log(__METHOD__, "error while removing image file: " . $e, LOG_ERR);
+            return false;
+        }
+    }
+
+
     public function delete(Target $target, Image $image)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         $this->deleteCachedImages($image->getId());
-        $this->deleteImageFile($target, $image);
+        $this->deleteLocalImageFile($target, $image);
+        $this->deleteAmazonS3ImageFile($target, $image);
 
         try {
             $imageCollection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionImages());
@@ -1471,5 +1510,61 @@ class ImageModel
         }
 
         return false;
+    }
+
+
+    public function removeThumbnails(Target $target, Image $image)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        if(!$this->dequeue($image)) {
+            $this->logger->log(__METHOD__, "error while dequeuing image", LOG_ERR);
+            return false;
+        }
+
+        if(!$this->deleteCachedImages($image->getId())) {
+            $this->logger->log(__METHOD__, "error while deleting cached images", LOG_ERR);
+            return false;
+        }
+
+        if(!$this->deleteLocalImageFile($target, $image))
+        {
+            $this->logger->log(__METHOD__, "error while deleting local image file", LOG_ERR);
+            return false;
+        }
+
+        if(!$this->deleteAmazonS3ImageFile($target, $image))
+        {
+            $this->logger->log(__METHOD__, "error while deleting Amazon S3 image file", LOG_ERR);
+            return false;
+        }
+
+        try {
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionImages());
+
+            $query = array(
+                Settings::getMongoKeyImageAttrId() => $image->getId()
+            );
+
+            $update = array(
+                '$unset' => array(
+                    Settings::getMongoKeyImageAttrTsLastUpdated() => '',
+                    Settings::getMongoKeyImageAttrHeight() => '',
+                    Settings::getMongoKeyImageAttrLocalPath() => '',
+                    Settings::getMongoKeyImageAttrAmazonS3url() => ''
+                )
+            );
+
+            if($collection->update($query, $update))
+            {
+                $this->logger->log(__METHOD__, "image " . $image->getId() . " thumbnails removed successfully", LOG_INFO);
+            }
+
+        } catch (\Exception $e) {
+            $this->logger->log(__METHOD__, "exception while removing thumbnails from image " . $image->getId() . ": " . $e->getMessage(), LOG_ERR);
+            return false;
+        }
+
+        return true;
     }
 }
