@@ -72,10 +72,16 @@
                                                             <a href="/pages/targetinfo.php?id={$image->getTargetId()}">{$image->getTargetId()}</a>
 							                            </td>
                                                 </tr>
-						<tr>
+						        <tr>
                 					<td style="vertical-align: middle;">width:</td>
                 					<td style="vertical-align: middle;">{$image->getWidth()}</td>
             					</tr>
+                                                {if $image->getHeight()}
+                                                    <tr>
+                                                        <td style="vertical-align: middle;">height:</td>
+                                                        <td style="vertical-align: middle;">{$image->getHeight()}</td>
+                                                    </tr>
+                                                {/if}
                                                 <tr>
                                                     <td style="vertical-align: middle;">effect:</td>
                                                     <td style="vertical-align: middle;">{$image->getEffect()}</td>
@@ -84,10 +90,16 @@
                 					<td style="vertical-align: middle;">filename suffix:</td>
                 					<td style="vertical-align: middle;">{$image->getFileNameSuffix()}</td>
             					</tr>
+                                                {if $image->getLocalPath()}
+                                                    <tr>
+                                                        <td style="vertical-align: middle;">local path:</td>
+                                                        <td style="vertical-align: middle;">{$image->getLocalPath()}</td>
+                                                    </tr>
+                                                {/if}
                                                 {if $image->getAmazonS3url()}
                                                 <tr>
                                                     <td style="vertical-align: middle;">Amazon S3:</td>
-                                                    <td style="vertical-align: middle;"><a href="{$image->getAmazonS3url()}" target="_blank">URL</a></td>
+                                                    <td style="vertical-align: middle;"><a href="{$image->getAmazonS3url()}" target="_blank">{$image->getAmazonS3url()}</a></td>
                                                 </tr>
                                                 {/if}
                                                 <tr>

@@ -1517,6 +1517,8 @@ class ImageModel
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
+        
+        
         if(!$this->dequeue($image)) {
             $this->logger->log(__METHOD__, "error while dequeuing image", LOG_ERR);
             return false;
@@ -1527,18 +1529,6 @@ class ImageModel
             return false;
         }
 
-        if(!$this->deleteLocalImageFile($target, $image))
-        {
-            $this->logger->log(__METHOD__, "error while deleting local image file", LOG_ERR);
-            return false;
-        }
-
-        if(!$this->deleteAmazonS3ImageFile($target, $image))
-        {
-            $this->logger->log(__METHOD__, "error while deleting Amazon S3 image file", LOG_ERR);
-            return false;
-        }
-
         try {
             $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionImages());
 
@@ -1546,14 +1536,33 @@ class ImageModel
                 Settings::getMongoKeyImageAttrId() => $image->getId()
             );
 
+            $unsetAttrs = array();
+            
+            if($this->deleteLocalImageFile($target, $image))
+            {
+                $unsetAttrs[Settings::getMongoKeyImageAttrLocalPath()] = ""; 
+            }else {
+                $this->logger->log(__METHOD__, "error while deleting local image file", LOG_ERR);
+            }
+
+            if($this->deleteAmazonS3ImageFile($target, $image))
+            {
+                $unsetAttrs[Settings::getMongoKeyImageAttrAmazonS3url()] = "";
+            }else {
+                $this->logger->log(__METHOD__, "error while deleting Amazon S3 image file", LOG_ERR);
+            }
+
+            if(empty($unsetAttrs)) {
+                $this->logger->log(__METHOD__, "could not remove thumbnails of image " . $image->getId(), LOG_ERR);
+                return false;
+            }else {
+                $unsetAttrs[Settings::getMongoKeyImageAttrHeight()] = "";
+                $unsetAttrs[Settings::getMongoKeyImageAttrTsLastUpdated()] = "";
+            }
+            
             $update = array(
-                '$unset' => array(
-                    Settings::getMongoKeyImageAttrTsLastUpdated() => '',
-                    Settings::getMongoKeyImageAttrHeight() => '',
-                    Settings::getMongoKeyImageAttrLocalPath() => '',
-                    Settings::getMongoKeyImageAttrAmazonS3url() => ''
-                )
-            );
+                '$unset' => $unsetAttrs
+            );            
 
             if($collection->update($query, $update))
             {
@@ -1561,7 +1570,7 @@ class ImageModel
                 return true;
             }
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->log(__METHOD__, "exception while removing thumbnails from image " . $image->getId() . ": " . $e->getMessage(), LOG_ERR);
             return false;
         }

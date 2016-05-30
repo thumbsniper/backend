@@ -2026,4 +2026,49 @@ class TargetModel
 
         return false;
     }
+
+
+    public function removeImageThumbnails($targetId)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $target = $this->getById($targetId);
+        $images = $this->imageModel->getImages($target->getId());
+
+        if(!empty($images)) {
+            /** @var Image $image */
+            foreach($images as $image)
+            {
+                if(!$this->imageModel->removeThumbnails($target, $image))
+                {
+                    $this->logger->log(__METHOD__, "an error occurred during image thumbnail removal for target " . $target->getId(), LOG_ERR);
+                    return false;
+                }
+            }
+        }
+
+        try {
+            $targetCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
+
+            $query = array(
+                Settings::getMongoKeyTargetAttrId() => $target->getId()
+            );
+
+            $update = array(
+                '$unset' => array(
+                    Settings::getMongoKeyTargetAttrTsLastUpdated() => ''
+                )
+            );
+
+            if($targetCollection->update($query, $update)) {
+                $this->logger->log(__METHOD__, "target " . $image->getId() . ": image thumbnails removed successfully", LOG_INFO);
+                return true;
+            }
+        } catch (Exception $e) {
+            $this->logger->log(__METHOD__, "exception while removing target's image thumbnails (" . $target->getId() . "): " . $e->getMessage(), LOG_ERR);
+            return false;
+        }
+
+        return false;
+    }
 }
