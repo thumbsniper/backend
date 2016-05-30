@@ -1558,6 +1558,7 @@ class ImageModel
             if($collection->update($query, $update))
             {
                 $this->logger->log(__METHOD__, "image " . $image->getId() . " thumbnails removed successfully", LOG_INFO);
+                return true;
             }
 
         } catch (\Exception $e) {
@@ -1565,6 +1566,6 @@ class ImageModel
             return false;
         }
 
-        return true;
+        return false;
     }
 }
