@@ -35,10 +35,10 @@ class UpdateImageLocalPath extends ApiV3
         $targetModel = $this->getTargetModel();
         $imageModel = $this->getImageModel();
 
-        for($i = 0; $i < $targetModel->getNumTargets(); $i = $i+100)
+        for($i = 0; $i < $targetModel->getNumTargets(); $i = $i+1000)
         {
             echo "==== offset: " . ($i > 0 ? $i-1 : $i) . " ====\n";
-            foreach($targetModel->getTargets("_id", "asc", 100, ($i > 0 ? $i-1 : $i)) as $target) {
+            foreach($targetModel->getTargets("_id", "asc", 1000, ($i > 0 ? $i-1 : $i)) as $target) {
                 /** @var Target $target */
                 
                 foreach ($imageModel->getImages($target->getId()) as $image) {
