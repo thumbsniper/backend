@@ -43,7 +43,7 @@ class UpdateImageLocalPath extends ApiV3
                 
                 foreach ($imageModel->getImages($target->getId()) as $image) {
                     /** @var Image $image */
-                    if ($image->getTsLastUpdated() == null) {
+                    if ($image->getTsLastUpdated() == null || $image->getLocalPath()) {
                         continue;
                     }
 
