@@ -1352,7 +1352,7 @@ class ImageModel
         }
 
         if($resultUrl) {
-            $this->logger->log(__METHOD__, "S3 upload successful", LOG_ERR);
+            $this->logger->log(__METHOD__, "S3 upload successful", LOG_INFO);
         }
 
         return $resultUrl;
