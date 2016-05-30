@@ -228,7 +228,7 @@ abstract class Settings
 
     // EXPIRY
 
-	static private $redisMasterImageExpire = 3600; // 1 hour until master image expires
+	static private $redisMasterImageExpire = 28800; // 8 hours until master image expires
     //TODO: use separate expire property for Amazon S3 (don't use the redis cache expire anymore)
 	static private $redisImageCacheExpire = 28800; // 8 hours
     static private $amazonS3presignedUrlExpireSeconds = 28800; // 8 hours
