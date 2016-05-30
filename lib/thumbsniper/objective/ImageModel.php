@@ -1099,7 +1099,10 @@ class ImageModel
             $image = $this->getById($image->getId());
 
             if($forcedUpdate || !$image->getTsLastUpdated() ||
-                $image->getTsLastUpdated() < (time() - Helpers::getVariancedValue(Settings::getImageDefaultMaxAge(), Settings::getImageMaxAgeVariance()))) {
+                $image->getTsLastUpdated() < (time() - Helpers::getVariancedValue(Settings::getImageDefaultMaxAge(), Settings::getImageMaxAgeVariance())) ||
+//FIXME: this may take a while
+                (Settings::isLocalThumbnailStorageEnabled() && !$image->getLocalPath()) ||
+                (Settings::isAmazonS3enabled() && !$image->getAmazonS3url())) {
                 return false;
             }
         }
