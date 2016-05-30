@@ -819,16 +819,18 @@ class Panel extends ApiV3
         $this->smarty->assignByRef('image', $image);
         $this->smarty->assignByRef('target', $target);
 
-        // TEST Thumbnail
-        $this->loadAndValidateCommonParameters("thumbnail");
-        $this->loadAndValidateThumbnailParameters($image->getWidth(), $image->getEffect(), $target->getUrl(), null, null, false, null, null);
-        Settings::setImageWatermarksEnabled(false);
+        if($image->getTsLastUpdated()) {
+            // TEST Thumbnail
+            $this->loadAndValidateCommonParameters("thumbnail");
+            $this->loadAndValidateThumbnailParameters($image->getWidth(), $image->getEffect(), $target->getUrl(), null, null, false, null, null);
+            Settings::setImageWatermarksEnabled(false);
 
-        $thumbnail = $this->processThumbnailRequest();
+            $thumbnail = $this->processThumbnailRequest();
 
-	    $this->getLogger()->log(__METHOD__, "thumbnail: " . print_r($thumbnail, true), LOG_INFO);
+            $this->getLogger()->log(__METHOD__, "thumbnail: " . print_r($thumbnail, true), LOG_INFO);
 
-        $this->smarty->assignByRef('thumbnail', $thumbnail);
+            $this->smarty->assignByRef('thumbnail', $thumbnail);
+        }
 
         $this->smarty->display('imageinfo.tpl');
     }
