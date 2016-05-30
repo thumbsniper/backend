@@ -1014,7 +1014,8 @@ class ImageModel
 
         } catch (\Exception $e) {
             $this->logger->log(__METHOD__, "could not find next thumbnail job: " . $e->getMessage(), LOG_DEBUG);
-            die();
+            //FIXME: why did we die() here?
+            //die();
         }
 
         if(!$imageId) {
