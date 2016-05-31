@@ -66,9 +66,9 @@ class CleanupObsoleteTargets extends ApiV3
                     
                     $this->setForceDebug(true);
                     if($targetModel->cleanupImageThumbnails($doc[Settings::getMongoKeyTargetAttrId()])) {
-                        echo "RESULT: success\n";
+                        echo "(" . $numTargets . ") RESULT: success\n";
                     }else {
-                        echo "RESULT: failed\n";
+                        echo "(" . $numTargets . ") RESULT: failed\n";
                     }
                     $this->setForceDebug(false);
                     echo "=======================\n";

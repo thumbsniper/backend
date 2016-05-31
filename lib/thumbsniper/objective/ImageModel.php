@@ -1451,6 +1451,11 @@ class ImageModel
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
+        if(!$image->getAmazonS3url()) {
+            $this->logger->log(__METHOD__, "Amazon S3 path does not exist", LOG_DEBUG);
+            return true;
+        }
+        
         try {
             $imgFileName = $target->getFileNameBase() . $image->getFileNameSuffix() . '.' . Settings::getImageFiletype($image->getEffect());
 
