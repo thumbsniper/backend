@@ -98,6 +98,7 @@ class TargetModel
 	    $target->setLastErrorMessage(isset($data[Settings::getMongoKeyTargetAttrLastErrorMessage()]) ? $data[Settings::getMongoKeyTargetAttrLastErrorMessage()] : null);
 	    $target->setCensored(isset($data[Settings::getMongoKeyTargetAttrCensored()]) ? $data[Settings::getMongoKeyTargetAttrCensored()] : false);
         $target->setMimeType(isset($data[Settings::getMongoKeyTargetAttrMimeType()]) ? $data[Settings::getMongoKeyTargetAttrMimeType()] : false);
+        $target->setCounterCleanup(isset($data[Settings::getMongoKeyTargetAttrCounterCleanup()]) ? $data[Settings::getMongoKeyTargetAttrCounterCleanup()] : 0);
 
         $tsAdded = null;
         if(isset($data[Settings::getMongoKeyTargetAttrTsAdded()]))
@@ -142,6 +143,17 @@ class TargetModel
             }
         }
         $target->setTsLastFailed($tsLastFailed);
+
+        $tsLastCleanup = null;
+        if(isset($data[Settings::getMongoKeyTargetAttrTsLastCleanup()]))
+        {
+            if($data[Settings::getMongoKeyTargetAttrTsLastCleanup()] instanceof MongoTimestamp) {
+                /** @var MongoTimestamp $mongoTs */
+                $mongoTs = $data[Settings::getMongoKeyTargetAttrTsLastCleanup()];
+                $tsLastCleanup = $mongoTs->sec;
+            }
+        }
+        $target->setTsLastCleanup($tsLastCleanup);
 
         //TODO: add more ts
 
@@ -2028,7 +2040,7 @@ class TargetModel
     }
 
 
-    public function removeImageThumbnails($targetId)
+    public function cleanupImageThumbnails($targetId)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
@@ -2039,7 +2051,7 @@ class TargetModel
             /** @var Image $image */
             foreach($images as $image)
             {
-                if(!$this->imageModel->removeThumbnails($target, $image))
+                if(!$this->imageModel->cleanupThumbnails($target, $image))
                 {
                     $this->logger->log(__METHOD__, "an error occurred during image thumbnail removal for target " . $target->getId(), LOG_ERR);
                     return false;
@@ -2057,6 +2069,12 @@ class TargetModel
             $update = array(
                 '$unset' => array(
                     Settings::getMongoKeyTargetAttrTsLastUpdated() => ''
+                ),
+                '$set' => array(
+                    Settings::getMongoKeyTargetAttrTsLastCleanup() => new MongoTimestamp()
+                ),
+                '$inc' => array(
+                    Settings::getMongoKeyTargetAttrCounterCleanup() => 1
                 )
             );
 

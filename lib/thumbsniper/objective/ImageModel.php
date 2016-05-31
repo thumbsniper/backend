@@ -79,6 +79,7 @@ class ImageModel
         $image->setNumRequests(isset($data[Settings::getMongoKeyImageAttrNumRequests()]) ? $data[Settings::getMongoKeyImageAttrNumRequests()] : 0);
         $image->setLocalPath(isset($data[Settings::getMongoKeyImageAttrLocalPath()]) ? $data[Settings::getMongoKeyImageAttrLocalPath()] : null);
         $image->setAmazonS3url(isset($data[Settings::getMongoKeyImageAttrAmazonS3url()]) ? $data[Settings::getMongoKeyImageAttrAmazonS3url()] : null);
+        $image->setCounterCleanup(isset($data[Settings::getMongoKeyImageAttrCounterCleanup()]) ? $data[Settings::getMongoKeyImageAttrCounterCleanup()] : 0);
         
         $tsAdded = null;
         if(isset($data[Settings::getMongoKeyImageAttrTsAdded()]))
@@ -112,6 +113,17 @@ class ImageModel
             }
         }
         $image->setTsLastRequested($tsLastRequested);
+
+        $tsLastCleanup = null;
+        if(isset($data[Settings::getMongoKeyImageAttrTsLastCleanup()]))
+        {
+            if($data[Settings::getMongoKeyImageAttrTsLastCleanup()] instanceof MongoTimestamp) {
+                /** @var MongoTimestamp $mongoTs */
+                $mongoTs = $data[Settings::getMongoKeyImageAttrTsLastCleanup()];
+                $tsLastCleanup = $mongoTs->sec;
+            }
+        }
+        $image->setTsLastCleanup($tsLastCleanup);
 
         return $image;
     }
@@ -1017,7 +1029,7 @@ class ImageModel
             $targetData = $collection->findAndModify($query, null, $fields, $options);
             $imageId = $targetData['_id'];
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->log(__METHOD__, "could not find next thumbnail job: " . $e->getMessage(), LOG_DEBUG);
             //FIXME: why did we die() here?
             //die();
@@ -1513,7 +1525,7 @@ class ImageModel
     }
 
 
-    public function removeThumbnails(Target $target, Image $image)
+    public function cleanupThumbnails(Target $target, Image $image)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
@@ -1561,7 +1573,13 @@ class ImageModel
             }
             
             $update = array(
-                '$unset' => $unsetAttrs
+                '$unset' => $unsetAttrs,
+                '$set' => array(
+                    Settings::getMongoKeyImageAttrTsLastCleanup() => new MongoTimestamp()
+                ),
+                '$inc' => array(
+                    Settings::getMongoKeyImageAttrCounterCleanup() => 1
+                )
             );            
 
             if($collection->update($query, $update))

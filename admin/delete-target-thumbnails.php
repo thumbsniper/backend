@@ -33,7 +33,7 @@ class DeleteTargetThumbnails extends ApiV3
     public function mainLoop()
     {
         $targetModel = $this->getTargetModel();
-        $targetModel->removeImageThumbnails('000232354e9ecda572420bd526a9c4af');
+        $targetModel->cleanupImageThumbnails('f015ab5454a8117309ea8b329936c98e');
 
         return true;
     }

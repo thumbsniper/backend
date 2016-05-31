@@ -13,7 +13,7 @@
     }
   ],
   "require": {
-    "thumbsniper/shared-libs": "v0.9.0",
+    "thumbsniper/shared-libs": "v0.9.1",
     "thumbsniper/client-php": "dev-master",
     "piwik/piwik-php-tracker": "1.0.0",
     "smarty/smarty": "v3.1.21",

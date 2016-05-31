@@ -96,6 +96,14 @@
                                     <td style="vertical-align: middle;">{if !is_null($target->getTsLastRequested())}{$target->getTsLastRequested()|date_format:"%d.%m.%Y %H:%M:%S"}{else}never{/if}</td>
                                 </tr>
                                 <tr>
+                                    <td style="vertical-align: middle;">cleaned up</td>
+                                    <td style="vertical-align: middle;">{if !is_null($target->getTsLastCleanup())}{$target->getTsLastCleanup()|date_format:"%d.%m.%Y %H:%M:%S"}{else}never{/if}</td>
+                                </tr>
+                                <tr>
+                                    <td style="vertical-align: middle;">cleanups</td>
+                                    <td style="vertical-align: middle;">{$target->getCounterCleanup()}</td>
+                                </tr>
+                                <tr>
                                     <td style="vertical-align: middle;">censored:</td>
                                     <td style="vertical-align: middle;">{if $target->isCensored() == true}yes{else}no{/if}</td>
                                 </tr>

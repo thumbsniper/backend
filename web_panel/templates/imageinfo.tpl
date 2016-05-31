@@ -115,6 +115,10 @@
                                                         <td style="vertical-align: middle;">{$image->getTsLastRequested()|date_format:"%d.%m.%Y %H:%M:%S"}</td>
                                                 </tr>
                                                 <tr>
+                                                    <td style="vertical-align: middle;">cleanup</td>
+                                                    <td style="vertical-align: middle;">{if !is_null($image->getTsLastCleanup())}{$image->getTsLastCleanup()|date_format:"%d.%m.%Y %H:%M:%S"}{else}never{/if}</td>
+                                                </tr>
+                                                <tr>
                                                     <td style="vertical-align: middle;">checkouts</td>
                                                     <td style="vertical-align: middle;">{$image->getCounterCheckedOut()}</td>
                                                 </tr>
@@ -125,6 +129,10 @@
                                                 <tr>
                                                     <td style="vertical-align: middle;">requests</td>
                                                     <td style="vertical-align: middle;">{$image->getNumRequests()}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="vertical-align: middle;">cleanups</td>
+                                                    <td style="vertical-align: middle;">{$image->getCounterCleanup()}</td>
                                                 </tr>
                                             </tbody>
                                         </table>

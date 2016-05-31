@@ -40,11 +40,14 @@ class DeleteObsoleteTargets extends ApiV3
             $td = new DateTime();
             $td->modify('-12 months');
             $td->modify('+26 days');
-            $td->modify('-8 hours');
+            $td->modify('-7 hours');
 
             $query = array(
                 Settings::getMongoKeyTargetAttrTsLastRequested() => array(
                     '$lt' => new MongoTimestamp($td->getTimestamp())
+                ),
+                Settings::getMongoKeyTargetAttrTsLastUpdated() => array(
+                    '$exists' => true
                 )
             );
 
@@ -60,15 +63,19 @@ class DeleteObsoleteTargets extends ApiV3
             foreach ($cursor as $doc) {
                 $t = $targetModel->getById($doc[Settings::getMongoKeyTargetAttrId()]);
 
-                if ($t instanceof Target) {
+                if ($t instanceof Target && $t->getTsLastUpdated()) {
                     echo "(" . $numTargets . ") TARGET - " . date("d.m.Y H:i:s", $t->getTsLastRequested()) . " - " . $t->getUrl() . " (" . $t->getId() . ")\n";
                     
                     $this->setForceDebug(true);
-                    $targetModel->removeImageThumbnails($t->getId());
+                    if($targetModel->cleanupImageThumbnails($t->getId())) {
+                        echo "RESULT: success\n";
+                    }else {
+                        echo "RESULT: failed\n";
+                    }
                     $this->setForceDebug(false);
                     echo "=======================\n";
-                    break;
-                    //$numTargets--;
+                    //break;
+                    $numTargets--;
                 }
             }
 

@@ -329,6 +329,8 @@ abstract class Settings
 	static private $mongoKeyTargetAttrLastErrorMessage = "lastErrorMessage";
 	static private $mongoKeyTargetAttrCensored = "censored";
     static private $mongoKeyTargetAttrMimeType = "mimeType";
+    static private $mongoKeyTargetAttrTsLastCleanup = "tsLastCleanup";
+    static private $mongoKeyTargetAttrCounterCleanup = "counterCleanup";
 
 	static private $redisKeyTargetMasterImageData = "transient:key:target:cache:data:"; // . targetId
 
@@ -357,6 +359,8 @@ abstract class Settings
     static private $mongoKeyImageAttrNumRequestsDaily = "numRequestsDaily";
     static private $mongoKeyImageAttrLocalPath = "localPath";
     static private $mongoKeyImageAttrAmazonS3url = "amazonS3url";
+    static private $mongoKeyImageAttrTsLastCleanup = "tsLastCleanup";
+    static private $mongoKeyImageAttrCounterCleanup = "counterCleanup";
     
 	static private $redisKeyImageCacheData = "transient:key:image:cache:data:"; // . $imageId
 	static private $redisKeyImageCacheKeyBranded = "transient:key:image:cache:key:branded:"; // + imageId
@@ -2907,5 +2911,37 @@ abstract class Settings
     public static function setAmazonS3presignedUrlExpireStr($amazonS3presignedUrlExpireStr)
     {
         self::$amazonS3presignedUrlExpireStr = $amazonS3presignedUrlExpireStr;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyImageAttrCounterCleanup()
+    {
+        return self::$mongoKeyImageAttrCounterCleanup;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyTargetAttrTsLastCleanup()
+    {
+        return self::$mongoKeyTargetAttrTsLastCleanup;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyTargetAttrCounterCleanup()
+    {
+        return self::$mongoKeyTargetAttrCounterCleanup;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyImageAttrTsLastCleanup()
+    {
+        return self::$mongoKeyImageAttrTsLastCleanup;
     }
 }
