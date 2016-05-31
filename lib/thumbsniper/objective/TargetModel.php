@@ -2048,6 +2048,9 @@ class TargetModel
         $images = $this->imageModel->getImages($target->getId());
 
         if(!empty($images)) {
+
+            $this->logger->log(__METHOD__, "cleanup target: " . $target->getId() . " (lastRequested: " . date("d.m.Y H:i:s", $target->getTsLastRequested()) . ")", LOG_DEBUG);
+            
             /** @var Image $image */
             foreach($images as $image)
             {

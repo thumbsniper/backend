@@ -1,17 +1,17 @@
 <?php
 /**
  *  Copyright (C) 2015  Thomas Schulte <thomas@cupracer.de>
- *
+ *  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *
+ *  
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *
+ *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -28,7 +28,7 @@ use ThumbSniper\shared\Target;
 
 
 
-class DeleteObsoleteTargets extends ApiV3
+class CleanupObsoleteTargets extends ApiV3
 {
     public function mainLoop()
     {
@@ -57,7 +57,7 @@ class DeleteObsoleteTargets extends ApiV3
             $cursor = $collection->find($query, $fields);
             $numTargets = $cursor->count();
             echo "num targets to clean up: " . $numTargets . "\n";
-            die();
+
             foreach ($cursor as $doc) {
                 //$t = $targetModel->getById($doc[Settings::getMongoKeyTargetAttrId()]);
 
@@ -88,5 +88,5 @@ class DeleteObsoleteTargets extends ApiV3
 }
 
 
-$main = new DeleteObsoleteTargets(false);
+$main = new CleanupObsoleteTargets(false);
 $main->mainLoop();
