@@ -38,6 +38,7 @@ class CleanupObsoleteTargets extends ApiV3
             $collection = new MongoCollection($this->getMongoDB(), Settings::getMongoCollectionTargets());
             $td = new DateTime();
             $td->modify('-9 months');
+            $td->setTime(0, 0, 0);
 //            $td->modify('+26 days');
 //            $td->modify('-7 hours');
 
