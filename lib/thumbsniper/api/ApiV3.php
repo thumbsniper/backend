@@ -1276,6 +1276,12 @@ class ApiV3
         $this->forceDebug = $forceDebug;
         $this->getLogger()->setForceDebug($forceDebug);
     }
+
+    
+    public function isForceDebug()
+    {
+        return $this->forceDebug;
+    }
     
 
     protected function getMongoDB()

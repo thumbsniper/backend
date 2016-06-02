@@ -157,6 +157,8 @@ abstract class Settings
     static private $agentMaxSleepDuration = 10; // 10 seconds
     static private $storeUserAgents = false;
 
+    static private $cleanupObsoleteTargetThumbnails = true;
+    
     // API
     static private $apiHost;
     static private $apiKeyExpire;
@@ -233,7 +235,7 @@ abstract class Settings
 	static private $redisImageCacheExpire = 28800; // 8 hours
     static private $amazonS3presignedUrlExpireSeconds = 28800; // 8 hours
     static private $amazonS3presignedUrlExpireStr = '+8 hours'; // must match $redisImageCacheExpire
-
+    static private $obsoleteTargetThumbnailsExireStr = '-6 months';
     // LOCAL STORAGE
     /** @var bool */
     static private $localThumbnailStorageEnabled = true;
@@ -2943,5 +2945,37 @@ abstract class Settings
     public static function getMongoKeyImageAttrTsLastCleanup()
     {
         return self::$mongoKeyImageAttrTsLastCleanup;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getObsoleteTargetThumbnailsExireStr()
+    {
+        return self::$obsoleteTargetThumbnailsExireStr;
+    }
+
+    /**
+     * @param string $obsoleteTargetThumbnailsExireStr
+     */
+    public static function setObsoleteTargetThumbnailsExireStr($obsoleteTargetThumbnailsExireStr)
+    {
+        self::$obsoleteTargetThumbnailsExireStr = $obsoleteTargetThumbnailsExireStr;
+    }
+
+    /**
+     * @return boolean
+     */
+    public static function isCleanupObsoleteTargetThumbnails()
+    {
+        return self::$cleanupObsoleteTargetThumbnails;
+    }
+
+    /**
+     * @param boolean $cleanupObsoleteTargetThumbnails
+     */
+    public static function setCleanupObsoleteTargetThumbnails($cleanupObsoleteTargetThumbnails)
+    {
+        self::$cleanupObsoleteTargetThumbnails = $cleanupObsoleteTargetThumbnails;
     }
 }
