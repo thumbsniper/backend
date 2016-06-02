@@ -31,7 +31,11 @@ class CleanupObsoleteTargetThumbnails extends ApiV3
 {
     public function log($source, $msg, $severity)
     {
-        echo $msg . "\n";
+        $now = microtime();
+        list($ms, $timestamp) = explode(" ", $now);
+        $ms = substr($ms, 1, 5);
+
+        echo date("Y-m-d H:i:s", $timestamp) . $ms . " - " . $source . " - " . $msg . "\n";
     }
     
     
@@ -59,7 +63,7 @@ class CleanupObsoleteTargetThumbnails extends ApiV3
                 Settings::getMongoKeyTargetAttrId() => true
             );
 
-            $this->log(__METHOD__, "Searching for obsolete target thumbnails to clean up (threshold: " . Settings::getObsoleteTargetThumbnailsExireStr() . ")", LOG_INFO);
+            $this->log(__METHOD__, "Searching for targets to clean up (threshold: " . Settings::getObsoleteTargetThumbnailsExireStr() . ")", LOG_INFO);
             $cursor = $collection->find($query, $fields);
             $numTargetsLeft = $cursor->count();
             $this->log(__METHOD__, "Number of targets to clean up: " . $numTargetsLeft, LOG_INFO);
@@ -93,6 +97,9 @@ class CleanupObsoleteTargetThumbnails extends ApiV3
         {
             $this->log(__METHOD__, "Cleanup of obsolete target thumbnails is disabled.", LOG_INFO);
             return true;
+        }else
+        {
+            $this->log(__METHOD__, "Starting cleanup of obsolete target thumbnails.", LOG_INFO);
         }
         
         $targetsLeft = $this->cleanup();
