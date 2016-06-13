@@ -157,7 +157,7 @@ $slim->get('/agent/:apiAgentSecret/master/job/:mode/', function ($apiAgentSecret
     echo $api->agentGetMasterJob($mode);
 })->conditions(array(
 	'apiAgentSecret' => Settings::getApiAgentSecret(),
-    'mode'           => '(normal|longrun)'
+    'mode'           => '(normal|longrun|phantom)'
 ));
 
 $slim->post('/agent/:apiAgentSecret/thumbnail/job/', function () use ($slim, $api)
@@ -173,14 +173,16 @@ $slim->post('/agent/:apiAgentSecret/thumbnail/job/', function () use ($slim, $ap
 
 $slim->post('/agent/:apiAgentSecret/master/commit/:mode/', function ($apiAgentSecret, $mode) use ($slim, $api)
 {
-    $data = $slim->request()->params('data');
-
+	$data = $slim->request->getBody();
+	// $data = $slim->request()->params('data');
+	 
     if($data) {
         echo $api->agentProcessMasterCommit($data, $mode);
     }
+    
 })->conditions(array(
     'apiAgentSecret' => Settings::getApiAgentSecret(),
-    'mode'           => '(normal|longrun)'
+    'mode'           => '(normal|longrun|phantom)'
 ));
 
 $slim->post('/agent/:apiAgentSecret/thumbnail/commit/', function () use ($slim, $api)
@@ -202,7 +204,7 @@ $slim->post('/agent/:apiAgentSecret/master/failure/:mode/', function ($apiAgentS
     }
 })->conditions(array(
     'apiAgentSecret' => Settings::getApiAgentSecret(),
-    'mode'           => '(normal|longrun)'
+    'mode'           => '(normal|longrun|phantom)'
 ));
 
 $slim->post('/agent/:apiAgentSecret/thumbnail/failure/', function () use ($slim, $api)

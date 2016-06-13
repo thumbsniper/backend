@@ -902,16 +902,42 @@ class ApiV3
         if ($data == NULL) {
             return $this->getLogger()->logEcho(__METHOD__, "invalid result", LOG_ERR);
         }
+        
+        if($mode == "phantom") {
 
-        $this->getLogger()->log(__METHOD__, "size of base64 encoded target : " . strlen($data), LOG_DEBUG);
+            //TODO: check all $targetData values
 
-        $resultData_serialized = base64_decode($data, TRUE);
+            $targetData = json_decode($data, true);
+            //return $this->getLogger()->logEcho(__METHOD__, "HHIIIEER: " . print_r($targetData, true), LOG_ERR);
+            $target = $this->getTargetModel()->getById($targetData['id']);
 
-        $this->getLogger()->log(__METHOD__, "size of base64 decoded target : " . strlen($resultData_serialized), LOG_DEBUG);
+            if (!$target instanceof Target) {
+                return $this->getLogger()->logEcho(__METHOD__, "invalid target", LOG_ERR);
+            }
+            
+            if(!$targetData['image']) {
+                return $this->getLogger()->logEcho(__METHOD__, "invalid image data", LOG_ERR);
+            }
+            
+            $target->setMasterImage($targetData['image']);
+            $target->setJavaScriptEnabled(true);
+            $target->setSnipeDuration($targetData['snipeDuration']);
+            $target->setWeapon('PhantomJS');
+            $target->setRobotsAllowed(($targetData['robotsAllowed'] == 1));
+            $target->setTsRobotsCheck(time());
+            $target->setMimeType($targetData['contentType']);
+            
+        }else {
+            $this->getLogger()->log(__METHOD__, "size of base64 encoded target : " . strlen($data), LOG_DEBUG);
 
-        /** @var Target $target */
-        $target = unserialize($resultData_serialized);
+            $resultData_serialized = base64_decode($data, TRUE);
 
+            $this->getLogger()->log(__METHOD__, "size of base64 decoded target : " . strlen($resultData_serialized), LOG_DEBUG);
+
+            /** @var Target $target */
+            $target = unserialize($resultData_serialized);
+        }
+        
         if (!$target instanceof Target) {
             return $this->getLogger()->logEcho(__METHOD__, "invalid target", LOG_ERR);
         }
@@ -1028,31 +1054,48 @@ class ApiV3
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $target = $this->getTargetModel()->getNextMasterJob($priority);
+        if($priority == "phantom") {
+            $target = $this->getTargetModel()->getNextMasterJob($priority);
 
-        if(!$target instanceof Target)
-        {
-            $this->getLogger()->log(__METHOD__, "no target found", LOG_INFO);
-            return $this->getCalculatedAgentSleepDuration('master_' . $priority);
+            if (!$target instanceof Target) {
+                $this->getLogger()->log(__METHOD__, "no target found", LOG_INFO);
+                return json_encode(array(
+                    'sleep' => $this->getCalculatedAgentSleepDuration('master_' . $priority)
+                ));
+            } else {
+                $this->decrementAgentSleepDuration('master_' . $priority);
+            }
+
+            return json_encode(array(
+                'id' => $target->getId(),
+                'url' => $target->getUrl()
+            ));
         }else {
-            $this->decrementAgentSleepDuration('master_' . $priority);
+            $target = $this->getTargetModel()->getNextMasterJob($priority);
+
+            if (!$target instanceof Target) {
+                $this->getLogger()->log(__METHOD__, "no target found", LOG_INFO);
+                return $this->getCalculatedAgentSleepDuration('master_' . $priority);
+            } else {
+                $this->decrementAgentSleepDuration('master_' . $priority);
+            }
+
+            if ($target->getCounterFailed() <= Settings::getTargetMaxTries() / 2) {
+                $target->setJavaScriptEnabled(true);
+            } else {
+                $target->setJavaScriptEnabled(false);
+            }
+
+            if ($target->getCounterFailed() % 2 == 0) {
+                $target->setWeapon(Settings::getWeaponCutycapt());
+            } else {
+                $target->setWeapon(Settings::getWeaponWkhtml());
+            }
+
+            $this->getLogger()->log(__METHOD__, "prepared job for targetId " . $target->getId(), LOG_DEBUG);
+
+            return base64_encode(serialize($target));
         }
-
-        if ($target->getCounterFailed() <= Settings::getTargetMaxTries() / 2) {
-            $target->setJavaScriptEnabled(true);
-        } else {
-            $target->setJavaScriptEnabled(false);
-        }
-
-        if ($target->getCounterFailed() % 2 == 0) {
-            $target->setWeapon(Settings::getWeaponCutycapt());
-        } else {
-            $target->setWeapon(Settings::getWeaponWkhtml());
-        }
-
-        $this->getLogger()->log(__METHOD__, "prepared job for targetId " . $target->getId(), LOG_DEBUG);
-
-        return base64_encode(serialize($target));
     }
 
 

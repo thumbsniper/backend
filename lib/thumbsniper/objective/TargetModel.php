@@ -1429,7 +1429,7 @@ class TargetModel
 
 
 
-    private function checkOut($targetId, $mode, $priority)
+    public function checkOut($targetId, $mode, $priority)
     {
         $this->logger->log(__METHOD__, '$targetId = ' . $targetId . ', $mode = ' . $mode, LOG_DEBUG);
 
