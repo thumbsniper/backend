@@ -1161,8 +1161,31 @@ class ApiV3
             return $this->getLogger()->logEcho(__METHOD__, "invalid result", LOG_ERR);
         }
 
-        $resultData_serialized = base64_decode($data, TRUE);
-        $target = unserialize($resultData_serialized);
+        if($mode == "phantom") {
+            $targetData = json_decode($data, true);
+            $target = $this->getTargetModel()->getById($targetData['id']);
+
+            if (!$target instanceof Target) {
+                return $this->getLogger()->logEcho(__METHOD__, "invalid target", LOG_ERR);
+            }
+
+            $target->setJavaScriptEnabled(true);
+            $target->setWeapon('PhantomJS');
+
+            if(array_key_exists('error', $targetData)) {
+                $target->setLastErrorMessage($targetData['error']);
+            }else {
+                $target->setLastErrorMessage(null);
+            }
+
+            if(array_key_exists('robotsAllowed', $targetData)) {
+                $target->setRobotsAllowed($targetData['robotsAllowed']);
+                $target->setTsRobotsCheck(time());
+            }
+        }else {
+            $resultData_serialized = base64_decode($data, TRUE);
+            $target = unserialize($resultData_serialized);
+        }
 
         if (!$target instanceof Target) {
             return $this->getLogger()->logEcho(__METHOD__, "invalid target", LOG_ERR);
