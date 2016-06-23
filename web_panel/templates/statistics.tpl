@@ -150,7 +150,7 @@
         <!-- /.row -->
 
         <div class="row">
-            <div class="col-lg-4">
+            <div class="col-lg-3">
                 <div class="panel panel-primary">
                     <div class="panel-heading">
                         Daily processed masters (normal)
@@ -161,9 +161,9 @@
                 </div>
                 <!-- /.panel-primary -->
             </div>
-            <!-- /.col-lg-4 -->
+            <!-- /.col-lg-3 -->
 
-            <div class="col-lg-4">
+            <div class="col-lg-3">
                 <div class="panel panel-primary">
                     <div class="panel-heading">
                         Daily processed masters (longrun)
@@ -174,9 +174,22 @@
                 </div>
                 <!-- /.panel-primary -->
             </div>
-            <!-- /.col-lg-4 -->
+            <!-- /.col-lg-3 -->
 
-            <div class="col-lg-4">
+            <div class="col-lg-3">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        Daily processed masters (phantom)
+                    </div>
+                    <div class="panel-body">
+                        <div id="daily-processed-masters-phantom" style="height: 250px;"></div>
+                    </div>
+                </div>
+                <!-- /.panel-primary -->
+            </div>
+            <!-- /.col-lg-3 -->
+
+            <div class="col-lg-3">
                 <div class="panel panel-primary">
                     <div class="panel-heading">
                         Daily processed images
@@ -187,7 +200,7 @@
                 </div>
                 <!-- /.panel-primary -->
             </div>
-            <!-- /.col-lg-4 -->
+            <!-- /.col-lg-3 -->
         </div>
         <!-- /.row -->
 
@@ -589,6 +602,47 @@
 
         var dailyProcessedMastersLongrunTimeOutId = 0;
         ajaxProcessedMastersLongrunDaily();
+
+
+        //////////////////////////////
+        // daily-processed-masters-phantom
+        //////////////////////////////
+
+        var chartProcessedMastersPhantomDaily = Morris.Area({
+            element: 'daily-processed-masters-phantom',
+            //data: [0, 0],
+            xkey: 'date',
+            ykeys: ['agentConnections', 'targetsUpdated', 'targetsFailed', 'targetsForbidden'],
+            xLabels: 'day',
+            xLabelAngle: '45',
+            labels: ['agent connections','updated targets', 'failed targets', 'forbidden targets'],
+            hideHover: 'auto'
+        });
+
+        var ajaxProcessedMastersPhantomDaily = function () {
+            $.ajax({
+                type: "GET",
+                dataType: 'json',
+                url: "/json/dailyprocessedmasters.php",
+                data: { mode: 'phantom', days: 30 },
+                success: function (response) {
+                    if (response == 'True') {
+                        clearTimeout(dailyProcessedMastersPhantomTimeOutId);
+                    } else {
+                        dailyProcessedMastersPhantomTimeOutId = setTimeout(ajaxProcessedMastersPhantomDaily, refreshIntervalLong);
+                    }
+                }
+            })
+                    .done(function (data) {
+                        chartProcessedMastersPhantomDaily.setData(data);
+                    })
+                    .fail(function () {
+                        console.log("error occurred while refreshing ajaxDailyItemsUpdated");
+                    });
+        };
+
+        var dailyProcessedMastersPhantomTimeOutId = 0;
+        ajaxProcessedMastersPhantomDaily();
 
 
 
