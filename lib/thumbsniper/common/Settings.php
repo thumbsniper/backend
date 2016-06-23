@@ -212,6 +212,8 @@ abstract class Settings
     static private $apiKeyOrReferrerWhitelistOnly = true;
 	static private $oauthLocalPasswordSalt = "secret";
 
+    static private $preferAgentPhantom = true;
+    
     // MAIL
     static private $mailFromName;
     static private $mailFromAddress;
@@ -2977,5 +2979,21 @@ abstract class Settings
     public static function setCleanupObsoleteTargetThumbnails($cleanupObsoleteTargetThumbnails)
     {
         self::$cleanupObsoleteTargetThumbnails = $cleanupObsoleteTargetThumbnails;
+    }
+
+    /**
+     * @return boolean
+     */
+    public static function isPreferAgentPhantom()
+    {
+        return self::$preferAgentPhantom;
+    }
+
+    /**
+     * @param boolean $preferAgentPhantom
+     */
+    public static function setPreferAgentPhantom($preferAgentPhantom)
+    {
+        self::$preferAgentPhantom = $preferAgentPhantom;
     }
 }
