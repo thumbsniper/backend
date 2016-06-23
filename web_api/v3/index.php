@@ -173,8 +173,11 @@ $slim->post('/agent/:apiAgentSecret/thumbnail/job/', function () use ($slim, $ap
 
 $slim->post('/agent/:apiAgentSecret/master/commit/:mode/', function ($apiAgentSecret, $mode) use ($slim, $api)
 {
-	$data = $slim->request->getBody();
-	// $data = $slim->request()->params('data');
+    if($mode == "phantom") {
+        $data = $slim->request->getBody();
+    }else {
+        $data = $slim->request()->params('data');
+    }
 	 
     if($data) {
         echo $api->agentProcessMasterCommit($data, $mode);
@@ -199,7 +202,11 @@ $slim->post('/agent/:apiAgentSecret/thumbnail/commit/', function () use ($slim, 
 
 $slim->post('/agent/:apiAgentSecret/master/failure/:mode/', function ($apiAgentSecret, $mode) use ($slim, $api)
 {
-    $data = $slim->request->getBody();
+    if($mode == "phantom") {
+        $data = $slim->request->getBody();
+    }else {
+        $data = $slim->request()->params('data');
+    }
 
     if($data) {
         echo $api->agentProcessMasterFailure($data, $mode);
