@@ -989,6 +989,7 @@ class TargetModel
                 Settings::getMongoKeyTargetAttrRobotsAllowed() => $target->isRobotsAllowed(),
                 Settings::getMongoKeyTargetAttrTsRobotsCheck() => $target->getTsRobotsCheck(),
 	            Settings::getMongoKeyTargetAttrLastErrorMessage() => $target->getLastErrorMessage(),
+                Settings::getMongoKeyTargetAttrWeapon() => $target->getWeapon(),
                 Settings::getMongoKeyTargetAttrTsLastFailed() => new MongoTimestamp()
             ),
             '$unset' => array(
@@ -1514,6 +1515,10 @@ class TargetModel
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
+        if(Settings::isPreferAgentPhantom()) {
+            $mode = ($mode == 'normal') ? 'phantom' : $mode;
+        }
+        
         try {
             $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionQueueJobsMasters());
 
