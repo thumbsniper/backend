@@ -190,6 +190,8 @@ $slim->post('/agent/:apiAgentSecret/thumbnail/commit/', function () use ($slim, 
     $data = $slim->request()->params('data');
     if($data) {
         echo $api->agentProcessThumbnailsCommit($data);
+    }else {
+        echo "no data";
     }
 })->conditions(array(
     'apiAgentSecret' => Settings::getApiAgentSecret()
@@ -197,11 +199,13 @@ $slim->post('/agent/:apiAgentSecret/thumbnail/commit/', function () use ($slim, 
 
 $slim->post('/agent/:apiAgentSecret/master/failure/:mode/', function ($apiAgentSecret, $mode) use ($slim, $api)
 {
-    $data = $slim->request()->params('data');
+    $data = $slim->request->getBody();
 
     if($data) {
         echo $api->agentProcessMasterFailure($data, $mode);
-    }
+    }else {
+		echo "no data";
+	}
 })->conditions(array(
     'apiAgentSecret' => Settings::getApiAgentSecret(),
     'mode'           => '(normal|longrun|phantom)'
