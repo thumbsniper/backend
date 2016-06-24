@@ -1395,7 +1395,7 @@ class TargetModel
             if($target->isForcedUpdate() || !$target->getTsLastUpdated() ||
                 $target->getTsLastUpdated() < (time() - Helpers::getVariancedValue($maxAge, Settings::getImageMaxAgeVariance()))) {
 
-                if($target->isRobotsAllowed() || !$target->getTsRobotsCheck())
+                if($target->isForcedUpdate() || $target->isRobotsAllowed() || !$target->getTsRobotsCheck())
                 {
                     if ($target->getCounterFailed() < Settings::getTargetMaxTries() / 2) {
                         $this->checkOut($target->getId(), 'normal', $priority);
