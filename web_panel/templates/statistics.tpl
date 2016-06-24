@@ -363,8 +363,8 @@
             element: 'queues',
             //data: [0, 0],
             xkey: 'date',
-            ykeys: ['targetNormal', 'targetLongrun', 'image'],
-            labels: ['targets normal', 'targets longrun', 'images'],
+            ykeys: ['targetNormal', 'targetLongrun', 'targetPhantom', 'image'],
+            labels: ['targets normal', 'targets longrun', 'targets phantom', 'images'],
             hideHover: false
         });
 

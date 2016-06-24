@@ -741,6 +741,13 @@ class TargetModel
 	}
 
 
+    public function getQueueSizeJobTargetPhantom()
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        return $this->getMasterJobQueueSize('phantom');
+    }
+
 
     public function getNextMasterJob($mode)
     {

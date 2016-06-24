@@ -1362,6 +1362,7 @@ class Panel extends ApiV3
                 $row['date'] = date('H:i:s', time());
                 $row['targetNormal'] = $this->getTargetModel()->getQueueSizeJobTargetNormal();
                 $row['targetLongrun'] = $this->getTargetModel()->getQueueSizeJobTargetLongrun();
+                $row['targetPhantom'] = $this->getTargetModel()->getQueueSizeJobTargetPhantom();
                 $row['image'] = $this->getImageModel()->getThumbnailJobQueueSize();
                 $result[] = $row;
         }
