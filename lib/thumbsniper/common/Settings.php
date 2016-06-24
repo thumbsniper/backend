@@ -212,7 +212,7 @@ abstract class Settings
     static private $apiKeyOrReferrerWhitelistOnly = true;
 	static private $oauthLocalPasswordSalt = "secret";
 
-    static private $preferAgentPhantom = true;
+    static private $preferAgentPhantom = false;
     
     // MAIL
     static private $mailFromName;
