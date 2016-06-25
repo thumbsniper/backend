@@ -25,6 +25,7 @@ RUN zypper --non-interactive in \
     openssl-devel \
     php5-curl \
     php5-devel \
+    php5-gd \
     php5-geoip \
     php5-intl \
     php5-json \
