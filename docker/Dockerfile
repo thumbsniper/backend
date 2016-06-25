@@ -1,71 +1,67 @@
-FROM php:5-apache
+FROM opensuse:42.1
+MAINTAINER Thomas Schulte <thomas@cupracer.de>
 
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
-RUN echo "deb http://repo.mongodb.org/apt/debian wheezy/mongodb-org/3.0 main" | tee /etc/apt/sources.list.d/mongodb-org-3.0.list
+EXPOSE 80
 
-RUN apt-get clean && apt-get update && apt-get install -y \
-		git \
-		ImageMagick \
-		libbz2-dev \
-		libcurl3-dev \
-		libfreetype6-dev \
-		libgeoip-dev \
-		libicu-dev \
-		libjpeg62-turbo-dev \
-		libncurses5-dev \
-		libmagickwand-dev \
-		libpng12-dev \
-		libssl-dev \
-		mongodb-org-shell \
-		netcat \
-		nodejs-legacy \
-		npm \
-		php-pear \
-		zlib1g-dev \
-	--no-install-recommends && rm -r /var/lib/apt/lists/*
+ENV MONGO_HOST=mongo MONGO_PORT=27017 MONGO_USER=thumbsniper MONGO_PASS=secret MONGO_DB=thumbsniper
 
-RUN pecl install \
-	geoip \
-	imagick \
-	mongo
+RUN zypper --non-interactive ref \
+    && zypper --non-interactive up \
+    && zypper --non-interactive in curl
 
-#RUN curl -L https://pecl.php.net/get/redis-2.2.7.tgz > /tmp/redis.tgz \
-RUN curl -L https://pecl.php.net/get/redis > /tmp/redis.tgz \
-	&& mkdir /usr/src/php/ext/redis \
-	&& tar -xf /tmp/redis.tgz -C /usr/src/php/ext/redis --strip-components 1 \
-	&& rm /tmp/redis.tgz 
+RUN rpm --import http://download.opensuse.org/repositories/server:/php:/extensions/openSUSE_Leap_42.1/repodata/repomd.xml.key \
+    && zypper ar --refresh http://download.opensuse.org/repositories/server:/php:/extensions/openSUSE_Leap_42.1/server:php:extensions.repo \
+    && zypper ar --refresh --no-gpgcheck https://repo.mongodb.org/zypper/suse/12/mongodb-org/3.2/x86_64/ mongodb \
+    && zypper ref
 
-RUN mkdir -p /usr/local/share/GeoIP \
-	&& cd /usr/local/share/GeoIP \
-	&& curl -o /usr/local/share/GeoIP/GeoIPCity.dat.gz http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz \
-	&& gunzip /usr/local/share/GeoIP/GeoIPCity.dat.gz
+RUN zypper --non-interactive in \
+    apache2-mod_php5 \
+    gcc \
+    git \
+    make \
+    mongodb-org-shell \
+    netcat-openbsd \
+    npm \
+    openssl-devel \
+    php5-curl \
+    php5-devel \
+    php5-geoip \
+    php5-intl \
+    php5-json \
+    php5-mbstring \
+    php5-openssl \
+    php5-pear \
+    php5-phar \
+    php5-zip \
+    zlib-devel
 
-RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/
+#RUN curl -o /tmp/pecl-mongodb.tgz  https://pecl.php.net/get/mongodb \
+#   && mkdir /tmp/pecl-mongodb \
+#   && tar xf /tmp/pecl-mongodb.tgz --strip 1 -C /tmp/pecl-mongodb
+#
+#WORKDIR /tmp/pecl-mongodb
+#
+#RUN phpize \
+#   && CFLAGS="-fno-strict-aliasing" ./configure --with-libdir=/usr/lib64 --enable-mongo \
+#   && make \
+#   && make install \
+#   && echo "extension=mongodb.so" > /etc/php5/conf.d/mongodb.ini
+#
+#WORKDIR /
+#
+#RUN rm -rf /tmp/pecl-mongodb*
 
-RUN docker-php-ext-install \
-	bz2 \
-	exif \
-	gd \
-	gettext \
-	intl \
-	json \
-	mbstring \
-	mysqli \
-	pdo \
-	pdo_mysql \
-	phar \
-	redis \
-	zip
-
-RUN docker-php-ext-enable \
-	geoip \
-	imagick \
-	mongo
-
-RUN pear install \
-        Mail \
-        Mail_Mime \
-        Net_SMTP
+RUN curl -o /tmp/pecl-mongo.tgz  https://pecl.php.net/get/mongo \
+    && mkdir /tmp/pecl-mongo \
+    && tar xf /tmp/pecl-mongo.tgz --strip 1 -C /tmp/pecl-mongo \
+    && cd /tmp/pecl-mongo \
+    && phpize \
+    && CFLAGS="-fno-strict-aliasing" ./configure --with-libdir=/usr/lib64 --enable-mongo \
+    && make \
+    && make install \
+    && cd / \
+    && echo "extension=mongo.so" > /etc/php5/conf.d/mongo.ini \
+    && rm -rf /tmp/pecl-mongo*
 
 RUN curl -s https://getcomposer.org/installer | php -- --install-dir /usr/local/bin --filename composer
 
@@ -73,45 +69,46 @@ RUN npm install -g bower
 
 COPY etc/apache2 /etc/apache2
 
-RUN a2enmod access_compat expires headers remoteip rewrite
-RUN a2enconf https remoteip rewrite
-RUN a2ensite 000-default api img panel
+RUN a2enmod php5 \
+    && a2enmod logio \
+    && a2enmod expires \
+    && a2enmod headers \
+    && a2enmod remoteip \
+    && a2enmod rewrite \
+    && a2enflag FOREGROUND
 
 RUN git clone -b master https://github.com/thumbsniper/backend.git /opt/thumbsniper
 
 RUN composer --working-dir=/opt/thumbsniper update
 
-RUN echo 'always_populate_raw_post_data=-1' >> /usr/local/etc/php/php.ini \
-        && echo 'geoip.custom_directory=/usr/local/share/GeoIP' >> /usr/local/etc/php/php.ini \
-        && echo 'post_max_size=128M' >> /usr/local/etc/php/php.ini \
-        && echo 'upload_max_filesize=128M' >> /usr/local/etc/php/php.ini \
-        && echo 'include_path=.:/usr/share/php5:/usr/share/php5/PEAR:/opt/thumbsniper' >> /usr/local/etc/php/php.ini \
-        && echo 'open_basedir=/opt/thumbsniper:/usr/share/php5:/tmp' >> /usr/local/etc/php/php.ini \
-        && echo 'upload_tmp_dir=/tmp' >> /usr/local/etc/php/php.ini \
-        && echo 'session.save_path=/tmp' >> /usr/local/etc/php/php.ini \
-        && echo 'sys_temp_dir=/tmp' >> /usr/local/etc/php/php.ini \
-        && echo 'error_reporting=E_ALL' >> /usr/local/etc/php/php.ini \
-        && echo 'cgi.fix_pathinfo=0' >> /usr/local/etc/php/php.ini \
-        && echo 'display_errors=Off' >> /usr/local/etc/php/php.ini \
-        && echo 'expose_php=Off' >> /usr/local/etc/php/php.ini \
-        && echo 'log_errors=On' >> /usr/local/etc/php/php.ini \
-        && echo 'date.timezone=Europe/Berlin' >> /usr/local/etc/php/php.ini
+RUN echo 'always_populate_raw_post_data=-1' >> /etc/php5/apache2/php.ini \
+    && echo 'geoip.custom_directory=/usr/local/share/GeoIP' >> /etc/php5/apache2/php.ini \
+    && echo 'post_max_size=128M' >> /etc/php5/apache2/php.ini \
+    && echo 'upload_max_filesize=128M' >> /etc/php5/apache2/php.ini \
+    && echo 'include_path=.:/usr/share/php5:/usr/share/php5/PEAR:/opt/thumbsniper' >> /etc/php5/apache2/php.ini \
+    && echo 'open_basedir=/opt/thumbsniper:/usr/share/php5:/tmp' >> /etc/php5/apache2/php.ini \
+    && echo 'upload_tmp_dir=/tmp' >> /etc/php5/apache2/php.ini \
+    && echo 'session.save_path=/tmp' >> /etc/php5/apache2/php.ini \
+    && echo 'sys_temp_dir=/tmp' >> /etc/php5/apache2/php.ini \
+    && echo 'error_reporting=E_ALL' >> /etc/php5/apache2/php.ini \
+    && echo 'cgi.fix_pathinfo=0' >> /etc/php5/apache2/php.ini \
+    && echo 'display_errors=Off' >> /etc/php5/apache2/php.ini \
+    && echo 'expose_php=Off' >> /etc/php5/apache2/php.ini \
+    && echo 'log_errors=On' >> /etc/php5/apache2/php.ini \
+    && echo 'date.timezone=Europe/Berlin' >> /etc/php5/apache2/php.ini
 
 WORKDIR /opt/thumbsniper/web_panel
 RUN bower --allow-root --config.interactive=false update
 WORKDIR /
 
-RUN groupmod -g 999 www-data \
-	&& usermod -u 999 -g 999 www-data \
-	&& chown -R www-data:www-data /var/lock/apache2 /var/run/apache2 /var/log/apache2 /var/www/html \
-	&& chown www-data:www-data /opt/thumbsniper/web_panel/templates_c
+RUN groupmod -g 999 www \
+    && usermod -u 999 -g 999 wwwrun \
+    && chown -R wwwrun /var/cache/apache2 /var/lib/apache2 /var/lib/php5 \
+    && chown wwwrun:www /opt/thumbsniper/web_panel/templates_c
 
 COPY config/backend-config.inc.php /opt/thumbsniper/config/backend-config.inc.php
 COPY config/panel-config.inc.php /opt/thumbsniper/config/panel-config.inc.php
 
 COPY init.sh /
 
-ENV MONGO_HOST=mongo MONGO_PORT=27017 MONGO_USER=thumbsniper MONGO_PASS=secret MONGO_DB=thumbsniper
-
 CMD ["/init.sh"]
-
