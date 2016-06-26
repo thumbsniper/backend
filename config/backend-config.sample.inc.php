@@ -102,6 +102,7 @@ Settings::setStoreUserAgents(true);
 Settings::setApiHost('api.' . Settings::getDomain());
 Settings::setApiKeyExpire(31536000); // 1 year
 Settings::setApiAgentSecret('secret');
+//Settings::setPreferAgentPhantom(true);
 
 // Local image storage
 Settings::setLocalThumbnailStorageEnabled(true);
