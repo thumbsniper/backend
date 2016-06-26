@@ -923,10 +923,13 @@ class ApiV3
             $target->setJavaScriptEnabled(true);
             $target->setSnipeDuration($targetData['snipeDuration']);
             $target->setWeapon('PhantomJS');
-            $target->setRobotsAllowed(($targetData['robotsAllowed'] == 1));
-            $target->setTsRobotsCheck(time());
-            $target->setMimeType($targetData['contentType']);
             
+            if(array_key_exists('robotsAllowed', $targetData)) {
+                $target->setRobotsAllowed(($targetData['robotsAllowed'] == 1));
+                $target->setTsRobotsCheck(time());
+            }
+            
+            $target->setMimeType($targetData['contentType']);
         }else {
             $this->getLogger()->log(__METHOD__, "size of base64 encoded target : " . strlen($data), LOG_DEBUG);
 
