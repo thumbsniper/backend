@@ -1005,15 +1005,15 @@ class TargetModel
             )
         );
 
-        if(!$target->getTsRobotsCheck() || $target->isRobotsAllowed()) {
+        if(!$target->isRobotsAllowed() && $target->getTsRobotsCheck()) {
+            $this->incrementTargetsForbiddenDailyStats($mode);
+            $this->deleteMasterImage($target);
+            //TODO: delete images
+        }else {
             $this->incrementTargetsFailedDailyStats($mode);
             $update['$inc'] = array(
                 Settings::getMongoKeyTargetAttrCounterFailed() => 1
             );
-        }else {
-            $this->incrementTargetsForbiddenDailyStats($mode);
-	        $this->deleteMasterImage($target);
-	        //TODO: delete images
         }
 
         $result = $collection->update($query, $update);
