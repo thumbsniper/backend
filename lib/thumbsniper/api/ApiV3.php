@@ -1185,7 +1185,7 @@ class ApiV3
                 $target->setRobotsAllowed($targetData['robotsAllowed']);
                 $target->setTsRobotsCheck($targetData['tsRobotsCheck']);
             }else {
-                $target->setRobotsAllowed(true);
+                $target->setRobotsAllowed(null);
                 $target->setTsRobotsCheck(null);
             }
         }else {

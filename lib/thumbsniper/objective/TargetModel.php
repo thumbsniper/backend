@@ -993,8 +993,6 @@ class TargetModel
 
         $update = array(
             '$set' => array(
-                Settings::getMongoKeyTargetAttrRobotsAllowed() => $target->isRobotsAllowed(),
-                Settings::getMongoKeyTargetAttrTsRobotsCheck() => $target->getTsRobotsCheck(),
 	            Settings::getMongoKeyTargetAttrLastErrorMessage() => $target->getLastErrorMessage(),
                 Settings::getMongoKeyTargetAttrWeapon() => $target->getWeapon(),
                 Settings::getMongoKeyTargetAttrTsLastFailed() => new MongoTimestamp()
@@ -1004,12 +1002,20 @@ class TargetModel
                 Settings::getMongoKeyTargetAttrForcedUpdate() => ""
             )
         );
-
-        if(!$target->isRobotsAllowed() && $target->getTsRobotsCheck()) {
-            $this->incrementTargetsForbiddenDailyStats($mode);
-            $this->deleteMasterImage($target);
-            //TODO: delete images
+        
+        if($target->getTsRobotsCheck() !== null && $target->isRobotsAllowed() !== null) {
+            $update['$set'][Settings::getMongoKeyTargetAttrTsRobotsCheck()] = $target->getTsRobotsCheck();
+            $update['$set'][Settings::getMongoKeyTargetAttrRobotsAllowed()] = $target->isRobotsAllowed();
+            
+            if(!$target->isRobotsAllowed()) {
+                $this->incrementTargetsForbiddenDailyStats($mode);
+                $this->deleteMasterImage($target);
+                //TODO: delete images    
+            }
         }else {
+            $update['$unset'][Settings::getMongoKeyTargetAttrTsRobotsCheck()] = "";
+            $update['$unset'][Settings::getMongoKeyTargetAttrRobotsAllowed()] = "";
+
             $this->incrementTargetsFailedDailyStats($mode);
             $update['$inc'] = array(
                 Settings::getMongoKeyTargetAttrCounterFailed() => 1
