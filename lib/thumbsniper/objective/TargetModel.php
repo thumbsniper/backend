@@ -1726,7 +1726,9 @@ class TargetModel
                     Settings::getMongoKeyTargetAttrForcedUpdate() => true
                 ),
                 '$unset' => array(
-                    Settings::getMongoKeyTargetAttrCounterFailed() => ''
+                    Settings::getMongoKeyTargetAttrCounterFailed() => '',
+                    Settings::getMongoKeyTargetAttrTsRobotsCheck() => '',
+                    Settings::getMongoKeyTargetAttrRobotsAllowed() => ''
                 )
             );
 
