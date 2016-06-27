@@ -206,54 +206,59 @@ class TargetModel
 		$targetId = $this->calculateId($url);
 		$target = $this->getById($targetId);
 
-		do {
-			$this->logger->log(__METHOD__, "start loop", LOG_DEBUG);
+        try {
+            do {
+                $this->logger->log(__METHOD__, "start loop", LOG_DEBUG);
 
-			if (!$target instanceof Target) {
-				$this->logger->log(__METHOD__, "creating new target record (" . $url . ")", LOG_DEBUG);
+                if (!$target instanceof Target) {
+                    $this->logger->log(__METHOD__, "creating new target record (" . $url . ")", LOG_DEBUG);
 
-				try {
-                    $targetCollection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
+                    try {
+                        $targetCollection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
 
-                    $targetQuery = array(
-                        Settings::getMongoKeyTargetAttrId() => $targetId
-                    );
+                        $targetQuery = array(
+                            Settings::getMongoKeyTargetAttrId() => $targetId
+                        );
 
-                    $targetData = array(
-                        Settings::getMongoKeyTargetAttrUrl() => $url,
-                        Settings::getMongoKeyTargetAttrFileNameBase() => $targetId,
-                        Settings::getMongoKeyTargetAttrFileNameSuffix() => Settings::getMasterFiletype(),
-                        Settings::getMongoKeyTargetAttrTsAdded() => new MongoTimestamp(),
-                        Settings::getMongoKeyTargetAttrTsLastRequested()  => new MongoTimestamp(),
-                        Settings::getMongoKeyTargetAttrCounterCheckedOut() => 0,
-                    );
+                        $targetData = array(
+                            Settings::getMongoKeyTargetAttrUrl() => $url,
+                            Settings::getMongoKeyTargetAttrFileNameBase() => $targetId,
+                            Settings::getMongoKeyTargetAttrFileNameSuffix() => Settings::getMasterFiletype(),
+                            Settings::getMongoKeyTargetAttrTsAdded() => new MongoTimestamp(),
+                            Settings::getMongoKeyTargetAttrTsLastRequested() => new MongoTimestamp(),
+                            Settings::getMongoKeyTargetAttrCounterCheckedOut() => 0,
+                        );
 
-                    $targetUpdate = array(
-                        '$setOnInsert' => $targetData
-                    );
+                        $targetUpdate = array(
+                            '$setOnInsert' => $targetData
+                        );
 
-                    $targetOptions = array(
-                        'upsert' => true
-                    );
+                        $targetOptions = array(
+                            'upsert' => true
+                        );
 
-                    $result = $targetCollection->update($targetQuery, $targetUpdate, $targetOptions);
+                        $result = $targetCollection->update($targetQuery, $targetUpdate, $targetOptions);
 
-                    if(is_array($result)) {
-                        if($result['n'] == true) {
-                            $this->logger->log(__METHOD__, "new target created: " . $targetId, LOG_INFO);
-                        }elseif($result['updatedExisting']) {
-                            $this->logger->log(__METHOD__, "updated target " . $targetId . " instead of creating a new one. Works fine. :-)", LOG_INFO);
+                        if (is_array($result)) {
+                            if ($result['n'] == true) {
+                                $this->logger->log(__METHOD__, "new target created: " . $targetId, LOG_INFO);
+                            } elseif ($result['updatedExisting']) {
+                                $this->logger->log(__METHOD__, "updated target " . $targetId . " instead of creating a new one. Works fine. :-)", LOG_INFO);
+                            }
                         }
+
+                        $this->incrementNewTargetsDailyStats();
+                    } catch (Exception $e) {
+                        throw(new Exception("exception while creating target " . $url . ": " . $e->getMessage() . "(Code: " . $e->getCode() . ")"));
                     }
 
-					$this->incrementNewTargetsDailyStats();
-				} catch (Exception $e) {
-					$this->logger->log(__METHOD__, "exception while creating target " . $url . ": " . $e->getMessage() . "(Code: " . $e->getCode() . ")", LOG_ERR);
-				}
+                    $target = $this->getById($targetId);
+                }
+            } while (!$target instanceof Target);
+        }catch (Exception $e) {
+            $this->logger->log(__METHOD__, $e, LOG_ERR);
+        }
 
-				$target = $this->getById($targetId);
-			}
-		}while(!$target instanceof Target);
 		$this->logger->log(__METHOD__, "end loop", LOG_DEBUG);
 
 		$currentImage = $this->imageModel->getOrCreate($targetId, $width, $effect);
