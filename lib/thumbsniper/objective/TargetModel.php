@@ -1408,7 +1408,9 @@ class TargetModel
             if($target->isForcedUpdate() || !$target->getTsLastUpdated() ||
                 $target->getTsLastUpdated() < (time() - Helpers::getVariancedValue($maxAge, Settings::getImageMaxAgeVariance()))) {
 
-                if($target->isForcedUpdate() || $target->isRobotsAllowed() || !$target->getTsRobotsCheck())
+                // $target->isForcedUpdate() must not be used here -> this would result in infinite retries!
+                //if($target->isForcedUpdate() || $target->isRobotsAllowed() || !$target->getTsRobotsCheck())
+                if($target->isRobotsAllowed() || !$target->getTsRobotsCheck())
                 {
                     if ($target->getCounterFailed() < Settings::getTargetMaxTries() / 2) {
                         $this->checkOut($target->getId(), 'normal', $priority);
@@ -1430,6 +1432,7 @@ class TargetModel
                     }
                 }elseif(!$target->isRobotsAllowed() && $target->getTsRobotsCheck() && $target->getTsRobotsCheck() < (time() - Helpers::getVariancedValue(Settings::getRobotsCheckMaxAge(), Settings::getRobotsMaxAgeVariance()))) {
                     // give robots.txt blocked URL's another chance
+                    $this->logger->log(__METHOD__, "give robots.txt blocked URL's another chance", LOG_INFO);
                     $this->checkOut($target->getId(), 'normal', $priority);
                     // old -> enqeued
                     return false;
