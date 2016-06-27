@@ -158,6 +158,10 @@
                                     <td>{if !is_null($target->isRobotsAllowed())}{if $target->isRobotsAllowed() == true}yes{else}no{/if}{else}unknown{/if}</td>
                                 </tr>
                                 <tr>
+                                    <td>last robots.txt check</td>
+                                    <td>{if !is_null($target->getTsRobotsCheck())}{$target->getTsRobotsCheck()|date_format:"%d.%m.%Y %H:%M:%S"}{else}never{/if}</td>
+                                </tr>
+                                <tr>
                                     <td>JavaScript</td>
                                     <td>{if !is_null($target->isJavaScriptEnabled())}{if $target->isJavaScriptEnabled() == true}yes{else}no{/if}{else}unknown{/if}</td>
                                 </tr>
