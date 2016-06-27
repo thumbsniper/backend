@@ -1181,9 +1181,12 @@ class ApiV3
                 $target->setLastErrorMessage(null);
             }
 
-            if(array_key_exists('robotsAllowed', $targetData)) {
+            if(array_key_exists('robotsAllowed', $targetData) && array_key_exists('tsRobotsCheck', $targetData)) {
                 $target->setRobotsAllowed($targetData['robotsAllowed']);
-                $target->setTsRobotsCheck(time());
+                $target->setTsRobotsCheck($targetData['tsRobotsCheck']);
+            }else {
+                $target->setRobotsAllowed(true);
+                $target->setTsRobotsCheck(null);
             }
         }else {
             $resultData_serialized = base64_decode($data, TRUE);
