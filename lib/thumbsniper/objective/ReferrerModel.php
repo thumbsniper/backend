@@ -209,6 +209,8 @@ class ReferrerModel
         $referrerId = $this->calculateId($urlBase);
         $referrer = $this->getById($referrerId);
 
+        //FIXME: use try/catch to break infinite loop (as in TargetModel)
+
         do {
             $this->logger->log(__METHOD__, "start loop", LOG_DEBUG);
 

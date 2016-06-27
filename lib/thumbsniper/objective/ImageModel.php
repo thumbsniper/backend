@@ -176,7 +176,7 @@ class ImageModel
         $imageId = $this->calculateId($targetId, $width, $effect);
         $image = $this->getById($imageId);
 
-
+        //FIXME: use try/catch to break infinite loop (as in TargetModel)
         do {
             $this->logger->log(__METHOD__, "start loop", LOG_DEBUG);
 
