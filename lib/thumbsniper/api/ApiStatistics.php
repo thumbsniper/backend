@@ -35,6 +35,8 @@ use ThumbSniper\objective\Referrer;
 use ThumbSniper\objective\ReferrerModel;
 use ThumbSniper\objective\UserAgent;
 use ThumbSniper\objective\UserAgentModel;
+use ThumbSniper\objective\Visitor;
+use ThumbSniper\objective\VisitorModel;
 use ThumbSniper\shared\Target;
 use MongoDB;
 
@@ -68,6 +70,8 @@ class ApiStatistics
     /** @var UserAgentModel */
     private $userAgentModel;
 
+    /** @var VisitorModel */
+    private $visitorModel;
 
 
     function __construct(MongoDB $mongoDB, Client $redis, Logger $logger)
@@ -84,6 +88,7 @@ class ApiStatistics
         $this->referrerModel = new ReferrerModel($this->mongoDB, $this->logger);
         $this->referrerDeeplinkModel = new ReferrerDeeplinkModel($this->mongoDB, $this->logger);
         $this->userAgentModel = new UserAgentModel($this->mongoDB, $this->logger);
+        $this->visitorModel = new VisitorModel($this->mongoDB, $this->logger);
     } // function
 
 
@@ -680,6 +685,20 @@ class ApiStatistics
     }
 
 
+    public function updateVisitorLastSeenStats($visitorId)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $success = TRUE;
+
+        if (!$this->visitorModel->updateLastSeen($visitorId)) {
+            $success = FALSE;
+        }
+
+        return $success;
+    }
+
+
     public function getMasterAgentConnectionsDailyStats($mode)
     {
         //TODO: limit days (also in other functions)
@@ -776,6 +795,33 @@ class ApiStatistics
         if ($userAgentId != NULL) {
             if($this->userAgentModel->incrementRequestsStats($userAgentId)) {
                 $this->logger->log(__METHOD__, "incremented daily requests for user agent " . $userAgentId, LOG_DEBUG);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    public function incrementVisitorRequestStats(Visitor $visitor)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        if(Settings::isEnergySaveActive())
+        {
+            $this->logger->log(__METHOD__, "energy saving active", LOG_DEBUG);
+            return true;
+        }
+
+        $visitorId = NULL;
+
+        if ($visitor) {
+            $visitorId = $visitor->getId();
+        }
+
+        if ($visitorId != NULL) {
+            if($this->visitorModel->incrementRequestsStats($visitorId)) {
+                $this->logger->log(__METHOD__, "incremented daily requests for visitor " . $visitorId, LOG_DEBUG);
                 return true;
             }
         }

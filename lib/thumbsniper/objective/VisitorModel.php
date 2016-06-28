@@ -22,7 +22,6 @@ namespace ThumbSniper\objective;
 
 use ThumbSniper\common\Logger;
 use ThumbSniper\common\Settings;
-use ThumbSniper\shared\Target;
 
 use Exception;
 
@@ -59,9 +58,9 @@ class VisitorModel
         }
 
         $visitor->setId(isset($data[Settings::getMongoKeyVisitorAttrId()]) ? $data[Settings::getMongoKeyVisitorAttrId()] : null);
-        $visitor->setAddress(isset($data[Settings::getMongoKeyVisitorAttrAddress()]) ? $data[Settings::getMongoKeyVisitorAttrAddress()] : null);
+        //$visitor->setAddress(isset($data[Settings::getMongoKeyVisitorAttrAddress()]) ? $data[Settings::getMongoKeyVisitorAttrAddress()] : null);
         $visitor->setAddressType(isset($data[Settings::getMongoKeyVisitorAttrAddressType()]) ? $data[Settings::getMongoKeyVisitorAttrAddressType()] : null);
-        $visitor->setNumRequests(isset($data[Settings::getMongoKeyVisitorAttrNumRequests()]) ? $data[Settings::getMongoKeyVisitorAttrNumRequests()] : 0);
+        //$visitor->setNumRequests(isset($data[Settings::getMongoKeyVisitorAttrNumRequests()]) ? $data[Settings::getMongoKeyVisitorAttrNumRequests()] : 0);
 
         $tsAdded = null;
         if(isset($data[Settings::getMongoKeyVisitorAttrTsAdded()]))
@@ -105,7 +104,7 @@ class VisitorModel
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        return md5($address);
+        return md5(inet_pton($address));
     }
 
 
@@ -185,7 +184,7 @@ class VisitorModel
                     $mongoNow = new MongoTimestamp();
 
                     $data = array(
-                        Settings::getMongoKeyVisitorAttrAddress() => $address,
+                        //Settings::getMongoKeyVisitorAttrAddress() => $address,
                         Settings::getMongoKeyVisitorAttrAddressType() => $addressType,
                         Settings::getMongoKeyVisitorAttrTsAdded() => $mongoNow,
                         Settings::getMongoKeyVisitorAttrTsLastSeen() => $mongoNow
@@ -224,7 +223,7 @@ class VisitorModel
 
                 $visitor = $this->getById($visitorId);
             }
-        }while(!$visitor instanceof UserAgent);
+        }while(!$visitor instanceof Visitor);
         $this->logger->log(__METHOD__, "end loop", LOG_DEBUG);
 
         return $visitor;
@@ -534,8 +533,8 @@ class VisitorModel
     }
 
 
-//HIER
-    public function incrementRequestsStats($userAgentId)
+
+    public function incrementRequestsStats($visitorId)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
@@ -543,26 +542,26 @@ class VisitorModel
         $today = date("Y-m-d", $now);
 
         try {
-            $statsCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionUserAgents());
+            $statsCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionVisitors());
 
             $statsQuery = array(
-                Settings::getMongoKeyUserAgentAttrId() => $userAgentId
+                Settings::getMongoKeyVisitorAttrId() => $visitorId
             );
 
             $statsUpdate = array(
                 '$inc' => array(
-                    Settings::getMongoKeyUserAgentAttrNumRequests() => 1,
-                    Settings::getMongoKeyUserAgentAttrNumRequestsDaily() . "." . $today => 1
+                    Settings::getMongoKeyVisitorAttrNumRequests() => 1,
+                    Settings::getMongoKeyVisitorAttrNumRequestsDaily() . "." . $today => 1
                 )
             );
 
             if($statsCollection->update($statsQuery, $statsUpdate)) {
-                $this->logger->log(__METHOD__, "incremented user agent daily request stats for " . $userAgentId, LOG_DEBUG);
+                $this->logger->log(__METHOD__, "incremented visitor daily request stats for " . $visitorId, LOG_DEBUG);
                 return true;
             }
 
         } catch (Exception $e) {
-            $this->logger->log(__METHOD__, "exception while incrementing user agent daily request stats for " . $userAgentId . ": " . $e->getMessage(), LOG_ERR);
+            $this->logger->log(__METHOD__, "exception while incrementing visitor daily request stats for " . $visitorId . ": " . $e->getMessage(), LOG_ERR);
         }
 
         return false;
@@ -570,7 +569,7 @@ class VisitorModel
 
 
 
-    public function getNumRequestsDaily($userAgentId, $days)
+    public function getNumRequestsDaily($visitorId, $days)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
@@ -579,30 +578,30 @@ class VisitorModel
         $now = time();
 
         try {
-            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionUserAgents());
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionVisitors());
 
             $query = array(
-                Settings::getMongoKeyUserAgentAttrId() => $userAgentId,
-                Settings::getMongoKeyUserAgentAttrNumRequestsDaily() => array(
+                Settings::getMongoKeyVisitorAttrId() => $visitorId,
+                Settings::getMongoKeyVisitorAttrNumRequestsDaily() => array(
                     '$exists' => true
                 )
             );
 
             $fields = array(
-                Settings::getMongoKeyUserAgentAttrId() => false,
-                Settings::getMongoKeyUserAgentAttrNumRequestsDaily() => true
+                Settings::getMongoKeyVisitorAttrId() => false,
+                Settings::getMongoKeyVisitorAttrNumRequestsDaily() => true
             );
 
             $doc = $collection->findOne($query, $fields);
 
             for ($i = 0; $i < $days; $i++) {
                 $day = date("Y-m-d", $now - (86400 * $i));
-                if (isset($doc[Settings::getMongoKeyUserAgentAttrNumRequestsDaily()][$day])) {
-                    $stats[$day] = $doc[Settings::getMongoKeyUserAgentAttrNumRequestsDaily()][$day];
+                if (isset($doc[Settings::getMongoKeyVisitorAttrNumRequestsDaily()][$day])) {
+                    $stats[$day] = $doc[Settings::getMongoKeyVisitorAttrNumRequestsDaily()][$day];
                 }
             }
         } catch (Exception $e) {
-            $this->logger->log(__METHOD__, "exception while getting user agent daily request stats for " . $userAgentId . ": " . $e->getMessage(), LOG_ERR);
+            $this->logger->log(__METHOD__, "exception while getting visitor daily request stats for " . $visitorId . ": " . $e->getMessage(), LOG_ERR);
         }
 
         return $stats;
@@ -610,28 +609,28 @@ class VisitorModel
 
 
 
-    public function updateLastSeen($userAgentId)
+    public function updateLastSeen($visitorId)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         try {
-            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionUserAgents());
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionVisitors());
 
             $query = array(
-                Settings::getMongoKeyUserAgentAttrId() => $userAgentId
+                Settings::getMongoKeyVisitorAttrId() => $visitorId
             );
 
             $update = array(
                 '$set' => array(
-                    Settings::getMongoKeyUserAgentAttrTsLastSeen()  => new MongoTimestamp()
+                    Settings::getMongoKeyVisitorAttrTsLastSeen()  => new MongoTimestamp()
                 ));
 
             $collection->update($query, $update);
         } catch (Exception $e) {
-            $this->logger->log(__METHOD__, "exception while setting tsLastSeen on user agent " . $userAgentId . ": " . $e->getMessage(), LOG_ERR);
+            $this->logger->log(__METHOD__, "exception while setting tsLastSeen on visitor " . $visitorId . ": " . $e->getMessage(), LOG_ERR);
         }
 
-        $this->logger->log(__METHOD__, "updated tsLastSeen for user agent " . $userAgentId, LOG_DEBUG);
+        $this->logger->log(__METHOD__, "updated tsLastSeen for visitor " . $visitorId, LOG_DEBUG);
 
         //TODO: check result
         return true;
@@ -639,30 +638,39 @@ class VisitorModel
 
 
 
-    private function isBlacklisted($userAgentId)
+    private function isBlacklisted($visitorId)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         try {
-            $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionUserAgentsBlacklist());
+            $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionVisitorsBlacklist());
 
             $query = array(
-                '_id' => $userAgentId
+                '_id' => $visitorId
             );
 
             $blacklistData = $collection->findOne($query);
 
             if(is_array($blacklistData))
             {
-                $this->logger->log(__METHOD__, "user agent is blacklisted: " . $userAgentId, LOG_INFO);
+                $this->logger->log(__METHOD__, "visitor is blacklisted: " . $visitorId, LOG_INFO);
                 return true;
             }
         } catch (\Exception $e) {
-            $this->logger->log(__METHOD__, "exception while searching for blacklisted user agent " . $userAgentId . ": " . $e->getMessage(), LOG_ERR);
+            $this->logger->log(__METHOD__, "exception while searching for blacklisted visitor " . $visitorId . ": " . $e->getMessage(), LOG_ERR);
             return true;
         }
 
         //not blacklisted
         return false;
+    }
+
+
+    private function getGeoIpData($address) {
+        $geoip = array();
+        
+//        if(!geoip_db_avail(GEOIP_CITY_EDITION_REV0) && !geoip_db_avail(GEOIP_CITY_EDITION_REV0)) {
+//            return f
+//        }
     }
 }

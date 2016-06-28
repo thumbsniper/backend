@@ -53,6 +53,7 @@ if($slim->request->params('waitimg'))
 
 $apiParams['referrer'] = $slim->request->getReferer();
 $apiParams['userAgent'] = $slim->request->getUserAgent();
+$apiParams['visitorAddress'] = $slim->request->getIp();
 $apiParams['callback'] = $slim->request->params('callback');
 //$forceUpdate
 
@@ -113,7 +114,8 @@ $slim->get('/thumbnail/:apiKey/:width/:effect/', function ($apiKey, $width, $eff
 		echo "invalid common parameters";
 	}
 
-    $response = $api->outputThumbnail($apiKey, $width, $effect, $apiParams['url'], $apiParams['waitimg'], $apiParams['referrer'], null, $apiParams['callback'], $apiParams['userAgent']);
+    $response = $api->outputThumbnail($apiKey, $width, $effect, $apiParams['url'], $apiParams['waitimg'], 
+        $apiParams['referrer'], null, $apiParams['callback'], $apiParams['userAgent'], $apiParams['visitorAddress']);
 
     if(!$response)
     {
@@ -137,7 +139,8 @@ $slim->get('/thumbnail/:width/:effect/', function ($width, $effect) use ($slim, 
 		echo "invalid common parameters";
 	}
 
-	$response = $api->outputThumbnail(null, $width, $effect, $apiParams['url'], $apiParams['waitimg'], $apiParams['referrer'], null, $apiParams['callback'], $apiParams['userAgent']);
+	$response = $api->outputThumbnail(null, $width, $effect, $apiParams['url'], $apiParams['waitimg'],
+        $apiParams['referrer'], null, $apiParams['callback'], $apiParams['userAgent'], $apiParams['visitorAddress']);
 
 	if(!$response)
 	{

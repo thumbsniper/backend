@@ -140,6 +140,19 @@ class Helpers
             return false;
         }
     }
+    
+    
+    public static function getIpProtocol($address) {
+        $protocol = null;
+        
+        if(filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $protocol = "IPv6";
+        }elseif(filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $protocol = "IPv4";
+        }
+        
+        return $protocol;
+    }
 
 
 	public static function getSaltedPasswordHash($password, $salt)

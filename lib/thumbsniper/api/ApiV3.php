@@ -35,6 +35,8 @@ use ThumbSniper\db\Redis;
 use ThumbSniper\objective\ReferrerDeeplinkModel;
 use ThumbSniper\objective\UserAgent;
 use ThumbSniper\objective\UserAgentModel;
+use ThumbSniper\objective\Visitor;
+use ThumbSniper\objective\VisitorModel;
 use ThumbSniper\shared\Image;
 use ThumbSniper\objective\ImageModel;
 use ThumbSniper\objective\Referrer;
@@ -79,6 +81,9 @@ class ApiV3
     /** @var UserAgentModel */
     private $userAgentModel;
 
+    /** @var VisitorModel */
+    private $visitorModel;
+
     /** @var Account */
     protected $account;
 
@@ -94,6 +99,9 @@ class ApiV3
 
     /** @var UserAgent */
     protected $userAgent;
+
+    /** @var Visitor */
+    protected $visitor;
 
     protected $httpProtocol;
     protected $httpRequestMethod;
@@ -511,6 +519,47 @@ class ApiV3
     }
 
 
+    protected function checkVisitor($address, $result)
+    {
+        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
+
+        if(Settings::isStoreVisitors()) {
+            if (!$result) {
+                $this->getLogger()->log(__METHOD__, "not checking visitor because of previous error(s)", LOG_DEBUG);
+            } else {
+                if (!Settings::isEnergySaveActive() && $address != null) {
+
+                    $addressType = Helpers::getIpProtocol($address);
+                    
+                    if(!$addressType) {
+                        $this->getLogger()->log(__METHOD__, "invalid addressType", LOG_ERR);
+                        return $result;
+                    }
+                    
+                    //FIXME: get real addressType
+                    $visitor = $this->getVisitorModel()->getOrCreateByAddress($address, $addressType);
+
+                    if (!$visitor instanceof Visitor) {
+                        $this->getLogger()->log(__METHOD__, "invalid visitor: " . $address, LOG_WARNING);
+                    } else {
+                        $this->visitor = $visitor;
+
+                        //$this->getVisitorModel()->addTargetMapping($this->userAgent, $this->target);
+                        //$this->getTargetModel()->addUserAgentMapping($this->target, $this->userAgent);
+
+                        $this->getApiStatistics()->updateVisitorLastSeenStats($this->visitor->getId());
+                        $this->getApiStatistics()->incrementVisitorRequestStats($this->visitor);
+                    }
+                } else {
+                    $this->getLogger()->log(__METHOD__, "not using visitor", LOG_DEBUG);
+                }
+            }
+        }
+
+        return $result;
+    }
+
+
     protected function checkCallback($callback)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
@@ -561,7 +610,7 @@ class ApiV3
     }
 
 
-    public function loadAndValidateThumbnailParameters($width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr)
+    public function loadAndValidateThumbnailParameters($width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr, $visitorAddress)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
@@ -585,6 +634,7 @@ class ApiV3
         $this->checkWaitImage($waitimg, $result);
         $this->checkReferrer($referrerUrl, $result);
         $this->checkUserAgent($userAgentStr, $result);
+        $this->checkVisitor($visitorAddress, $result);
         $this->checkCallback($callback);
 
         if ($forceUpdate) {
@@ -716,7 +766,7 @@ class ApiV3
     }
 
 
-    public function outputThumbnail($apiKey, $width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr)
+    public function outputThumbnail($apiKey, $width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr, $visitorAddress)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
@@ -726,7 +776,7 @@ class ApiV3
         $violation = $this->isViolation($url, $referrerUrl);
 
         if(!$violation) {
-            if (!$this->loadAndValidateThumbnailParameters($width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr)) {
+            if (!$this->loadAndValidateThumbnailParameters($width, $effect, $url, $waitimg, $referrerUrl, $forceUpdate, $callback, $userAgentStr, $visitorAddress)) {
                 $this->getLogger()->log(__METHOD__, "invalid thumbnail parameters", LOG_ERR);
                 //TODO: create SlimResponse
                 return false;
@@ -1493,5 +1543,15 @@ class ApiV3
         }
 
         return $this->userAgentModel;
+    }
+
+    protected function getVisitorModel()
+    {
+        if(!$this->visitorModel instanceof VisitorModel) {
+            $this->getLogger()->log(__METHOD__, "init new VisitorModel instance", LOG_DEBUG);
+            $this->visitorModel = new VisitorModel($this->getMongoDB(), $this->getLogger());
+        }
+
+        return $this->visitorModel;
     }
 }

@@ -97,6 +97,7 @@ Settings::setImageWatermarksEnabled(false);
 Settings::setApiKeyOrReferrerWhitelistOnly(true);
 Settings::setAgentMaxSleepDuration(30);
 Settings::setStoreUserAgents(true);
+Settings::setStoreVisitors(true);
 
 // API
 Settings::setApiHost('api.' . Settings::getDomain());

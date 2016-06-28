@@ -156,6 +156,7 @@ abstract class Settings
     static private $domainVerificationExpire = 2592000; // 30 days
     static private $agentMaxSleepDuration = 10; // 10 seconds
     static private $storeUserAgents = false;
+    static private $storeVisitors = false;
 
     static private $cleanupObsoleteTargetThumbnails = true;
     
@@ -3096,5 +3097,21 @@ abstract class Settings
     public static function getMongoKeyVisitorAttrNumRequestsDaily()
     {
         return self::$mongoKeyVisitorAttrNumRequestsDaily;
+    }
+
+    /**
+     * @return boolean
+     */
+    public static function isStoreVisitors()
+    {
+        return self::$storeVisitors;
+    }
+
+    /**
+     * @param boolean $storeVisitors
+     */
+    public static function setStoreVisitors($storeVisitors)
+    {
+        self::$storeVisitors = $storeVisitors;
     }
 }
