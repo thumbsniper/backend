@@ -385,6 +385,19 @@ abstract class Settings
     static private $mongoKeyUserAgentAttrNumRequests = "numRequests";
     static private $mongoKeyUserAgentAttrNumRequestsDaily = "numRequestsDaily";
 
+    // VISITOR
+    static private $mongoCollectionVisitors = "visitors";
+    static private $mongoCollectionVisitorsBlacklist = "visitors_blacklist";
+    static private $mongoKeyVisitorAttrId = "_id";
+    static private $mongoKeyVisitorAttrAddress = "address";
+    static private $mongoKeyVisitorAttrAddressType = "addressType";
+    static private $mongoKeyVisitorAttrTsAdded = "tsAdded";
+    static private $mongoKeyVisitorAttrTsLastUpdated = "tsLastUpdated";
+    static private $mongoKeyVisitorAttrTsLastSeen = "tsLastSeen";
+    static private $mongoKeyVisitorAttrBlacklisted = "blacklisted";
+    static private $mongoKeyVisitorAttrNumRequests = "numRequests";
+    static private $mongoKeyVisitorAttrNumRequestsDaily = "numRequestsDaily";
+
     // STATISTICS
     static private $mongoCollectionStatistics = "statistics";
     
@@ -2995,5 +3008,93 @@ abstract class Settings
     public static function setPreferAgentPhantom($preferAgentPhantom)
     {
         self::$preferAgentPhantom = $preferAgentPhantom;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoCollectionVisitors()
+    {
+        return self::$mongoCollectionVisitors;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoCollectionVisitorsBlacklist()
+    {
+        return self::$mongoCollectionVisitorsBlacklist;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrId()
+    {
+        return self::$mongoKeyVisitorAttrId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrAddress()
+    {
+        return self::$mongoKeyVisitorAttrAddress;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrAddressType()
+    {
+        return self::$mongoKeyVisitorAttrAddressType;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrTsAdded()
+    {
+        return self::$mongoKeyVisitorAttrTsAdded;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrTsLastUpdated()
+    {
+        return self::$mongoKeyVisitorAttrTsLastUpdated;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrTsLastSeen()
+    {
+        return self::$mongoKeyVisitorAttrTsLastSeen;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrBlacklisted()
+    {
+        return self::$mongoKeyVisitorAttrBlacklisted;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrNumRequests()
+    {
+        return self::$mongoKeyVisitorAttrNumRequests;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrNumRequestsDaily()
+    {
+        return self::$mongoKeyVisitorAttrNumRequestsDaily;
     }
 }
