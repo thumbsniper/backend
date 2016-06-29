@@ -132,10 +132,6 @@ class VisitorModel
                 Settings::getMongoKeyVisitorAttrId() => $id
             );
 
-//            $fields = array(
-//                'targets' => false
-//            );
-
             $data = $collection->findOne($query);
 
             if(is_array($data)) {
@@ -159,7 +155,7 @@ class VisitorModel
 
 
 
-    public function getOrCreateByAddress($address, $addressType)
+    public function getOrCreateByAddress($address, $addressType, $userAgent, $referrer)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
@@ -268,10 +264,128 @@ class VisitorModel
         }while(!$visitor instanceof Visitor);
         $this->logger->log(__METHOD__, "end loop", LOG_DEBUG);
 
+
+        if($visitor instanceof Visitor) {
+            if($userAgent instanceof UserAgent) {
+                if($this->addUserAgentMapping($visitor, $userAgent)) {
+                    $visitor->setUserAgent($userAgent);
+                }
+            }
+            if($referrer instanceof Referrer) {
+                if($this->addReferrerMapping($visitor, $referrer)) {
+                    $visitor->setReferrer($referrer);
+                }
+            }
+        }
+
         return $visitor;
     }
 
 
+    private function addUserAgentMapping(Visitor $visitor, UserAgent $userAgent)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        if(!$visitor || !$userAgent) {
+            $this->logger->log(__METHOD__, "could not create Visitor->UserAgent mapping", LOG_ERR);
+            return false;
+        }
+
+        $mapId = md5($visitor->getId() . $userAgent->getId());
+        
+        try {
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionMapVisitorsUserAgents());
+
+            $query = array(
+                Settings::getMongoKeyMapVisitorsUserAgentsAttrId() => $mapId
+            );
+
+            $mongoNow = new MongoTimestamp();
+
+            $data = array(
+                Settings::getMongoKeyMapVisitorsUserAgentsAttrVisitorId() => $visitor->getId(),
+                Settings::getMongoKeyMapVisitorsUserAgentsAttrUserAgentId() => $userAgent->getId(),
+                Settings::getMongoKeyMapVisitorsUserAgentsAttrTsAdded() => $mongoNow
+            );
+
+            $update = array(
+                '$setOnInsert' => $data
+            );
+
+            $options = array(
+                'upsert' => true
+            );
+
+            $result = $collection->update($query, $update, $options);
+
+            if(is_array($result)) {
+                if($result['n'] == true) {
+                    $this->logger->log(__METHOD__, "new visitor->userAgent mapping created: " . $mapId, LOG_INFO);
+                    return true;
+                }elseif($result['updatedExisting']) {
+                    $this->logger->log(__METHOD__, "updated visitor->userAgent mapping " . $mapId . " instead of creating a new one. Works fine. :-)", LOG_INFO);
+                    return true;
+                }
+            }
+        }catch(Exception $e) {
+            $this->logger->log(__METHOD__, "exception while creating visitor->userAgent mapping " . $mapId . ": " . $e->getMessage(), LOG_ERR);
+        }
+
+        return false;
+    }
+
+
+    private function addReferrerMapping(Visitor $visitor, Referrer $referrer)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        if(!$visitor || !$referrer) {
+            $this->logger->log(__METHOD__, "could not create Visitor->Referrer mapping", LOG_ERR);
+            return false;
+        }
+
+        $mapId = md5($visitor->getId() . $referrer->getId());
+
+        try {
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionMapVisitorsReferrers());
+
+            $query = array(
+                Settings::getMongoKeyMapVisitorsReferrersAttrId() => $mapId
+            );
+
+            $mongoNow = new MongoTimestamp();
+
+            $data = array(
+                Settings::getMongoKeyMapVisitorsReferrersAttrVisitorId() => $visitor->getId(),
+                Settings::getMongoKeyMapVisitorsReferrersAttrReferrerId() => $referrer->getId(),
+                Settings::getMongoKeyMapVisitorsReferrersAttrTsAdded() => $mongoNow
+            );
+
+            $update = array(
+                '$setOnInsert' => $data
+            );
+
+            $options = array(
+                'upsert' => true
+            );
+
+            $result = $collection->update($query, $update, $options);
+
+            if(is_array($result)) {
+                if($result['n'] == true) {
+                    $this->logger->log(__METHOD__, "new visitor->referrer mapping created: " . $mapId, LOG_INFO);
+                    return true;
+                }elseif($result['updatedExisting']) {
+                    $this->logger->log(__METHOD__, "updated visitor->referrer mapping " . $mapId . " instead of creating a new one. Works fine. :-)", LOG_INFO);
+                    return true;
+                }
+            }
+        }catch(Exception $e) {
+            $this->logger->log(__METHOD__, "exception while creating visitor->referrer mapping " . $mapId . ": " . $e->getMessage(), LOG_ERR);
+        }
+
+        return false;
+    }
 
 /*    public function addTargetMapping(UserAgent $userAgent, Target $target)
     {
