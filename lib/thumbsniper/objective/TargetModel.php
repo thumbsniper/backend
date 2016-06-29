@@ -1644,75 +1644,75 @@ class TargetModel
 
 
 
-    public function addReferrerMapping(Target $target, Referrer $referrer)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+//    public function addReferrerMapping(Target $target, Referrer $referrer)
+//    {
+//        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+//
+//        try {
+//            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
+//
+//            $referrerData = array(
+//                'id' => $referrer->getId()
+//            );
+//
+//            $query = array(
+//                Settings::getMongoKeyTargetAttrId() => $target->getId(),
+//                'referrers.id' => array(
+//                    '$ne' => $referrer->getId()
+//                ));
+//
+//            $update = array(
+//                '$push' => array(
+//                    'referrers' => $referrerData
+//                ));
+//
+//            if($collection->update($query, $update)) {
+//                $this->logger->log(__METHOD__, "added referrer " . $referrer->getId() . " to target " . $target->getId(), LOG_DEBUG);
+//            }
+//
+//        } catch (Exception $e) {
+//            $this->logger->log(__METHOD__, "exception while adding referrer " . $referrer->getId() . " to target " . $target->getId() . ": " . $e->getMessage(), LOG_ERR);
+//        }
+//
+//        //TODO: result auswerten
+//        return true;
+//    }
 
-        try {
-            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
-
-            $referrerData = array(
-                'id' => $referrer->getId()
-            );
-
-            $query = array(
-                Settings::getMongoKeyTargetAttrId() => $target->getId(),
-                'referrers.id' => array(
-                    '$ne' => $referrer->getId()
-                ));
-
-            $update = array(
-                '$push' => array(
-                    'referrers' => $referrerData
-                ));
-
-            if($collection->update($query, $update)) {
-                $this->logger->log(__METHOD__, "added referrer " . $referrer->getId() . " to target " . $target->getId(), LOG_DEBUG);
-            }
-
-        } catch (Exception $e) {
-            $this->logger->log(__METHOD__, "exception while adding referrer " . $referrer->getId() . " to target " . $target->getId() . ": " . $e->getMessage(), LOG_ERR);
-        }
-
-        //TODO: result auswerten
-        return true;
-    }
 
 
-
-    public function addUserAgentMapping(Target $target, UserAgent $userAgent)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
-
-        try {
-            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
-
-            $data = array(
-                'id' => $userAgent->getId()
-            );
-
-            $query = array(
-                Settings::getMongoKeyTargetAttrId() => $target->getId(),
-                'useragents.id' => array(
-                    '$ne' => $userAgent->getId()
-                ));
-
-            $update = array(
-                '$push' => array(
-                    'useragents' => $data
-                ));
-
-            if($collection->update($query, $update)) {
-                $this->logger->log(__METHOD__, "added user agent " . $userAgent->getId() . " to target " . $target->getId(), LOG_DEBUG);
-            }
-
-        } catch (Exception $e) {
-            $this->logger->log(__METHOD__, "exception while adding user agent " . $userAgent->getId() . " to target " . $target->getId() . ": " . $e->getMessage(), LOG_ERR);
-        }
-
-        //TODO: result auswerten
-        return true;
-    }
+//    public function addUserAgentMapping(Target $target, UserAgent $userAgent)
+//    {
+//        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+//
+//        try {
+//            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionTargets());
+//
+//            $data = array(
+//                'id' => $userAgent->getId()
+//            );
+//
+//            $query = array(
+//                Settings::getMongoKeyTargetAttrId() => $target->getId(),
+//                'useragents.id' => array(
+//                    '$ne' => $userAgent->getId()
+//                ));
+//
+//            $update = array(
+//                '$push' => array(
+//                    'useragents' => $data
+//                ));
+//
+//            if($collection->update($query, $update)) {
+//                $this->logger->log(__METHOD__, "added user agent " . $userAgent->getId() . " to target " . $target->getId(), LOG_DEBUG);
+//            }
+//
+//        } catch (Exception $e) {
+//            $this->logger->log(__METHOD__, "exception while adding user agent " . $userAgent->getId() . " to target " . $target->getId() . ": " . $e->getMessage(), LOG_ERR);
+//        }
+//
+//        //TODO: result auswerten
+//        return true;
+//    }
 
 
     public function forceUpdate($targetId)
@@ -1771,6 +1771,7 @@ class TargetModel
 
 
 
+    //FIXME: use new map collection (or even move to different model)
     // what targets did a user agent request?
     public function getUserAgentTargets($userAgentId, $accountId = NULL, $orderby, $orderDirection, $limit, $offset, $where)
     {
@@ -1846,7 +1847,7 @@ class TargetModel
     }
 
 
-
+    //FIXME: use new map collection (or even move to different model)
     public function getNumUserAgentTargets($userAgentId, $accountId, $where)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);

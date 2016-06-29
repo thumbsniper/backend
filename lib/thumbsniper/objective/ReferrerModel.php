@@ -513,65 +513,83 @@ class ReferrerModel
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        try {
-            $referrerCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionReferrers());
-
-            $targetData = array(
-                'id' => $target->getId()
-            );
-
-            $referrerQuery = array(
-                Settings::getMongoKeyReferrerAttrId() => $referrer->getId(),
-                'targets.id' => array(
-                    '$ne' => $target->getId()
-                ));
-
-            $referrerUpdate = array(
-                '$push' => array(
-                    'targets' => $targetData
-                ));
-
-            if($referrerCollection->update($referrerQuery, $referrerUpdate)) {
-                $this->logger->log(__METHOD__, "added target " . $target->getId() . " to referrer " . $referrer->getId(), LOG_DEBUG);
-            }
-
-        } catch (Exception $e) {
-            $this->logger->log(__METHOD__, "exception while adding target " . $target->getId() . " to referrer " . $referrer->getId() . ": " . $e->getMessage(), LOG_ERR);
+        if(!$referrer || !$target) {
+            $this->logger->log(__METHOD__, "could not create Referrer->Target mapping", LOG_ERR);
+            return false;
         }
 
-        //TODO: result auswerten
-        return true;
+        $mapId = md5($referrer->getId() . $target->getId());
+
+        try {
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionMapReferrersTargets());
+
+            $query = array(
+                Settings::getMongoKeyMapReferrersTargetsAttrId() => $mapId
+            );
+
+            $mongoNow = new MongoTimestamp();
+
+            $data = array(
+                Settings::getMongoKeyMapReferrersTargetsAttrReferrerId() => $referrer->getId(),
+                Settings::getMongoKeyMapReferrersTargetsAttrTargetId() => $target->getId(),
+                Settings::getMongoKeyMapReferrersTargetsAttrTsAdded() => $mongoNow
+            );
+
+            $update = array(
+                '$setOnInsert' => $data
+            );
+
+            $options = array(
+                'upsert' => true
+            );
+
+            $result = $collection->update($query, $update, $options);
+
+            if(is_array($result)) {
+                if($result['n'] == true) {
+                    $this->logger->log(__METHOD__, "new referrer->target mapping created: " . $mapId, LOG_INFO);
+                    return true;
+                }elseif($result['updatedExisting']) {
+                    $this->logger->log(__METHOD__, "updated referrer->target mapping " . $mapId . " instead of creating a new one. Works fine. :-)", LOG_INFO);
+                    return true;
+                }
+            }
+        }catch(Exception $e) {
+            $this->logger->log(__METHOD__, "exception while creating referrer->target mapping " . $mapId . ": " . $e->getMessage(), LOG_ERR);
+        }
+
+        return false;
     }
 
-
+    
     public function removeTargetMappings(Target $target)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         try {
-            $referrerCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionReferrers());
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionMapReferrersTargets());
 
-            $targetData = array(
-                'id' => $target->getId()
+            $query = array(
+                Settings::getMongoKeyMapReferrersTargetsAttrTargetId() => $target->getId()
             );
 
-            $referrerQuery = array(
-                'targets.id' => array(
-                    '$eq' => $target->getId()
-                ));
+            $result = $collection->remove($query);
 
-            $referrerUpdate = array(
-                '$pull' => array(
-                    'targets' => $targetData
-                ));
-
-            if($referrerCollection->update($referrerQuery, $referrerUpdate)) {
-                $this->logger->log(__METHOD__, "removed target " . $target->getId() . " from referrers", LOG_DEBUG);
-                return true;
+            if(is_array($result)) {
+                if($result['ok'] == true) {
+                    if($result['n'] > 0) {
+                        $this->logger->log(__METHOD__, "referrer->target mappings removed: " . $target->getId(), LOG_INFO);
+                    }else {
+                        $this->logger->log(__METHOD__, "no referrer->target mappings were removed (ok): " . $target->getId(), LOG_INFO);
+                    }
+                    return true;
+                }else {
+                    $this->logger->log(__METHOD__, "could not remove referrer->target mappings " . $target->getId() . ": " . $result['err'] . " - " . $result['errmsg'], LOG_ERR);
+                    return false;
+                }
             }
-
         } catch (Exception $e) {
-            $this->logger->log(__METHOD__, "exception while removing target " . $target->getId() . " from referrers: " . $e->getMessage(), LOG_ERR);
+            $this->logger->log(__METHOD__, "exception while removing referrer->target mappings " . $target->getId() . " from referrers: " . $e->getMessage(), LOG_ERR);
         }
 
         return false;
@@ -588,20 +606,24 @@ class ReferrerModel
         //TODO: $accountId, $search and order
 
         try {
-            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionReferrers());
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionMapReferrersTargets());
 
             $query = array(
                 '$query' => array(
-                    'targets.id' => $targetId
+                    Settings::getMongoKeyMapReferrersTargetsAttrTargetId() => $targetId
                 )
             );
 
-            if ($accountId) {
+            //FIXME: limit the referrers result to those which $accountId is allowed to see
+/*            if ($accountId) {
                 $query['$query'] = array(
                     Settings::getMongoKeyReferrerAttrAccountId() => $accountId
                 );
             }
+*/
 
+            //FIXME: reapair ordering
+            /*
             if ($orderDirection == "asc") {
                 $query['$orderby'] = array(
                     $orderby => 1
@@ -611,6 +633,7 @@ class ReferrerModel
                     $orderby => -1
                 );
             }
+            */
 
             //TODO: also search for _id content?
 
@@ -625,14 +648,16 @@ class ReferrerModel
 //                    )
 //                );
 
-                $query['$query'][Settings::getMongoKeyReferrerAttrUrlBase()] = array(
-                    '$regex' => $where,
-                    '$options' => 'i'
-                );
+                
+                //FIXME: repair this! Those values need to be accessible again
+//                $query['$query'][Settings::getMongoKeyReferrerAttrUrlBase()] = array(
+//                    '$regex' => $where,
+//                    '$options' => 'i'
+//                );
             }
 
             $fields = array(
-                Settings::getMongoKeyReferrerAttrId() => true
+                Settings::getMongoKeyMapReferrersTargetsAttrReferrerId() => true
             );
 
             /** @var MongoCursor $cursor */
@@ -643,7 +668,7 @@ class ReferrerModel
             foreach($cursor as $data)
             {
                 //$this->logger->log(__METHOD__, "HIER: " . print_r($data, true), LOG_DEBUG);
-                $referrer = $this->getById($data[Settings::getMongoKeyReferrerAttrId()]);
+                $referrer = $this->getById($data[Settings::getMongoKeyMapReferrersTargetsAttrReferrerId()]);
 
                 if($referrer instanceof Referrer)
                 {
@@ -673,38 +698,41 @@ class ReferrerModel
         //TODO: filter by targetId
 
         try {
-            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionReferrers());
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionMapReferrersTargets());
 
             $query = array();
 
             if($targetId)
             {
-                $query['targets.id'] = $targetId;
+                $query[Settings::getMongoKeyMapReferrersTargetsAttrTargetId()] = $targetId;
             }
 
-            if($accountId)
-            {
-                $query[Settings::getMongoKeyReferrerAttrAccountId()] = $accountId;
-            }
+            //FIXME: make filtering by $accountId work again
+//            if($accountId)
+//            {
+//                $query[Settings::getMongoKeyReferrerAttrAccountId()] = $accountId;
+//            }
 
-            if ($where)
-            {
-                if($targetId || $accountId) {
-                    //TODO: ist es okay, das $query Array hier so neu aufzubauen?
-                    $oldQuery = $query;
-                    $query = array('$and' => array());
-                    $query['$and'][] = $oldQuery;
-                    $query['$and'][][Settings::getMongoKeyReferrerAttrUrlBase()] = array(
-                        '$regex' => $where,
-                        '$options' => 'i'
-                    );
-                }else {
-                    $query[Settings::getMongoKeyReferrerAttrUrlBase()] = array(
-                        '$regex' => $where,
-                        '$options' => 'i'
-                    );
-                }
-            }
+            
+            //FIXME: make filtering by $where and $accountId work again
+//            if ($where)
+//            {
+//                if($targetId || $accountId) {
+//                    //TODO: ist es okay, das $query Array hier so neu aufzubauen?
+//                    $oldQuery = $query;
+//                    $query = array('$and' => array());
+//                    $query['$and'][] = $oldQuery;
+//                    $query['$and'][][Settings::getMongoKeyReferrerAttrUrlBase()] = array(
+//                        '$regex' => $where,
+//                        '$options' => 'i'
+//                    );
+//                }else {
+//                    $query[Settings::getMongoKeyReferrerAttrUrlBase()] = array(
+//                        '$regex' => $where,
+//                        '$options' => 'i'
+//                    );
+//                }
+//            }
 
             $numReferrers = $collection->count($query);
             $this->logger->log(__METHOD__, "successfully counted referrers", LOG_DEBUG);

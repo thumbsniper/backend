@@ -465,7 +465,7 @@ class ApiV3
                     }
 
                     $this->getReferrerModel()->addTargetMapping($referrer, $this->target);
-                    $this->getTargetModel()->addReferrerMapping($this->target, $referrer);
+                    //$this->getTargetModel()->addReferrerMapping($this->target, $referrer);
 
                     $this->getApiStatistics()->updateReferrerLastSeenStats($referrer->getId());
                 }

@@ -418,6 +418,12 @@ abstract class Settings
     static private $mongoKeyMapVisitorsReferrersAttrReferrerId = "referrerId";
     static private $mongoKeyMapVisitorsReferrersAttrTsAdded = "tsAdded";
 
+    static private $mongoCollectionMapReferrersTargets = "mapReferrersTargets";
+    static private $mongoKeyMapReferrersTargetsAttrId = "_id";
+    static private $mongoKeyMapReferrersTargetsAttrReferrerId = "referrerId";
+    static private $mongoKeyMapReferrersTargetsAttrTargetId = "targetId";
+    static private $mongoKeyMapReferrersTargetsAttrTsAdded = "tsAdded";
+
 
     // STATISTICS
     static private $mongoCollectionStatistics = "statistics";
@@ -3285,5 +3291,45 @@ abstract class Settings
     public static function getMongoKeyMapVisitorsReferrersAttrTsAdded()
     {
         return self::$mongoKeyMapVisitorsReferrersAttrTsAdded;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoCollectionMapReferrersTargets()
+    {
+        return self::$mongoCollectionMapReferrersTargets;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyMapReferrersTargetsAttrId()
+    {
+        return self::$mongoKeyMapReferrersTargetsAttrId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyMapReferrersTargetsAttrReferrerId()
+    {
+        return self::$mongoKeyMapReferrersTargetsAttrReferrerId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyMapReferrersTargetsAttrTargetId()
+    {
+        return self::$mongoKeyMapReferrersTargetsAttrTargetId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyMapReferrersTargetsAttrTsAdded()
+    {
+        return self::$mongoKeyMapReferrersTargetsAttrTsAdded;
     }
 }
