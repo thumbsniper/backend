@@ -776,31 +776,31 @@ class ApiStatistics
     }
 
 
-    public function incrementUserAgentRequestStats(UserAgent $userAgent)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
-
-		if(Settings::isEnergySaveActive())
-		{
-			$this->logger->log(__METHOD__, "energy saving active", LOG_DEBUG);
-			return true;
-		}
-
-        $userAgentId = NULL;
-
-        if ($userAgent) {
-            $userAgentId = $userAgent->getId();
-        }
-
-        if ($userAgentId != NULL) {
-            if($this->userAgentModel->incrementRequestsStats($userAgentId)) {
-                $this->logger->log(__METHOD__, "incremented daily requests for user agent " . $userAgentId, LOG_DEBUG);
-                return true;
-            }
-        }
-
-        return false;
-    }
+//    public function incrementUserAgentRequestStats(UserAgent $userAgent)
+//    {
+//        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+//
+//		if(Settings::isEnergySaveActive())
+//		{
+//			$this->logger->log(__METHOD__, "energy saving active", LOG_DEBUG);
+//			return true;
+//		}
+//
+//        $userAgentId = NULL;
+//
+//        if ($userAgent) {
+//            $userAgentId = $userAgent->getId();
+//        }
+//
+//        if ($userAgentId != NULL) {
+//            if($this->userAgentModel->incrementRequestsStats($userAgentId)) {
+//                $this->logger->log(__METHOD__, "incremented daily requests for user agent " . $userAgentId, LOG_DEBUG);
+//                return true;
+//            }
+//        }
+//
+//        return false;
+//    }
 
 
 //    public function incrementVisitorRequestStats(Visitor $visitor)
