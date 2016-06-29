@@ -94,12 +94,6 @@ class ApiV3
     // to be able to use it without a Target->getOrCreate() call
     protected $targetUrl;
 
-    /** @var Referrer */
-    protected $referrer;
-
-    /** @var UserAgent */
-    protected $userAgent;
-
     /** @var Visitor */
     protected $visitor;
 
@@ -424,102 +418,98 @@ class ApiV3
     }
 
 
-    protected function checkReferrer($referrerUrl, $result)
+    protected function checkReferrer($referrerUrl)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
-        if (!$result) {
-            $this->getLogger()->log(__METHOD__, "not checking referrer because of previous error(s)", LOG_DEBUG);
-        } else {
-            if(!Settings::isEnergySaveActive() && $referrerUrl != null) {
+        $referrer = null;
+        
+        if(!Settings::isEnergySaveActive() && $referrerUrl != null) {
 
-                $referrerUrl = $this->getValidatedUrl($referrerUrl, true, true);
+            $referrerUrl = $this->getValidatedUrl($referrerUrl, true, true);
 
-                if($referrerUrl == null) {
-                    $this->getLogger()->log(__METHOD__, "invalid referrerUrl: " . $referrerUrl, LOG_WARNING);
-                }else {
-                    if ($this->account instanceof Account) {
-                        $referrer = $this->getReferrerModel()->getOrCreateByUrl($referrerUrl, $this->account->getId());
-                    } else {
-                        $referrer = $this->getReferrerModel()->getOrCreateByUrl($referrerUrl);
-                    }
+            if($referrerUrl == null) {
+                $this->getLogger()->log(__METHOD__, "invalid referrerUrl: " . $referrerUrl, LOG_WARNING);
+            }else {
+                if ($this->account instanceof Account) {
+                    $ref = $this->getReferrerModel()->getOrCreateByUrl($referrerUrl, $this->account->getId());
+                } else {
+                    $ref = $this->getReferrerModel()->getOrCreateByUrl($referrerUrl);
+                }
 
-                    if (!$referrer instanceof Referrer) {
-                        $this->getLogger()->log(__METHOD__, "invalid referrer: " . $referrerUrl, LOG_WARNING);
-                    } else {
-                        $this->referrer = $referrer;
+                if (!$ref instanceof Referrer) {
+                    $this->getLogger()->log(__METHOD__, "invalid referrer: " . $referrerUrl, LOG_WARNING);
+                } else {
+                    $referrer = $ref;
 
-                        if ($referrer->getAccountId()) {
-                            /** @var Account $account */
-                            $account = null;
+                    if ($referrer->getAccountId()) {
+                        /** @var Account $account */
+                        $account = null;
 
-                            if (!$this->account instanceof Account) {
-                                $account = $this->getAccountModel()->getById($referrer->getAccountId());
-                            }
-
-                            // only load account by referrer if whitelist is enabled in account settings
-                            if ($account instanceof Account) {
-                                $this->getLogger()->log(__METHOD__, "found account " . $account->getId() . " by its referrer", LOG_DEBUG);
-
-                                if ($account->isWhitelistActive()) {
-                                    $this->getLogger()->log(__METHOD__, "whitelist active for account " . $account->getId(), LOG_DEBUG);
-                                    $this->account = $account;
-                                    $this->getReferrerModel()->checkDomainVerificationKeyExpired($this->referrer, $this->account);
-                                } else {
-                                    $this->getLogger()->log(__METHOD__, "ignoring account " . $account->getId(), LOG_DEBUG);
-                                }
-                            }
+                        if (!$this->account instanceof Account) {
+                            $account = $this->getAccountModel()->getById($referrer->getAccountId());
                         }
 
-                        $this->getReferrerModel()->addTargetMapping($this->referrer, $this->target);
-                        $this->getTargetModel()->addReferrerMapping($this->target, $this->referrer);
+                        // only load account by referrer if whitelist is enabled in account settings
+                        if ($account instanceof Account) {
+                            $this->getLogger()->log(__METHOD__, "found account " . $account->getId() . " by its referrer", LOG_DEBUG);
 
-                        $this->getApiStatistics()->updateReferrerLastSeenStats($this->referrer->getId());
+                            if ($account->isWhitelistActive()) {
+                                $this->getLogger()->log(__METHOD__, "whitelist active for account " . $account->getId(), LOG_DEBUG);
+                                $this->account = $account;
+                                $this->getReferrerModel()->checkDomainVerificationKeyExpired($referrer, $this->account);
+                            } else {
+                                $this->getLogger()->log(__METHOD__, "ignoring account " . $account->getId(), LOG_DEBUG);
+                            }
+                        }
                     }
+
+                    $this->getReferrerModel()->addTargetMapping($referrer, $this->target);
+                    $this->getTargetModel()->addReferrerMapping($this->target, $referrer);
+
+                    $this->getApiStatistics()->updateReferrerLastSeenStats($referrer->getId());
                 }
-            }else {
-                $this->getLogger()->log(__METHOD__, "not using referrer", LOG_DEBUG);
             }
+        }else {
+            $this->getLogger()->log(__METHOD__, "not using referrer", LOG_DEBUG);
         }
 
-        return $result;
+        return $referrer;
     }
 
 
-    protected function checkUserAgent($userAgentStr, $result)
+    protected function checkUserAgent($userAgentStr)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
-        if(!$this->referrer && Settings::isStoreUserAgents()) {
-            if (!$result) {
-                $this->getLogger()->log(__METHOD__, "not checking user agent because of previous error(s)", LOG_DEBUG);
-            } else {
-                if (!Settings::isEnergySaveActive() && $userAgentStr != null) {
+        $userAgent = null;
 
-                    $userAgent = $this->getUserAgentModel()->getOrCreateByDescription($userAgentStr);
+        if(Settings::isStoreUserAgents()) {
+            if (!Settings::isEnergySaveActive() && $userAgentStr != null) {
 
-                    if (!$userAgent instanceof UserAgent) {
-                        $this->getLogger()->log(__METHOD__, "invalid user agent: " . $userAgentStr, LOG_WARNING);
-                    } else {
-                        $this->userAgent = $userAgent;
+                $ua = $this->getUserAgentModel()->getOrCreateByDescription($userAgentStr);
 
-                        $this->getUserAgentModel()->addTargetMapping($this->userAgent, $this->target);
-                        $this->getTargetModel()->addUserAgentMapping($this->target, $this->userAgent);
-
-                        $this->getApiStatistics()->updateUserAgentLastSeenStats($this->userAgent->getId());
-                        $this->getApiStatistics()->incrementUserAgentRequestStats($this->userAgent);
-                    }
+                if (!$ua instanceof UserAgent) {
+                    $this->getLogger()->log(__METHOD__, "invalid user agent: " . $userAgentStr, LOG_WARNING);
                 } else {
-                    $this->getLogger()->log(__METHOD__, "not using user agent", LOG_DEBUG);
+                    $userAgent = $ua;
+
+                    //$this->getUserAgentModel()->addTargetMapping($this->userAgent, $this->target);
+                    //$this->getTargetModel()->addUserAgentMapping($this->target, $this->userAgent);
+
+                    $this->getApiStatistics()->updateUserAgentLastSeenStats($userAgent->getId());
+                    //$this->getApiStatistics()->incrementUserAgentRequestStats($this->userAgent);
                 }
+            } else {
+                $this->getLogger()->log(__METHOD__, "not using user agent", LOG_DEBUG);
             }
         }
 
-        return $result;
+        return $userAgent;
     }
 
 
-    protected function checkVisitor($address, $result)
+    protected function checkVisitor($address, $userAgentStr, $referrerUrl, $result)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
@@ -535,9 +525,11 @@ class ApiV3
                         $this->getLogger()->log(__METHOD__, "invalid addressType", LOG_ERR);
                         return $result;
                     }
-                    
-                    //FIXME: get real addressType
-                    $visitor = $this->getVisitorModel()->getOrCreateByAddress($address, $addressType);
+
+                    $userAgent = $this->checkUserAgent($userAgentStr);
+                    $referrer = $this->checkReferrer($referrerUrl);
+
+                    $visitor = $this->getVisitorModel()->getOrCreateByAddress($address, $addressType, $userAgent, $referrer);
 
                     if (!$visitor instanceof Visitor) {
                         $this->getLogger()->log(__METHOD__, "invalid visitor: " . $address, LOG_WARNING);
@@ -633,10 +625,11 @@ class ApiV3
 
         $this->checkWaitImage($waitimg, $result);
         $this->checkReferrer($referrerUrl, $result);
-        $this->checkUserAgent($userAgentStr, $result);
-        $this->checkVisitor($visitorAddress, $result);
+        $this->checkVisitor($visitorAddress, $userAgentStr, $referrerUrl, $result);
         $this->checkCallback($callback);
 
+        $this->getLogger()->log(__METHOD__, "VISITOR: " . print_r($this->visitor, true), LOG_DEBUG);
+        
         if ($forceUpdate) {
             $this->forceUpdate = true;
         }
@@ -723,7 +716,6 @@ class ApiV3
                 //TODO: ist diese if-Abrage ok? Mögliche Kombinationen prüfen
                 if (Settings::isImageWatermarksEnabled() == false ||
                     ($this->account && (!$this->account->getMaxDailyRequests() || $this->account->getRequestStats() < $this->account->getMaxDailyRequests()))
-//                    || (!isset($this->account) && ($this->referrer && $this->referrer->isWhitelisted()))) {
                 ) {
 
                     $this->getLogger()->log(__METHOD__, "using unbranded image for target " . $this->target->getId(), LOG_DEBUG);
@@ -832,7 +824,10 @@ class ApiV3
 			}
 
 			$this->getApiStatistics()->incrementDeliveryDailyStats();
-			$this->getApiStatistics()->trackPiwik($this->target, $this->referrer, $this->account, $this->callback);
+            
+            if($this->visitor) {
+                $this->getApiStatistics()->trackPiwik($this->target, $this->visitor->getReferrer(), $this->account, $this->callback);
+            }
 		}
 
         // don't count statistics for dummy images
@@ -844,9 +839,9 @@ class ApiV3
                 $this->getApiStatistics()->incrementApiKeyRequestStats($this->account);
             }
 
-            if(!Settings::isEnergySaveActive() && $this->referrer) {
-                $this->getApiStatistics()->incrementReferrerRequestStats($this->referrer);
-                $this->getApiStatistics()->incrementReferrerDeeplinkRequestStats($this->referrer->getCurrentDeeplink());
+            if(!Settings::isEnergySaveActive() && $this->visitor && $this->visitor->getReferrer()) {
+                $this->getApiStatistics()->incrementReferrerRequestStats($this->visitor->getReferrer());
+                $this->getApiStatistics()->incrementReferrerDeeplinkRequestStats($this->visitor->getReferrer()->getCurrentDeeplink());
             }
         }
 
