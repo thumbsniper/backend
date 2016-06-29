@@ -596,87 +596,88 @@ class ReferrerModel
     }
 
 
-    // what referrers link to a target?
+    /**
+     * what referrers link to a target?
+     * 
+     * @param $targetId
+     * @param null $accountId
+     * @param $orderby
+     * @param $orderDirection
+     * @param $limit
+     * @param $offset
+     * @param $where
+     * @return array
+     * 
+     */
     public function getTargetReferrers($targetId, $accountId = NULL, $orderby, $orderDirection, $limit, $offset, $where)
     {
-        $this->logger->log(__METHOD__, "limit: " . $limit . ", offset: " . $offset, LOG_DEBUG);
+        $this->logger->log(__METHOD__, null, LOG_DEBUG);
 
         $referrers = array();
 
-        //TODO: $accountId, $search and order
-
         try {
             $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionMapReferrersTargets());
-                        
-            $cursor = $collection->aggregateCursor(
-                array(
-                    array(
-                        '$match' => array(
-                            'targetId' => $targetId
-                        )
-                    ),
-                    array(
-                        '$lookup' => array(
-                            'from' => Settings::getMongoCollectionReferrers(),
-                            'localField' => Settings::getMongoKeyMapReferrersTargetsAttrReferrerId(),
-                            'foreignField' => Settings::getMongoKeyReferrerAttrId(),
-                            'as' => 'referrer'
-                        )
-                    ),
-                    array(
-                        '$match' => array(
-                            'referrer.urlBase' => array(
-                                '$regex' => $where,
-                                '$options' => 'i'
-                            )
-                        )
-                    ),
-//                    array(
-//                        '$sort' => array(
-//                            'referrer.' . $orderby => $orderDirection == "desc" ? -1 : 1 
-//                        )
-//                    ),
-                    array(
-                        '$limit' => $limit + $offset
-                    ),
-                    array(
-                        '$skip' => $offset
-                    )
+            $pipeline = array();        
+            
+            $pipeline[] = array(
+                '$match' => array(
+                    'targetId' => $targetId
                 )
             );
 
-            //FIXME: limit the referrers result to those which $accountId is allowed to see
-/*            if ($accountId) {
-                $query['$query'] = array(
-                    Settings::getMongoKeyReferrerAttrAccountId() => $accountId
+            $pipeline[] = array(
+                '$lookup' => array(
+                    'from' => Settings::getMongoCollectionReferrers(),
+                    'localField' => Settings::getMongoKeyMapReferrersTargetsAttrReferrerId(),
+                    'foreignField' => Settings::getMongoKeyReferrerAttrId(),
+                    'as' => 'referrer'
+                )
+            );
+
+            if($where) {
+                $pipeline[] = array(
+                    '$match' => array(
+                        '$or' => array(
+                            array(
+                                'referrer.' . Settings::getMongoKeyReferrerAttrUrlBase() => array(
+                                    '$regex' => $where,
+                                    '$options' => 'i'
+                                )
+                            ),
+                            array(
+                                'referrer.' . Settings::getMongoKeyReferrerAttrId() => array(
+                                    '$regex' => $where,
+                                    '$options' => 'i'
+                                )
+                            )
+                        )
+                    )
                 );
             }
-*/
 
-            //TODO: also search for _id content?
-
-            if ($where) {
-                //TODO: ist es okay, das $query Array hier so neu aufzubauen?
-//                $oldQuery = $query['$query'];
-//                $query['$query'] = array();
-//                $query['$query']['$and'] = $oldQuery;
-//                $query['$query']['$and'][] = array(
-//                    Settings::getMongoKeyReferrerAttrUrlBase() => array(
-//                        '$regex' => $where
-//                    )
-//                );
-
-                
-                //FIXME: repair this! Those values need to be accessible again
-//                $query['$query'][Settings::getMongoKeyReferrerAttrUrlBase()] = array(
-//                    '$regex' => $where,
-//                    '$options' => 'i'
-//                );
+            if($accountId) {
+                $pipeline[] = array(
+                    '$match' => array(
+                        'referrer.' . Settings::getMongoKeyReferrerAttrAccountId() => $accountId
+                    )
+                );
             }
 
-            $fields = array(
-                Settings::getMongoKeyMapReferrersTargetsAttrReferrerId() => true
+            $pipeline[] = array(
+                '$sort' => array(
+                    'referrer.' . $orderby => $orderDirection == "desc" ? -1 : 1
+                )
             );
+
+            $pipeline[] = array(
+                '$limit' => $limit + $offset
+            );
+
+            $pipeline[] = array(
+                '$skip' => $offset
+            );
+            
+            $cursor = $collection->aggregateCursor($pipeline);
 
             foreach($cursor as $data)
             {
@@ -711,46 +712,69 @@ class ReferrerModel
 
         $numReferrers = 0;
 
-        //TODO: filter by targetId
-
         try {
             $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionMapReferrersTargets());
+            $pipeline = array();
 
-            $query = array();
+            $pipeline[] = array(
+                '$match' => array(
+                    'targetId' => $targetId
+                )
+            );
 
-            if($targetId)
-            {
-                $query[Settings::getMongoKeyMapReferrersTargetsAttrTargetId()] = $targetId;
+            $pipeline[] = array(
+                '$lookup' => array(
+                    'from' => Settings::getMongoCollectionReferrers(),
+                    'localField' => Settings::getMongoKeyMapReferrersTargetsAttrReferrerId(),
+                    'foreignField' => Settings::getMongoKeyReferrerAttrId(),
+                    'as' => 'referrer'
+                )
+            );
+
+            if($where) {
+                $pipeline[] = array(
+                    '$match' => array(
+                        '$or' => array(
+                            array(
+                                'referrer.' . Settings::getMongoKeyReferrerAttrUrlBase() => array(
+                                    '$regex' => $where,
+                                    '$options' => 'i'
+                                )
+                            ),
+                            array(
+                                'referrer.' . Settings::getMongoKeyReferrerAttrId() => array(
+                                    '$regex' => $where,
+                                    '$options' => 'i'
+                                )
+                            )
+                        )
+                    )
+                );
             }
 
-            //FIXME: make filtering by $accountId work again
-//            if($accountId)
-//            {
-//                $query[Settings::getMongoKeyReferrerAttrAccountId()] = $accountId;
-//            }
+            if($accountId) {
+                $pipeline[] = array(
+                    '$match' => array(
+                        'referrer.' . Settings::getMongoKeyReferrerAttrAccountId() => $accountId
+                    )
+                );
+            }
 
+            $pipeline[] = array(
+                '$group' => array(
+                    '_id' => '$_id.' . 'referrer.' . Settings::getMongoKeyReferrerAttrId(),
+                    'count' => array(
+                        '$sum' => 1
+                    )
+                )
+            );
+
+            $cursor = $collection->aggregateCursor($pipeline);
+            $cursor->rewind();
+
+            $this->logger->log(__METHOD__, "CURSOR: " . print_r($cursor->current(), true), LOG_DEBUG);    
             
-            //FIXME: make filtering by $where and $accountId work again
-//            if ($where)
-//            {
-//                if($targetId || $accountId) {
-//                    //TODO: ist es okay, das $query Array hier so neu aufzubauen?
-//                    $oldQuery = $query;
-//                    $query = array('$and' => array());
-//                    $query['$and'][] = $oldQuery;
-//                    $query['$and'][][Settings::getMongoKeyReferrerAttrUrlBase()] = array(
-//                        '$regex' => $where,
-//                        '$options' => 'i'
-//                    );
-//                }else {
-//                    $query[Settings::getMongoKeyReferrerAttrUrlBase()] = array(
-//                        '$regex' => $where,
-//                        '$options' => 'i'
-//                    );
-//                }
-//            }
-
-            $numReferrers = $collection->count($query);
+            $numReferrers = $cursor->current()['count'];
             $this->logger->log(__METHOD__, "successfully counted referrers", LOG_DEBUG);
         } catch (Exception $e) {
             $this->logger->log(__METHOD__, "exception while counting referrers: " . $e->getMessage(), LOG_ERR);
