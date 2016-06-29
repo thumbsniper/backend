@@ -60,7 +60,6 @@ class UserAgentModel
 
         $userAgent->setId(isset($data[Settings::getMongoKeyUserAgentAttrId()]) ? $data[Settings::getMongoKeyUserAgentAttrId()] : null);
         $userAgent->setDescription(isset($data[Settings::getMongoKeyUserAgentAttrDescription()]) ? $data[Settings::getMongoKeyUserAgentAttrDescription()] : null);
-        $userAgent->setNumRequests(isset($data[Settings::getMongoKeyUserAgentAttrNumRequests()]) ? $data[Settings::getMongoKeyUserAgentAttrNumRequests()] : 0);
 
         $tsAdded = null;
         if(isset($data[Settings::getMongoKeyUserAgentAttrTsAdded()]))
@@ -182,8 +181,6 @@ class UserAgentModel
                         Settings::getMongoKeyUserAgentAttrDescription() => $description,
                         Settings::getMongoKeyUserAgentAttrTsAdded() => $mongoNow,
                         Settings::getMongoKeyUserAgentAttrTsLastSeen() => $mongoNow
-//                        Settings::getMongoKeyReferrerAttrNumRequests() => 1,
-//                        Settings::getMongoKeyReferrerAttrNumRequestsDaily() . "." . $today => 1
                     );
 
                     $update = array(
@@ -528,38 +525,38 @@ class UserAgentModel
 
 
 
-    public function incrementRequestsStats($userAgentId)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
-
-        $now = time();
-        $today = date("Y-m-d", $now);
-
-        try {
-            $statsCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionUserAgents());
-
-            $statsQuery = array(
-                Settings::getMongoKeyUserAgentAttrId() => $userAgentId
-            );
-
-            $statsUpdate = array(
-                '$inc' => array(
-                    Settings::getMongoKeyUserAgentAttrNumRequests() => 1,
-                    Settings::getMongoKeyUserAgentAttrNumRequestsDaily() . "." . $today => 1
-                )
-            );
-
-            if($statsCollection->update($statsQuery, $statsUpdate)) {
-                $this->logger->log(__METHOD__, "incremented user agent daily request stats for " . $userAgentId, LOG_DEBUG);
-                return true;
-            }
-
-        } catch (Exception $e) {
-            $this->logger->log(__METHOD__, "exception while incrementing user agent daily request stats for " . $userAgentId . ": " . $e->getMessage(), LOG_ERR);
-        }
-
-        return false;
-    }
+//    public function incrementRequestsStats($userAgentId)
+//    {
+//        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+//
+//        $now = time();
+//        $today = date("Y-m-d", $now);
+//
+//        try {
+//            $statsCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionUserAgents());
+//
+//            $statsQuery = array(
+//                Settings::getMongoKeyUserAgentAttrId() => $userAgentId
+//            );
+//
+//            $statsUpdate = array(
+//                '$inc' => array(
+//                    Settings::getMongoKeyUserAgentAttrNumRequests() => 1,
+//                    Settings::getMongoKeyUserAgentAttrNumRequestsDaily() . "." . $today => 1
+//                )
+//            );
+//
+//            if($statsCollection->update($statsQuery, $statsUpdate)) {
+//                $this->logger->log(__METHOD__, "incremented user agent daily request stats for " . $userAgentId, LOG_DEBUG);
+//                return true;
+//            }
+//
+//        } catch (Exception $e) {
+//            $this->logger->log(__METHOD__, "exception while incrementing user agent daily request stats for " . $userAgentId . ": " . $e->getMessage(), LOG_ERR);
+//        }
+//
+//        return false;
+//    }
 
 
 
