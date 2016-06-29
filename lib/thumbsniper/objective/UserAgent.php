@@ -28,7 +28,6 @@ class UserAgent
     private $tsLastSeen;
     private $tsLastUpdated;
     private $blacklisted;
-    private $numRequests;
 
 
 
@@ -134,23 +133,7 @@ class UserAgent
     {
         $this->tsLastSeen = $tsLastSeen;
     }
-
-    /**
-     * @return mixed
-     */
-    public function getNumRequests()
-    {
-        return $this->numRequests;
-    }
-
-    /**
-     * @param mixed $numRequests
-     */
-    public function setNumRequests($numRequests)
-    {
-        $this->numRequests = $numRequests;
-    }
-
+    
     /**
      * @return mixed
      */
