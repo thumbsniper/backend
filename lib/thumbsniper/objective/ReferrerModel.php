@@ -599,7 +599,7 @@ class ReferrerModel
     // what referrers link to a target?
     public function getTargetReferrers($targetId, $accountId = NULL, $orderby, $orderDirection, $limit, $offset, $where)
     {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+        $this->logger->log(__METHOD__, "limit: " . $limit . ", offset: " . $offset, LOG_DEBUG);
 
         $referrers = array();
 
@@ -607,10 +607,41 @@ class ReferrerModel
 
         try {
             $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionMapReferrersTargets());
-
-            $query = array(
-                '$query' => array(
-                    Settings::getMongoKeyMapReferrersTargetsAttrTargetId() => $targetId
+                        
+            $cursor = $collection->aggregateCursor(
+                array(
+                    array(
+                        '$match' => array(
+                            'targetId' => $targetId
+                        )
+                    ),
+                    array(
+                        '$lookup' => array(
+                            'from' => Settings::getMongoCollectionReferrers(),
+                            'localField' => Settings::getMongoKeyMapReferrersTargetsAttrReferrerId(),
+                            'foreignField' => Settings::getMongoKeyReferrerAttrId(),
+                            'as' => 'referrer'
+                        )
+                    ),
+                    array(
+                        '$match' => array(
+                            'referrer.urlBase' => array(
+                                '$regex' => $where,
+                                '$options' => 'i'
+                            )
+                        )
+                    ),
+//                    array(
+//                        '$sort' => array(
+//                            'referrer.' . $orderby => $orderDirection == "desc" ? -1 : 1 
+//                        )
+//                    ),
+                    array(
+                        '$limit' => $limit + $offset
+                    ),
+                    array(
+                        '$skip' => $offset
+                    )
                 )
             );
 
@@ -621,19 +652,6 @@ class ReferrerModel
                 );
             }
 */
-
-            //FIXME: reapair ordering
-            /*
-            if ($orderDirection == "asc") {
-                $query['$orderby'] = array(
-                    $orderby => 1
-                );
-            } else {
-                $query['$orderby'] = array(
-                    $orderby => -1
-                );
-            }
-            */
 
             //TODO: also search for _id content?
 
@@ -660,16 +678,14 @@ class ReferrerModel
                 Settings::getMongoKeyMapReferrersTargetsAttrReferrerId() => true
             );
 
-            /** @var MongoCursor $cursor */
-            $cursor = $collection->find($query, $fields);
-            $cursor->skip($offset);
-            $cursor->limit($limit);
-
             foreach($cursor as $data)
             {
-                //$this->logger->log(__METHOD__, "HIER: " . print_r($data, true), LOG_DEBUG);
-                $referrer = $this->getById($data[Settings::getMongoKeyMapReferrersTargetsAttrReferrerId()]);
-
+                if(!array_key_exists('referrer', $data) || !array_key_exists(0, $data['referrer'])) {
+                    continue;
+                }
+                
+                $referrer = ReferrerModel::load($data['referrer'][0]);
+                
                 if($referrer instanceof Referrer)
                 {
                     $referrers[] = $referrer;
