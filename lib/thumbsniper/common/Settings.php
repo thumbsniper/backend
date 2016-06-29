@@ -390,14 +390,21 @@ abstract class Settings
     static private $mongoCollectionVisitors = "visitors";
     static private $mongoCollectionVisitorsBlacklist = "visitors_blacklist";
     static private $mongoKeyVisitorAttrId = "_id";
-    static private $mongoKeyVisitorAttrAddress = "address";
     static private $mongoKeyVisitorAttrAddressType = "addressType";
     static private $mongoKeyVisitorAttrTsAdded = "tsAdded";
     static private $mongoKeyVisitorAttrTsLastUpdated = "tsLastUpdated";
     static private $mongoKeyVisitorAttrTsLastSeen = "tsLastSeen";
-    static private $mongoKeyVisitorAttrBlacklisted = "blacklisted";
-    static private $mongoKeyVisitorAttrNumRequests = "numRequests";
-    static private $mongoKeyVisitorAttrNumRequestsDaily = "numRequestsDaily";
+    static private $mongoKeyVisitorAttrGeoContinentCode = "geoContinentCode";
+    static private $mongoKeyVisitorAttrGeoCountryCode = "geoCountryCode";
+    static private $mongoKeyVisitorAttrGeoCountryCode3 = "geoCountryCode3";
+    static private $mongoKeyVisitorAttrGeoCountryName = "geoCountryName";
+    static private $mongoKeyVisitorAttrGeoRegion = "geoRegion";
+    static private $mongoKeyVisitorAttrGeoCity = "geoCity";
+    static private $mongoKeyVisitorAttrGeoPostalCode = "geoPostalCode";
+    static private $mongoKeyVisitorAttrGeoLatitude = "geoLatitude";
+    static private $mongoKeyVisitorAttrGeoLongitude = "geoLongitude";
+    static private $mongoKeyVisitorAttrGeoDmaCode = "geoDmaCode";
+    static private $mongoKeyVisitorAttrGeoAreaCode = "geoAreaCode";
 
     // STATISTICS
     static private $mongoCollectionStatistics = "statistics";
@@ -3038,14 +3045,6 @@ abstract class Settings
     /**
      * @return string
      */
-    public static function getMongoKeyVisitorAttrAddress()
-    {
-        return self::$mongoKeyVisitorAttrAddress;
-    }
-
-    /**
-     * @return string
-     */
     public static function getMongoKeyVisitorAttrAddressType()
     {
         return self::$mongoKeyVisitorAttrAddressType;
@@ -3076,30 +3075,6 @@ abstract class Settings
     }
 
     /**
-     * @return string
-     */
-    public static function getMongoKeyVisitorAttrBlacklisted()
-    {
-        return self::$mongoKeyVisitorAttrBlacklisted;
-    }
-
-    /**
-     * @return string
-     */
-    public static function getMongoKeyVisitorAttrNumRequests()
-    {
-        return self::$mongoKeyVisitorAttrNumRequests;
-    }
-
-    /**
-     * @return string
-     */
-    public static function getMongoKeyVisitorAttrNumRequestsDaily()
-    {
-        return self::$mongoKeyVisitorAttrNumRequestsDaily;
-    }
-
-    /**
      * @return boolean
      */
     public static function isStoreVisitors()
@@ -3113,5 +3088,93 @@ abstract class Settings
     public static function setStoreVisitors($storeVisitors)
     {
         self::$storeVisitors = $storeVisitors;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrGeoContinentCode()
+    {
+        return self::$mongoKeyVisitorAttrGeoContinentCode;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrGeoCountryCode()
+    {
+        return self::$mongoKeyVisitorAttrGeoCountryCode;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrGeoCountryCode3()
+    {
+        return self::$mongoKeyVisitorAttrGeoCountryCode3;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrGeoCountryName()
+    {
+        return self::$mongoKeyVisitorAttrGeoCountryName;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrGeoRegion()
+    {
+        return self::$mongoKeyVisitorAttrGeoRegion;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrGeoCity()
+    {
+        return self::$mongoKeyVisitorAttrGeoCity;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrGeoPostalCode()
+    {
+        return self::$mongoKeyVisitorAttrGeoPostalCode;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrGeoLatitude()
+    {
+        return self::$mongoKeyVisitorAttrGeoLatitude;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrGeoLongitude()
+    {
+        return self::$mongoKeyVisitorAttrGeoLongitude;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrGeoDmaCode()
+    {
+        return self::$mongoKeyVisitorAttrGeoDmaCode;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyVisitorAttrGeoAreaCode()
+    {
+        return self::$mongoKeyVisitorAttrGeoAreaCode;
     }
 }

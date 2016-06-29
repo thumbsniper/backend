@@ -84,7 +84,7 @@ RUN git clone -b master https://github.com/thumbsniper/backend.git /opt/thumbsni
 RUN composer --working-dir=/opt/thumbsniper update
 
 RUN echo 'always_populate_raw_post_data=-1' >> /etc/php5/apache2/php.ini \
-    && echo 'geoip.custom_directory=/usr/local/share/GeoIP' >> /etc/php5/apache2/php.ini \
+    && echo 'geoip.custom_directory=/var/lib/GeoIP' >> /etc/php5/apache2/php.ini \
     && echo 'post_max_size=128M' >> /etc/php5/apache2/php.ini \
     && echo 'upload_max_filesize=128M' >> /etc/php5/apache2/php.ini \
     && echo 'include_path=.:/usr/share/php5:/usr/share/php5/PEAR:/opt/thumbsniper' >> /etc/php5/apache2/php.ini \

@@ -803,29 +803,29 @@ class ApiStatistics
     }
 
 
-    public function incrementVisitorRequestStats(Visitor $visitor)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
-
-        if(Settings::isEnergySaveActive())
-        {
-            $this->logger->log(__METHOD__, "energy saving active", LOG_DEBUG);
-            return true;
-        }
-
-        $visitorId = NULL;
-
-        if ($visitor) {
-            $visitorId = $visitor->getId();
-        }
-
-        if ($visitorId != NULL) {
-            if($this->visitorModel->incrementRequestsStats($visitorId)) {
-                $this->logger->log(__METHOD__, "incremented daily requests for visitor " . $visitorId, LOG_DEBUG);
-                return true;
-            }
-        }
-
-        return false;
-    }
+//    public function incrementVisitorRequestStats(Visitor $visitor)
+//    {
+//        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+//
+//        if(Settings::isEnergySaveActive())
+//        {
+//            $this->logger->log(__METHOD__, "energy saving active", LOG_DEBUG);
+//            return true;
+//        }
+//
+//        $visitorId = NULL;
+//
+//        if ($visitor) {
+//            $visitorId = $visitor->getId();
+//        }
+//
+//        if ($visitorId != NULL) {
+//            if($this->visitorModel->incrementRequestsStats($visitorId)) {
+//                $this->logger->log(__METHOD__, "incremented daily requests for visitor " . $visitorId, LOG_DEBUG);
+//                return true;
+//            }
+//        }
+//
+//        return false;
+//    }
 }

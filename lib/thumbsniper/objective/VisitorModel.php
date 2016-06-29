@@ -58,9 +58,7 @@ class VisitorModel
         }
 
         $visitor->setId(isset($data[Settings::getMongoKeyVisitorAttrId()]) ? $data[Settings::getMongoKeyVisitorAttrId()] : null);
-        //$visitor->setAddress(isset($data[Settings::getMongoKeyVisitorAttrAddress()]) ? $data[Settings::getMongoKeyVisitorAttrAddress()] : null);
         $visitor->setAddressType(isset($data[Settings::getMongoKeyVisitorAttrAddressType()]) ? $data[Settings::getMongoKeyVisitorAttrAddressType()] : null);
-        //$visitor->setNumRequests(isset($data[Settings::getMongoKeyVisitorAttrNumRequests()]) ? $data[Settings::getMongoKeyVisitorAttrNumRequests()] : 0);
 
         $tsAdded = null;
         if(isset($data[Settings::getMongoKeyVisitorAttrTsAdded()]))
@@ -94,6 +92,18 @@ class VisitorModel
             }
         }
         $visitor->setTsLastUpdated($tsLastUpdated);
+
+        $visitor->setGeoContinentCode(isset($data[Settings::getMongoKeyVisitorAttrGeoContinentCode()]) ? $data[Settings::getMongoKeyVisitorAttrGeoContinentCode()] : null);
+        $visitor->setGeoCountryCode(isset($data[Settings::getMongoKeyVisitorAttrGeoCountryCode()]) ? $data[Settings::getMongoKeyVisitorAttrGeoCountryCode()] : null);
+        $visitor->setGeoCountryCode3(isset($data[Settings::getMongoKeyVisitorAttrGeoCountryCode3()]) ? $data[Settings::getMongoKeyVisitorAttrGeoCountryCode3()] : null);
+        $visitor->setGeoCountryName(isset($data[Settings::getMongoKeyVisitorAttrGeoCountryName()]) ? $data[Settings::getMongoKeyVisitorAttrGeoCountryName()] : null);
+        $visitor->setGeoRegion(isset($data[Settings::getMongoKeyVisitorAttrGeoRegion()]) ? $data[Settings::getMongoKeyVisitorAttrGeoRegion()] : null);
+        $visitor->setGeoCity(isset($data[Settings::getMongoKeyVisitorAttrGeoCity()]) ? $data[Settings::getMongoKeyVisitorAttrGeoCity()] : null);
+        $visitor->setGeoPostalCode(isset($data[Settings::getMongoKeyVisitorAttrGeoPostalCode()]) ? $data[Settings::getMongoKeyVisitorAttrGeoPostalCode()] : null);
+        $visitor->setGeoLatitude(isset($data[Settings::getMongoKeyVisitorAttrGeoLatitude()]) ? $data[Settings::getMongoKeyVisitorAttrGeoLatitude()] : null);
+        $visitor->setGeoLongitude(isset($data[Settings::getMongoKeyVisitorAttrGeoLongitude()]) ? $data[Settings::getMongoKeyVisitorAttrGeoLongitude()] : null);
+        $visitor->setGeoDmaCode(isset($data[Settings::getMongoKeyVisitorAttrGeoDmaCode()]) ? $data[Settings::getMongoKeyVisitorAttrGeoDmaCode()] : null);
+        $visitor->setGeoAreaCode(isset($data[Settings::getMongoKeyVisitorAttrGeoAreaCode()]) ? $data[Settings::getMongoKeyVisitorAttrGeoAreaCode()] : null);
 
         return $visitor;
     }
@@ -172,7 +182,9 @@ class VisitorModel
             if (!$visitor instanceof Visitor) {
                 $this->logger->log(__METHOD__, "creating new visitor record (" . $address . ")", LOG_INFO);
 
-                // save new referrer to DB
+                $geoData = $this->getGeoData($address);
+
+                // save new visitor to DB
 
                 try {
                     $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionVisitors());
@@ -184,13 +196,46 @@ class VisitorModel
                     $mongoNow = new MongoTimestamp();
 
                     $data = array(
-                        //Settings::getMongoKeyVisitorAttrAddress() => $address,
                         Settings::getMongoKeyVisitorAttrAddressType() => $addressType,
                         Settings::getMongoKeyVisitorAttrTsAdded() => $mongoNow,
                         Settings::getMongoKeyVisitorAttrTsLastSeen() => $mongoNow
-//                        Settings::getMongoKeyReferrerAttrNumRequests() => 1,
-//                        Settings::getMongoKeyReferrerAttrNumRequestsDaily() . "." . $today => 1
                     );
+
+                    if(is_array($geoData) && !empty($geoData)) {
+                        if($geoData['continent_code']) {
+                            $data[Settings::getMongoKeyVisitorAttrGeoContinentCode()] = $geoData['continent_code'];
+                        }
+                        if($geoData['country_code']) {
+                            $data[Settings::getMongoKeyVisitorAttrGeoCountryCode()] = $geoData['country_code'];
+                        }
+                        if($geoData['country_code3']) {
+                            $data[Settings::getMongoKeyVisitorAttrGeoCountryCode3()] = $geoData['country_code3'];
+                        }
+                        if($geoData['country_name']) {
+                            $data[Settings::getMongoKeyVisitorAttrGeoCountryName()] = $geoData['country_name'];
+                        }
+                        if($geoData['region']) {
+                            $data[Settings::getMongoKeyVisitorAttrGeoRegion()] = $geoData['region'];
+                        }
+                        if($geoData['city']) {
+                            $data[Settings::getMongoKeyVisitorAttrGeoCity()] = $geoData['city'];
+                        }
+                        if($geoData['postal_code']) {
+                            $data[Settings::getMongoKeyVisitorAttrGeoPostalCode()] = $geoData['postal_code'];
+                        }
+                        if($geoData['latitude']) {
+                            $data[Settings::getMongoKeyVisitorAttrGeoLatitude()] = $geoData['latitude'];
+                        }
+                        if($geoData['longitude']) {
+                            $data[Settings::getMongoKeyVisitorAttrGeoLongitude()] = $geoData['longitude'];
+                        }
+                        if($geoData['dma_code']) {
+                            $data[Settings::getMongoKeyVisitorAttrGeoDmaCode()] = $geoData['dma_code'];
+                        }
+                        if($geoData['area_code']) {
+                            $data[Settings::getMongoKeyVisitorAttrGeoAreaCode()] = $geoData['area_code'];
+                        }
+                    }
 
                     $update = array(
                         '$setOnInsert' => $data
@@ -199,7 +244,6 @@ class VisitorModel
                     $options = array(
                         'upsert' => true
                     );
-
 
                     $result = $collection->update($query, $update, $options);
 
@@ -213,8 +257,6 @@ class VisitorModel
                             $this->logger->log(__METHOD__, "updated visitor " . $visitorId . " instead of creating a new one. Works fine. :-)", LOG_INFO);
                         }
                     }
-
-                    //$this->logger->log(__METHOD__, "referrer = " . $referrerId . " - data = " . print_r($result, true), LOG_ERR);
                 } catch (Exception $e) {
                     $this->logger->log(__METHOD__, "exception while creating visitor " . $address . ": " . $e->getMessage(), LOG_ERR);
                     $this->logger->log(__METHOD__, "going to die now", LOG_ERR);
@@ -454,30 +496,28 @@ class VisitorModel
                 );
             }
 
-            //TODO: also search for _id content?
-
-            if ($where) {
-                //TODO: ist es okay, das $query Array hier so neu aufzubauen?
-                $oldQuery = $query['$query'];
-                $query['$query'] = array();
-                if(!empty($oldQuery)) {
-                    $query['$query']['$and'][] = $oldQuery;
-                }
-                $query['$query']['$and'][] = array(
-                    Settings::getMongoKeyVisitorAttrAddress() => array(
-                        '$regex' => $where,
-                        '$options' => 'i'
-                    )
-                );
-            }
+//            //TODO: also search for _id content?
+//
+//            if ($where) {
+//                //TODO: ist es okay, das $query Array hier so neu aufzubauen?
+//                $oldQuery = $query['$query'];
+//                $query['$query'] = array();
+//                if(!empty($oldQuery)) {
+//                    $query['$query']['$and'][] = $oldQuery;
+//                }
+//                $query['$query']['$and'][] = array(
+//                    Settings::getMongoKeyVisitorAttrAddress() => array(
+//                        '$regex' => $where,
+//                        '$options' => 'i'
+//                    )
+//                );
+//            }
 
             $fields = array(
                 Settings::getMongoKeyVisitorAttrId() => true
             );
 
-            //$this->logger->log(__METHOD__, "HIER: " . print_r($query, true), LOG_DEBUG);
-
-            /** @var MongoCursor $referrerCursor */
+            /** @var MongoCursor $cursor */
             $cursor = $collection->find($query, $fields); //$query, $fields);
             $cursor->skip($offset);
             $cursor->limit($limit);
@@ -534,78 +574,78 @@ class VisitorModel
 
 
 
-    public function incrementRequestsStats($visitorId)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+//    public function incrementRequestsStats($visitorId)
+//    {
+//        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+//
+//        $now = time();
+//        $today = date("Y-m-d", $now);
+//
+//        try {
+//            $statsCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionVisitors());
+//
+//            $statsQuery = array(
+//                Settings::getMongoKeyVisitorAttrId() => $visitorId
+//            );
+//
+//            $statsUpdate = array(
+//                '$inc' => array(
+//                    Settings::getMongoKeyVisitorAttrNumRequests() => 1,
+//                    Settings::getMongoKeyVisitorAttrNumRequestsDaily() . "." . $today => 1
+//                )
+//            );
+//
+//            if($statsCollection->update($statsQuery, $statsUpdate)) {
+//                $this->logger->log(__METHOD__, "incremented visitor daily request stats for " . $visitorId, LOG_DEBUG);
+//                return true;
+//            }
+//
+//        } catch (Exception $e) {
+//            $this->logger->log(__METHOD__, "exception while incrementing visitor daily request stats for " . $visitorId . ": " . $e->getMessage(), LOG_ERR);
+//        }
+//
+//        return false;
+//    }
 
-        $now = time();
-        $today = date("Y-m-d", $now);
-
-        try {
-            $statsCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionVisitors());
-
-            $statsQuery = array(
-                Settings::getMongoKeyVisitorAttrId() => $visitorId
-            );
-
-            $statsUpdate = array(
-                '$inc' => array(
-                    Settings::getMongoKeyVisitorAttrNumRequests() => 1,
-                    Settings::getMongoKeyVisitorAttrNumRequestsDaily() . "." . $today => 1
-                )
-            );
-
-            if($statsCollection->update($statsQuery, $statsUpdate)) {
-                $this->logger->log(__METHOD__, "incremented visitor daily request stats for " . $visitorId, LOG_DEBUG);
-                return true;
-            }
-
-        } catch (Exception $e) {
-            $this->logger->log(__METHOD__, "exception while incrementing visitor daily request stats for " . $visitorId . ": " . $e->getMessage(), LOG_ERR);
-        }
-
-        return false;
-    }
 
 
-
-    public function getNumRequestsDaily($visitorId, $days)
-    {
-        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
-
-        $stats = array();
-
-        $now = time();
-
-        try {
-            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionVisitors());
-
-            $query = array(
-                Settings::getMongoKeyVisitorAttrId() => $visitorId,
-                Settings::getMongoKeyVisitorAttrNumRequestsDaily() => array(
-                    '$exists' => true
-                )
-            );
-
-            $fields = array(
-                Settings::getMongoKeyVisitorAttrId() => false,
-                Settings::getMongoKeyVisitorAttrNumRequestsDaily() => true
-            );
-
-            $doc = $collection->findOne($query, $fields);
-
-            for ($i = 0; $i < $days; $i++) {
-                $day = date("Y-m-d", $now - (86400 * $i));
-                if (isset($doc[Settings::getMongoKeyVisitorAttrNumRequestsDaily()][$day])) {
-                    $stats[$day] = $doc[Settings::getMongoKeyVisitorAttrNumRequestsDaily()][$day];
-                }
-            }
-        } catch (Exception $e) {
-            $this->logger->log(__METHOD__, "exception while getting visitor daily request stats for " . $visitorId . ": " . $e->getMessage(), LOG_ERR);
-        }
-
-        return $stats;
-    }
+//    public function getNumRequestsDaily($visitorId, $days)
+//    {
+//        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+//
+//        $stats = array();
+//
+//        $now = time();
+//
+//        try {
+//            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionVisitors());
+//
+//            $query = array(
+//                Settings::getMongoKeyVisitorAttrId() => $visitorId,
+//                Settings::getMongoKeyVisitorAttrNumRequestsDaily() => array(
+//                    '$exists' => true
+//                )
+//            );
+//
+//            $fields = array(
+//                Settings::getMongoKeyVisitorAttrId() => false,
+//                Settings::getMongoKeyVisitorAttrNumRequestsDaily() => true
+//            );
+//
+//            $doc = $collection->findOne($query, $fields);
+//
+//            for ($i = 0; $i < $days; $i++) {
+//                $day = date("Y-m-d", $now - (86400 * $i));
+//                if (isset($doc[Settings::getMongoKeyVisitorAttrNumRequestsDaily()][$day])) {
+//                    $stats[$day] = $doc[Settings::getMongoKeyVisitorAttrNumRequestsDaily()][$day];
+//                }
+//            }
+//        } catch (Exception $e) {
+//            $this->logger->log(__METHOD__, "exception while getting visitor daily request stats for " . $visitorId . ": " . $e->getMessage(), LOG_ERR);
+//        }
+//
+//        return $stats;
+//    }
 
 
 
@@ -643,7 +683,7 @@ class VisitorModel
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         try {
-            $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionVisitorsBlacklist());
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionVisitorsBlacklist());
 
             $query = array(
                 '_id' => $visitorId
@@ -666,11 +706,37 @@ class VisitorModel
     }
 
 
-    private function getGeoIpData($address) {
-        $geoip = array();
+    private function getGeoData($address)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
         
-//        if(!geoip_db_avail(GEOIP_CITY_EDITION_REV0) && !geoip_db_avail(GEOIP_CITY_EDITION_REV0)) {
-//            return f
+        $geoData = array();
+
+//        $cst = array(
+//            'GEOIP_COUNTRY_EDITION' => GEOIP_COUNTRY_EDITION,
+//            'GEOIP_REGION_EDITION_REV0' => GEOIP_REGION_EDITION_REV0,
+//            'GEOIP_CITY_EDITION_REV0' => GEOIP_CITY_EDITION_REV0,
+//            'GEOIP_ORG_EDITION' => GEOIP_ORG_EDITION,
+//            'GEOIP_ISP_EDITION' => GEOIP_ISP_EDITION,
+//            'GEOIP_CITY_EDITION_REV1' => GEOIP_CITY_EDITION_REV1,
+//            'GEOIP_REGION_EDITION_REV1' => GEOIP_REGION_EDITION_REV1,
+//            'GEOIP_PROXY_EDITION' => GEOIP_PROXY_EDITION,
+//            'GEOIP_ASNUM_EDITION' => GEOIP_ASNUM_EDITION,
+//            'GEOIP_NETSPEED_EDITION' => GEOIP_NETSPEED_EDITION,
+//            'GEOIP_DOMAIN_EDITION' => GEOIP_DOMAIN_EDITION,
+//        );
+//
+//        foreach ($cst as $k=>$v) {
+//            $this->logger->log(__METHOD__, $k.': '.geoip_db_filename($v).'  '.(geoip_db_avail($v) ? 'Available':''), LOG_DEBUG);
 //        }
+        
+        if(geoip_db_avail(GEOIP_CITY_EDITION_REV0) || geoip_db_avail(GEOIP_CITY_EDITION_REV1)) {
+            $this->logger->log(__METHOD__, "retrieving GeoIP data", LOG_DEBUG);
+            $geoData = geoip_record_by_name($address);
+        }else {
+            $this->logger->log(__METHOD__, "no GeoIP database available", LOG_DEBUG);
+        }
+        
+        return $geoData;
     }
 }

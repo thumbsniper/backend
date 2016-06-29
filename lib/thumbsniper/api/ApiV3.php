@@ -548,7 +548,7 @@ class ApiV3
                         //$this->getTargetModel()->addUserAgentMapping($this->target, $this->userAgent);
 
                         $this->getApiStatistics()->updateVisitorLastSeenStats($this->visitor->getId());
-                        $this->getApiStatistics()->incrementVisitorRequestStats($this->visitor);
+                        //$this->getApiStatistics()->incrementVisitorRequestStats($this->visitor);
                     }
                 } else {
                     $this->getLogger()->log(__METHOD__, "not using visitor", LOG_DEBUG);
