@@ -61,6 +61,11 @@ class Visitor
     /** @var int */
     private $geoAreaCode;
 
+    /** @var UserAgent */
+    private $userAgent;
+    /** @var Referrer */
+    private $referrer;
+    
 
     function __construct()
     {
@@ -386,5 +391,37 @@ class Visitor
     public function setGeoAreaCode($geoAreaCode)
     {
         $this->geoAreaCode = $geoAreaCode;
+    }
+
+    /**
+     * @return UserAgent
+     */
+    public function getUserAgent()
+    {
+        return $this->userAgent;
+    }
+
+    /**
+     * @param UserAgent $userAgent
+     */
+    public function setUserAgent($userAgent)
+    {
+        $this->userAgent = $userAgent;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getReferrer()
+    {
+        return $this->referrer;
+    }
+
+    /**
+     * @param mixed $referrer
+     */
+    public function setReferrer($referrer)
+    {
+        $this->referrer = $referrer;
     }
 }
