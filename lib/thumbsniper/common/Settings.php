@@ -383,7 +383,6 @@ abstract class Settings
     static private $mongoKeyUserAgentAttrTsLastUpdated = "tsLastUpdated";
     static private $mongoKeyUserAgentAttrTsLastSeen = "tsLastSeen";
     static private $mongoKeyUserAgentAttrBlacklisted = "blacklisted";
-    static private $mongoKeyUserAgentAttrNumRequests = "numRequests";
     static private $mongoKeyUserAgentAttrNumRequestsDaily = "numRequestsDaily";
 
     // VISITOR
@@ -405,6 +404,20 @@ abstract class Settings
     static private $mongoKeyVisitorAttrGeoLongitude = "geoLongitude";
     static private $mongoKeyVisitorAttrGeoDmaCode = "geoDmaCode";
     static private $mongoKeyVisitorAttrGeoAreaCode = "geoAreaCode";
+    
+    // MAPS
+    static private $mongoCollectionMapVisitorsUserAgents = "mapVisitorsUserAgents";
+    static private $mongoKeyMapVisitorsUserAgentsAttrId = "_id";
+    static private $mongoKeyMapVisitorsUserAgentsAttrVisitorId = "visitorId";
+    static private $mongoKeyMapVisitorsUserAgentsAttrUserAgentId = "userAgentId";
+    static private $mongoKeyMapVisitorsUserAgentsAttrTsAdded = "tsAdded";
+
+    static private $mongoCollectionMapVisitorsReferrers = "mapVisitorsReferrers";
+    static private $mongoKeyMapVisitorsReferrersAttrId = "_id";
+    static private $mongoKeyMapVisitorsReferrersAttrVisitorId = "visitorId";
+    static private $mongoKeyMapVisitorsReferrersAttrReferrerId = "referrerId";
+    static private $mongoKeyMapVisitorsReferrersAttrTsAdded = "tsAdded";
+
 
     // STATISTICS
     static private $mongoCollectionStatistics = "statistics";
@@ -2419,14 +2432,6 @@ abstract class Settings
     /**
      * @return string
      */
-    public static function getMongoKeyUserAgentAttrNumRequests()
-    {
-        return self::$mongoKeyUserAgentAttrNumRequests;
-    }
-
-    /**
-     * @return string
-     */
     public static function getMongoKeyUserAgentAttrTsLastSeen()
     {
         return self::$mongoKeyUserAgentAttrTsLastSeen;
@@ -3176,5 +3181,109 @@ abstract class Settings
     public static function getMongoKeyVisitorAttrGeoAreaCode()
     {
         return self::$mongoKeyVisitorAttrGeoAreaCode;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoCollectionMapVisitorsUserAgents()
+    {
+        return self::$mongoCollectionMapVisitorsUserAgents;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyMapVisitorsUserAgentsAttrVisitorId()
+    {
+        return self::$mongoKeyMapVisitorsUserAgentsAttrVisitorId;
+    }
+
+    /**
+     * @param string $mongoKeyMapVisitorsUserAgentsAttrVisitorId
+     */
+    public static function setMongoKeyMapVisitorsUserAgentsAttrVisitorId($mongoKeyMapVisitorsUserAgentsAttrVisitorId)
+    {
+        self::$mongoKeyMapVisitorsUserAgentsAttrVisitorId = $mongoKeyMapVisitorsUserAgentsAttrVisitorId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyMapVisitorsUserAgentsAttrUserAgentId()
+    {
+        return self::$mongoKeyMapVisitorsUserAgentsAttrUserAgentId;
+    }
+
+    /**
+     * @param string $mongoKeyMapVisitorsUserAgentsAttrUserAgentId
+     */
+    public static function setMongoKeyMapVisitorsUserAgentsAttrUserAgentId($mongoKeyMapVisitorsUserAgentsAttrUserAgentId)
+    {
+        self::$mongoKeyMapVisitorsUserAgentsAttrUserAgentId = $mongoKeyMapVisitorsUserAgentsAttrUserAgentId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyMapVisitorsUserAgentsAttrId()
+    {
+        return self::$mongoKeyMapVisitorsUserAgentsAttrId;
+    }
+
+    /**
+     * @param string $mongoKeyMapVisitorsUserAgentsAttrId
+     */
+    public static function setMongoKeyMapVisitorsUserAgentsAttrId($mongoKeyMapVisitorsUserAgentsAttrId)
+    {
+        self::$mongoKeyMapVisitorsUserAgentsAttrId = $mongoKeyMapVisitorsUserAgentsAttrId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyMapVisitorsUserAgentsAttrTsAdded()
+    {
+        return self::$mongoKeyMapVisitorsUserAgentsAttrTsAdded;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoCollectionMapVisitorsReferrers()
+    {
+        return self::$mongoCollectionMapVisitorsReferrers;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyMapVisitorsReferrersAttrId()
+    {
+        return self::$mongoKeyMapVisitorsReferrersAttrId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyMapVisitorsReferrersAttrVisitorId()
+    {
+        return self::$mongoKeyMapVisitorsReferrersAttrVisitorId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyMapVisitorsReferrersAttrReferrerId()
+    {
+        return self::$mongoKeyMapVisitorsReferrersAttrReferrerId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyMapVisitorsReferrersAttrTsAdded()
+    {
+        return self::$mongoKeyMapVisitorsReferrersAttrTsAdded;
     }
 }
