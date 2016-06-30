@@ -112,6 +112,7 @@ $slim->get('/thumbnail/:apiKey/:width/:effect/', function ($apiKey, $width, $eff
 	if(!$api->loadAndValidateCommonParameters('thumbnail'))
 	{
 		echo "invalid common parameters";
+		die();
 	}
 
     $response = $api->outputThumbnail($apiKey, $width, $effect, $apiParams['url'], $apiParams['waitimg'], 
@@ -137,6 +138,7 @@ $slim->get('/thumbnail/:width/:effect/', function ($width, $effect) use ($slim, 
 	if(!$api->loadAndValidateCommonParameters('thumbnail'))
 	{
 		echo "invalid common parameters";
+        die();
 	}
 
 	$response = $api->outputThumbnail(null, $width, $effect, $apiParams['url'], $apiParams['waitimg'],
@@ -146,6 +148,7 @@ $slim->get('/thumbnail/:width/:effect/', function ($width, $effect) use ($slim, 
 	{
 		//$api->publishLogsAsHeaders();
 		echo "invalid thumbnail parameters";
+        die();
 	}else
 	{
 		output($slim, $response);
