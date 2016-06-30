@@ -33,6 +33,7 @@ use ThumbSniper\common\Settings;
 use ThumbSniper\db\Mongo;
 use ThumbSniper\db\Redis;
 use ThumbSniper\objective\ReferrerDeeplinkModel;
+use ThumbSniper\objective\RequestController;
 use ThumbSniper\objective\UserAgent;
 use ThumbSniper\objective\UserAgentModel;
 use ThumbSniper\objective\Visitor;
@@ -111,6 +112,8 @@ class ApiV3
 
     protected $frontendImageUrls;
 
+    /** @var RequestController */
+    protected $requestController;
 
 
     function __construct($forceDebug)
@@ -148,34 +151,10 @@ class ApiV3
     }
 
 
-    // validation
-
     public function loadAndValidateCommonParameters($action)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
-
-        $result = true;
-
-        // action
-
-        if (!$action || !is_string($action) || !in_array($action, Settings::getApiValidActions())) {
-            $this->getLogger()->log(__METHOD__, "invalid action", LOG_ERR);
-            $result = false;
-        } else {
-            $this->action = $action;
-        }
-
-        if(Helpers::isSSL())
-        {
-            $this->httpProtocol = "https";
-        }else
-        {
-            $this->httpProtocol = "http";
-        }
-
-        $this->httpRequestMethod = $_SERVER['REQUEST_METHOD'];
-
-        return $result;
+        return $this->getRequestController()->validateApiAction($action);
     }
 
 
@@ -395,29 +374,6 @@ class ApiV3
     }
 
 
-    protected function checkWaitImage($waitimg, $result)
-    {
-        $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
-
-        if (!$result) {
-            $this->getLogger()->log(__METHOD__, "not checking waitimg because of previous error(s)", LOG_DEBUG);
-        } else {
-            if ($waitimg != null) {
-                if (!is_string($waitimg) || !filter_var($waitimg, FILTER_VALIDATE_URL, FILTER_FLAG_SCHEME_REQUIRED)) {
-                    $this->getLogger()->log(__METHOD__, "invalid waitimg", LOG_WARNING);
-                } else {
-                    $this->getLogger()->log(__METHOD__, "set waitimg to: " . $waitimg, LOG_INFO);
-                    $this->waitimg = $waitimg;
-                }
-            } else {
-                $this->getLogger()->log(__METHOD__, "not using waitimg", LOG_DEBUG);
-            }
-        }
-
-        return $result;
-    }
-
-
     protected function checkReferrer($referrerUrl)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
@@ -623,7 +579,10 @@ class ApiV3
             $result = false;
         }
 
-        $this->checkWaitImage($waitimg, $result);
+        if($result) {
+            $this->getRequestController()->validateWaitImageUrl($waitimg);
+        }
+
         $this->checkReferrer($referrerUrl, $result);
         $this->checkVisitor($visitorAddress, $userAgentStr, $referrerUrl, $result);
         $this->checkCallback($callback);
@@ -1548,5 +1507,16 @@ class ApiV3
         }
 
         return $this->visitorModel;
+    }
+
+
+    protected function getRequestController()
+    {
+        if(!$this->requestController instanceof RequestController) {
+            $this->getLogger()->log(__METHOD__, "init new RequestController instance", LOG_DEBUG);
+            $this->requestController = new RequestController($this->getMongoDB(), $this->getLogger());
+        }
+
+        return $this->requestController;
     }
 }
