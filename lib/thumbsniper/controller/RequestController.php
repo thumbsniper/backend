@@ -45,6 +45,9 @@ class RequestController
 
     /** @var AccountModel */
     protected $accountModel;
+    
+    /** @var ReferrerModel */
+    protected $referrerModel;
 
 
 
@@ -143,7 +146,7 @@ class RequestController
     }
 
 
-    public function validateVisitor($address, $userAgentStr, $referrerUrl, $result)
+    public function validateVisitor($address, $userAgentStr, $referrerUrl, $apiKey, $result)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
@@ -164,7 +167,9 @@ class RequestController
             return false;
         }
 
-        $userAgent = $this->getValidatedUserAgent($userAgentStr);
+        $this->request->setUserAgent($this->getValidatedUserAgent($userAgentStr));
+        $this->request->setAccount($$this->getValidatedAccountByApiKey($apiKey));
+        
         $referrer = $this->checkReferrer($referrerUrl);
 
         $visitor = $this->getVisitorModel()->getOrCreateByAddress($address, $addressType, $userAgent, $referrer);
@@ -236,44 +241,45 @@ class RequestController
             return null;
         }
 
-        if ($this->account instanceof Account) {
-            $ref = $this->getReferrerModel()->getOrCreateByUrl($referrerUrl, $this->account->getId());
+        if ($this->request->getAccount() instanceof Account) {
+            $ref = $this->getReferrerModel()->getOrCreateByUrl($referrerUrl, $this->request->getAccount()->getId());
         } else {
             $ref = $this->getReferrerModel()->getOrCreateByUrl($referrerUrl);
         }
 
         if (!$ref instanceof Referrer) {
-            $this->getLogger()->log(__METHOD__, "invalid referrer: " . $referrerUrl, LOG_WARNING);
-        } else {
-            $referrer = $ref;
+            $this->logger->log(__METHOD__, "invalid referrer: " . $referrerUrl, LOG_WARNING);
+            return null;
+        }
+        
+        $referrer = $ref;
 
-            if ($referrer->getAccountId()) {
-                /** @var Account $account */
-                $account = null;
+        if ($referrer->getAccountId()) {
+            /** @var Account $account */
+            $account = null;
 
-                if (!$this->account instanceof Account) {
-                    $account = $this->getAccountModel()->getById($referrer->getAccountId());
-                }
-
-                // only load account by referrer if whitelist is enabled in account settings
-                if ($account instanceof Account) {
-                    $this->getLogger()->log(__METHOD__, "found account " . $account->getId() . " by its referrer", LOG_DEBUG);
-
-                    if ($account->isWhitelistActive()) {
-                        $this->getLogger()->log(__METHOD__, "whitelist active for account " . $account->getId(), LOG_DEBUG);
-                        $this->account = $account;
-                        $this->getReferrerModel()->checkDomainVerificationKeyExpired($referrer, $this->account);
-                    } else {
-                        $this->getLogger()->log(__METHOD__, "ignoring account " . $account->getId(), LOG_DEBUG);
-                    }
-                }
+            if (!$this->request->getAccount() instanceof Account) {
+                $account = $this->getAccountModel()->getById($referrer->getAccountId());
             }
 
-            $this->getReferrerModel()->addTargetMapping($referrer, $this->target);
-            //$this->getTargetModel()->addReferrerMapping($this->target, $referrer);
+            // only load account by referrer if whitelist is enabled in account settings
+            if ($account instanceof Account) {
+                $this->logger->log(__METHOD__, "found account " . $account->getId() . " by its referrer", LOG_DEBUG);
 
-            $this->getApiStatistics()->updateReferrerLastSeenStats($referrer->getId());
+                if ($account->isWhitelistActive()) {
+                    $this->logger->log(__METHOD__, "whitelist active for account " . $account->getId(), LOG_DEBUG);
+                    $this->account = $account;
+                    $this->getReferrerModel()->checkDomainVerificationKeyExpired($referrer, $this->account);
+                } else {
+                    $this->getLogger()->log(__METHOD__, "ignoring account " . $account->getId(), LOG_DEBUG);
+                }
+            }
         }
+
+        $this->getReferrerModel()->addTargetMapping($referrer, $this->target);
+        //$this->getTargetModel()->addReferrerMapping($this->target, $referrer);
+
+        $this->getApiStatistics()->updateReferrerLastSeenStats($referrer->getId());
     }
 
 
@@ -422,5 +428,16 @@ class RequestController
         }
 
         return $this->accountModel;
+    }
+
+
+    protected function getReferrerModel()
+    {
+        if(!$this->referrerModel instanceof ReferrerModel) {
+            $this->logger->log(__METHOD__, "init new ReferrerModel instance", LOG_DEBUG);
+            $this->referrerModel = new ReferrerModel($this->mongoDB, $this->logger);
+        }
+
+        return $this->referrerModel;
     }
 }

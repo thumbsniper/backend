@@ -578,7 +578,7 @@ class ApiV3
         {
             $result = false;
         }
-
+        
         if($result) {
             $this->getRequestController()->validateWaitImageUrl($waitimg);
         }

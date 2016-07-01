@@ -34,6 +34,9 @@ class Request
 
     /** @var Visitor */
     protected $visitor;
+
+    /** @var UserAgent */
+    protected $userAgent;
     
     /** @var string */
     protected $httpProtocol;
@@ -46,7 +49,7 @@ class Request
 
     /** @var string */
     protected $waitImageUrl;
-    
+        
     
     public function __construct()
     {
@@ -162,5 +165,21 @@ class Request
     public function setWaitImageUrl($waitImageUrl)
     {
         $this->waitImageUrl = $waitImageUrl;
+    }
+
+    /**
+     * @return UserAgent
+     */
+    public function getUserAgent()
+    {
+        return $this->userAgent;
+    }
+
+    /**
+     * @param UserAgent $userAgent
+     */
+    public function setUserAgent($userAgent)
+    {
+        $this->userAgent = $userAgent;
     }
 }
