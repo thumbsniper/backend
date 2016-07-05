@@ -22,8 +22,10 @@ namespace ThumbSniper\objective;
 
 use Aws\CloudFront\Exception\Exception;
 use MongoDB;
+use Predis\Client;
 use ThumbSniper\account\Account;
 use ThumbSniper\account\AccountModel;
+use ThumbSniper\api\ApiStatistics;
 use ThumbSniper\common\Helpers;
 use ThumbSniper\common\Logger;
 use ThumbSniper\common\Settings;
@@ -37,6 +39,9 @@ class RequestController
     /** @var MongoDB */
     protected $mongoDB;
 
+    /** @var Client */
+    private $redis;
+
     /** @var Request */
     protected $request;
 
@@ -49,26 +54,39 @@ class RequestController
     /** @var ReferrerModel */
     protected $referrerModel;
 
+    /** @var ApiStatistics */
+    protected $apiStatistics;
+
+    /** @var VisitorModel */
+    protected $visitorModel;
 
 
-    function __construct(MongoDB $mongoDB, Logger $logger)
+
+    function __construct(MongoDB $mongoDB, Client $redis, Logger $logger)
     {
         $logger->log(__METHOD__, NULL, LOG_DEBUG);
         
         $this->mongoDB = $mongoDB;
+        $this->redis = $redis;
         $this->logger = $logger;
         $this->request = new Request();
-        
-        $this->init();
     }
     
     
-    protected function init() 
+    protected function init($apiAction, $callback, $waitimg, $userAgentStr, $apiKey, $referrerUrl)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
-        
-        $this->findHttpProtocol();
-        $this->findHttpMethod();
+
+        $this->request->setHttpProtocol($this->getHttpProtocol());
+        $this->request->setHttpMethod($this->getHttpMethod());
+
+        $this->request->setApiAction($this->getValidatedApiAction($apiAction));
+        $this->request->setCallback($this->getValidatedCallback($callback));
+        $this->request->setWaitImageUrl($this->getValidatedWaitImageUrl($waitimg));
+
+        $this->request->setUserAgent($this->getValidatedUserAgent($userAgentStr));
+        $this->request->setAccount($this->getValidatedAccountByApiKey($apiKey));
+        $this->request->setReferrer($this->getValidatedReferrer($referrerUrl));
     }
 
 
@@ -85,22 +103,20 @@ class RequestController
     /**
      * @return string
      */
-    protected function findHttpProtocol() 
+    protected function getHttpProtocol()
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
-        $this->request->setHttpProtocol(Helpers::isSSL() ? "https" : "http");
-        return $this->request->getHttpProtocol();
+        return Helpers::isSSL() ? "https" : "http";
     }
 
 
     /**
      * @return string
      */
-    protected function findHttpMethod() 
+    protected function getHttpMethod()
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
-        $this->request->setHttpMethod($_SERVER['REQUEST_METHOD']);
-        return $this->request->getHttpMethod();
+        return $_SERVER['REQUEST_METHOD'];
     }
 
 
@@ -108,16 +124,15 @@ class RequestController
      * @param $action
      * @return bool
      */
-    public function validateApiAction($action)
+    protected function getValidatedApiAction($action)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         if(!$action || !is_string($action) || !in_array($action, Settings::getApiValidActions())) {
             $this->logger->log(__METHOD__, "invalid action: " . $action, LOG_ERR);
-            return false;
+            return null;
         } else {
-            $this->request->setApiAction($action);
-            return true;
+            return $action;
         }
     }
 
@@ -126,27 +141,26 @@ class RequestController
      * @param $waitimg
      * @return bool
      */
-    public function validateWaitImageUrl($waitimg)
+    protected function getValidatedWaitImageUrl($waitimg)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         if(!$waitimg) {
             $this->logger->log(__METHOD__, "not using waitimg", LOG_DEBUG);
-            return true;
+            return null;
         }
         
         if(!is_string($waitimg) || !filter_var($waitimg, FILTER_VALIDATE_URL, FILTER_FLAG_SCHEME_REQUIRED)) {
             $this->logger->log(__METHOD__, "invalid waitimg: " . $waitimg, LOG_WARNING);
-            return false;
+            return null;
         } else {
-            $this->logger->log(__METHOD__, "set waitimg to: " . $waitimg, LOG_INFO);
-            $this->request->setWaitImageUrl($waitimg);
-            return true;
+            $this->logger->log(__METHOD__, "found waitimg: " . $waitimg, LOG_INFO);
+            return $waitimg;
         }
     }
 
 
-    public function validateVisitor($address, $userAgentStr, $referrerUrl, $apiKey, $result)
+    public function getValidatedVisitor($address, $userAgentStr, $referrerUrl, $apiKey)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
@@ -167,24 +181,21 @@ class RequestController
             return false;
         }
 
-        $this->request->setUserAgent($this->getValidatedUserAgent($userAgentStr));
-        $this->request->setAccount($$this->getValidatedAccountByApiKey($apiKey));
-        
-        $referrer = $this->checkReferrer($referrerUrl);
 
-        $visitor = $this->getVisitorModel()->getOrCreateByAddress($address, $addressType, $userAgent, $referrer);
+        $visitor = $this->getVisitorModel()->getOrCreateByAddress($address, $addressType, $this->request->getUserAgent(), $this->request->getReferrer());
 
         if (!$visitor instanceof Visitor) {
-            $this->getLogger()->log(__METHOD__, "invalid visitor: " . $address, LOG_WARNING);
-        } else {
-            $this->visitor = $visitor;
-
-            //$this->getVisitorModel()->addTargetMapping($this->userAgent, $this->target);
-            //$this->getTargetModel()->addUserAgentMapping($this->target, $this->userAgent);
-
-            $this->getApiStatistics()->updateVisitorLastSeenStats($this->visitor->getId());
-            //$this->getApiStatistics()->incrementVisitorRequestStats($this->visitor);
+            $this->logger->log(__METHOD__, "invalid visitor: " . $address, LOG_WARNING);
+            return null;
         }
+
+        //$this->getVisitorModel()->addTargetMapping($this->userAgent, $this->target);
+        //$this->getTargetModel()->addUserAgentMapping($this->target, $this->userAgent);
+
+        $this->getApiStatistics()->updateVisitorLastSeenStats($visitor->getId());
+        //$this->getApiStatistics()->incrementVisitorRequestStats($this->visitor);
+
+        return $visitor;
     }
 
 
@@ -254,13 +265,8 @@ class RequestController
         
         $referrer = $ref;
 
-        if ($referrer->getAccountId()) {
-            /** @var Account $account */
-            $account = null;
-
-            if (!$this->request->getAccount() instanceof Account) {
-                $account = $this->getAccountModel()->getById($referrer->getAccountId());
-            }
+        if($referrer->getAccountId() && !$this->request->getAccount()) {
+            $account = $this->getAccountModel()->getById($referrer->getAccountId());
 
             // only load account by referrer if whitelist is enabled in account settings
             if ($account instanceof Account) {
@@ -268,18 +274,22 @@ class RequestController
 
                 if ($account->isWhitelistActive()) {
                     $this->logger->log(__METHOD__, "whitelist active for account " . $account->getId(), LOG_DEBUG);
-                    $this->account = $account;
-                    $this->getReferrerModel()->checkDomainVerificationKeyExpired($referrer, $this->account);
+                    $this->request->setAccount($account);
+                    $this->getReferrerModel()->checkDomainVerificationKeyExpired($referrer, $this->request->getAccount());
                 } else {
-                    $this->getLogger()->log(__METHOD__, "ignoring account " . $account->getId(), LOG_DEBUG);
+                    $this->logger->log(__METHOD__, "ignoring account " . $account->getId(), LOG_DEBUG);
                 }
             }
         }
 
-        $this->getReferrerModel()->addTargetMapping($referrer, $this->target);
+        //FIXME: addTargetMapping somewhere else
+        //$this->getReferrerModel()->addTargetMapping($referrer, $this->target);
+
         //$this->getTargetModel()->addReferrerMapping($this->target, $referrer);
 
         $this->getApiStatistics()->updateReferrerLastSeenStats($referrer->getId());
+
+        return $referrer;
     }
 
 
@@ -409,6 +419,25 @@ class RequestController
     }
 
 
+    protected function getValidatedCallback($callback)
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        if (!$callback) {
+            $this->logger->log(__METHOD__, "no callback used", LOG_DEBUG);
+            return null;
+        }
+
+        if(!is_string($callback) || !preg_match('/^jQuery[0-9]+_[0-9]+$|^jsonp[0-9]+$/', $callback)) {
+            $this->logger->log(__METHOD__, "invalid callback", LOG_WARNING);
+            return null;
+        }else {
+            $this->logger->log(__METHOD__, "set callback to: " . $callback, LOG_INFO);
+            return $callback;
+        }
+    }
+
+
     protected function getUserAgentModel()
     {
         if(!$this->userAgentModel instanceof UserAgentModel) {
@@ -439,5 +468,26 @@ class RequestController
         }
 
         return $this->referrerModel;
+    }
+
+    protected function getApiStatistics()
+    {
+        if(!$this->apiStatistics instanceof ApiStatistics) {
+            $this->logger->log(__METHOD__, "init new ApiStatistics instance", LOG_DEBUG);
+            $this->apiStatistics = new ApiStatistics($this->mongoDB, $this->redis, $this->logger);
+        }
+
+        return $this->apiStatistics;
+    }
+
+
+    protected function getVisitorModel()
+    {
+        if(!$this->visitorModel instanceof VisitorModel) {
+            $this->logger->log(__METHOD__, "init new VisitorModel instance", LOG_DEBUG);
+            $this->visitorModel = new VisitorModel($this->mongoDB, $this->logger);
+        }
+
+        return $this->visitorModel;
     }
 }

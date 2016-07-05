@@ -38,6 +38,9 @@ class Request
     /** @var UserAgent */
     protected $userAgent;
     
+    /** @var Referrer */
+    protected $referrer;
+    
     /** @var string */
     protected $httpProtocol;
     
@@ -49,6 +52,9 @@ class Request
 
     /** @var string */
     protected $waitImageUrl;
+    
+    /** @var string */
+    protected $callback;
         
     
     public function __construct()
@@ -181,5 +187,37 @@ class Request
     public function setUserAgent($userAgent)
     {
         $this->userAgent = $userAgent;
+    }
+
+    /**
+     * @return Referrer
+     */
+    public function getReferrer()
+    {
+        return $this->referrer;
+    }
+
+    /**
+     * @param Referrer $referrer
+     */
+    public function setReferrer($referrer)
+    {
+        $this->referrer = $referrer;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCallback()
+    {
+        return $this->callback;
+    }
+
+    /**
+     * @param string $callback
+     */
+    public function setCallback($callback)
+    {
+        $this->callback = $callback;
     }
 }

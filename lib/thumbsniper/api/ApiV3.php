@@ -582,6 +582,8 @@ class ApiV3
         if($result) {
             $this->getRequestController()->validateWaitImageUrl($waitimg);
         }
+        
+        
 
         $this->checkReferrer($referrerUrl, $result);
         $this->checkVisitor($visitorAddress, $userAgentStr, $referrerUrl, $result);
@@ -1514,7 +1516,7 @@ class ApiV3
     {
         if(!$this->requestController instanceof RequestController) {
             $this->getLogger()->log(__METHOD__, "init new RequestController instance", LOG_DEBUG);
-            $this->requestController = new RequestController($this->getMongoDB(), $this->getLogger());
+            $this->requestController = new RequestController($this->getMongoDB(), $this->getRedis(), $this->getLogger());
         }
 
         return $this->requestController;
