@@ -164,15 +164,16 @@ class ReferrerDeeplinkModel
         $referrerDeeplinkId = $this->calculateId($url);
         $referrerDeeplink = $this->getById($referrerDeeplinkId);
 
-        do {
-            $this->logger->log(__METHOD__, "start loop", LOG_DEBUG);
 
-            if (!$referrerDeeplink instanceof ReferrerDeeplink) {
-                $this->logger->log(__METHOD__, "creating new referrer deeplink record (" . $url . ")", LOG_DEBUG);
+        try {
+            do {
+                $this->logger->log(__METHOD__, "start loop", LOG_DEBUG);
 
-                // save new referrer to DB
+                if (!$referrerDeeplink instanceof ReferrerDeeplink) {
+                    $this->logger->log(__METHOD__, "creating new referrer deeplink record (" . $url . ")", LOG_DEBUG);
 
-                try {
+                    // save new referrer to DB
+
                     $referrerDeeplinkCollection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionReferrerDeeplinks());
 
                     $referrerDeeplinkQuery = array(
@@ -207,16 +208,17 @@ class ReferrerDeeplinkModel
                         }
                     }
 
-                } catch (\Exception $e) {
-                    $this->logger->log(__METHOD__, "exception while creating referrer deeplink " . $url . ": " . $e->getMessage(), LOG_ERR);
+                    $referrerDeeplink = $this->getById($referrerDeeplinkId);
                 }
 
-                $referrerDeeplink = $this->getById($referrerDeeplinkId);
-            }
-        }while(!$referrerDeeplink instanceof ReferrerDeeplink);
+            }while(!$referrerDeeplink instanceof ReferrerDeeplink);
+        }catch (Exception $e) {
+            $this->logger->log(__METHOD__, "exception while creating referrer deeplink " . $url . ": " . $e->getMessage() . "(Code: " . $e->getCode() . ")", LOG_ERR);
+        }
+
         $this->logger->log(__METHOD__, "end loop", LOG_DEBUG);
 
-        return $referrerDeeplink;
+        return $referrerDeeplink instanceof ReferrerDeeplink ? $referrerDeeplink : false;
     }
 
 

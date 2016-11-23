@@ -209,19 +209,15 @@ class ReferrerModel
         $referrerId = $this->calculateId($urlBase);
         $referrer = $this->getById($referrerId);
 
-        //FIXME: use try/catch to break infinite loop (as in TargetModel)
+        try {
+            do {
+                $this->logger->log(__METHOD__, "start loop", LOG_DEBUG);
 
-        do {
-            $this->logger->log(__METHOD__, "start loop", LOG_DEBUG);
+                if (!$referrer instanceof Referrer) {
+                    $this->logger->log(__METHOD__, "creating new referrer record (" . $url . ")", LOG_INFO);
 
-            if (!$referrer instanceof Referrer) {
-                $this->logger->log(__METHOD__, "creating new referrer record (" . $url . ")", LOG_INFO);
+                    // save new referrer to DB
 
-                $now = time();
-
-                // save new referrer to DB
-
-                try {
                     $referrerCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionReferrers());
 
                     $referrerQuery = array(
@@ -251,27 +247,28 @@ class ReferrerModel
 
                     $result = $referrerCollection->update($referrerQuery, $referrerUpdate, $referrerOptions);
 
-                    if(is_array($result)) {
-                        if($result['n'] == true) {
+                    if (is_array($result)) {
+                        if ($result['n'] == true) {
                             $this->logger->log(__METHOD__, "new referrer created: " . $referrerId, LOG_INFO);
 
                             // update statistics counter
                             $this->incrementNewReferrersDailyStats();
-                        }elseif($result['updatedExisting']) {
+                        } elseif ($result['updatedExisting']) {
                             $this->logger->log(__METHOD__, "updated referrer " . $referrerId . " instead of creating a new one. Works fine. :-)", LOG_INFO);
                         }
                     }
 
                     //$this->logger->log(__METHOD__, "referrer = " . $referrerId . " - data = " . print_r($result, true), LOG_ERR);
-                } catch (Exception $e) {
-                    $this->logger->log(__METHOD__, "exception while creating referrer " . $urlBase . ": " . $e->getMessage(), LOG_ERR);
-                    $this->logger->log(__METHOD__, "going to die now", LOG_ERR);
-                    die();
-                }
 
-                $referrer = $this->getById($referrerId);
-            }
-        }while(!$referrer instanceof Referrer);
+                    $referrer = $this->getById($referrerId);
+                }
+            } while (!$referrer instanceof Referrer);
+        }catch (Exception $e) {
+            $this->logger->log(__METHOD__, "exception while creating referrer " . $urlBase . ": " . $e->getMessage(), LOG_ERR);
+            $this->logger->log(__METHOD__, "going to die now", LOG_ERR);
+            die();
+        }
+
         $this->logger->log(__METHOD__, "end loop", LOG_DEBUG);
 
 		if(!Settings::isEnergySaveActive())
@@ -280,7 +277,7 @@ class ReferrerModel
         	$referrer->setCurrentDeeplink($currentDeeplink);
 		}
 
-        return $referrer;
+        return $referrer instanceof Referrer ? $referrer : false;
     }
 
 

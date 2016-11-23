@@ -161,15 +161,15 @@ class UserAgentModel
         $userAgentId = $this->calculateId($description);
         $userAgent = $this->getById($userAgentId);
 
-        do {
-            $this->logger->log(__METHOD__, "start loop", LOG_DEBUG);
+        try {
+            do {
+                $this->logger->log(__METHOD__, "start loop", LOG_DEBUG);
 
-            if (!$userAgent instanceof UserAgent) {
-                $this->logger->log(__METHOD__, "creating new user agent record (" . $description . ")", LOG_INFO);
+                if (!$userAgent instanceof UserAgent) {
+                    $this->logger->log(__METHOD__, "creating new user agent record (" . $description . ")", LOG_INFO);
 
-                // save new referrer to DB
+                    // save new referrer to DB
 
-                try {
                     $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionUserAgents());
 
                     $query = array(
@@ -197,30 +197,29 @@ class UserAgentModel
 
                     $result = $collection->update($query, $update, $options);
 
-                    if(is_array($result)) {
-                        if($result['n'] == true) {
+                    if (is_array($result)) {
+                        if ($result['n'] == true) {
                             $this->logger->log(__METHOD__, "new user agent created: " . $userAgentId, LOG_INFO);
 
                             // update statistics counter
                             $this->incrementNewUserAgentsDailyStats();
-                        }elseif($result['updatedExisting']) {
+                        } elseif ($result['updatedExisting']) {
                             $this->logger->log(__METHOD__, "updated user agent " . $userAgentId . " instead of creating a new one. Works fine. :-)", LOG_INFO);
                         }
                     }
 
-                    //$this->logger->log(__METHOD__, "referrer = " . $referrerId . " - data = " . print_r($result, true), LOG_ERR);
-                } catch (Exception $e) {
-                    $this->logger->log(__METHOD__, "exception while creating user agent " . $description . ": " . $e->getMessage(), LOG_ERR);
-                    $this->logger->log(__METHOD__, "going to die now", LOG_ERR);
-                    die();
+                    $userAgent = $this->getById($userAgentId);
                 }
+            } while (!$userAgent instanceof UserAgent);
+        }catch (Exception $e) {
+            $this->logger->log(__METHOD__, "exception while creating user agent " . $description . ": " . $e->getMessage(), LOG_ERR);
+            $this->logger->log(__METHOD__, "going to die now", LOG_ERR);
+            die();
+        }
 
-                $userAgent = $this->getById($userAgentId);
-            }
-        }while(!$userAgent instanceof UserAgent);
         $this->logger->log(__METHOD__, "end loop", LOG_DEBUG);
 
-        return $userAgent;
+        return $userAgent instanceof UserAgent ? $userAgent : false;
     }
 
 

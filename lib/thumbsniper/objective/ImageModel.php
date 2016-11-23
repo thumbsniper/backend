@@ -176,16 +176,15 @@ class ImageModel
         $imageId = $this->calculateId($targetId, $width, $effect);
         $image = $this->getById($imageId);
 
-        //FIXME: use try/catch to break infinite loop (as in TargetModel)
-        do {
-            $this->logger->log(__METHOD__, "start loop", LOG_DEBUG);
+        try {
+            do {
+                $this->logger->log(__METHOD__, "start loop", LOG_DEBUG);
 
-            if (!$image instanceof Image) {
+                if (!$image instanceof Image) {
 
-                // not found - create new image
-                // save new image to DB
+                    // not found - create new image
+                    // save new image to DB
 
-                try {
                     $targetCollection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionImages());
 
                     $query = array(
@@ -210,23 +209,23 @@ class ImageModel
 
                     $result = $targetCollection->update($query, $update, $options);
 
-                    if(is_array($result)) {
-                        if($result['n'] == true) {
+                    if (is_array($result)) {
+                        if ($result['n'] == true) {
                             $this->logger->log(__METHOD__, "new image created: " . $imageId, LOG_INFO);
-                        }elseif($result['updatedExisting']) {
+                        } elseif ($result['updatedExisting']) {
                             $this->logger->log(__METHOD__, "updated image " . $imageId . " instead of creating a new one. Works fine. :-)", LOG_INFO);
                         }
                     }
-                } catch (\Exception $e) {
-                    $this->logger->log(__METHOD__, "exception while creating image " . $width . "/" . $effect . " for target " . $targetId . ": " . $e->getMessage(), LOG_ERR);
-                }
 
-                $image = $this->getById($imageId);
-            }
-        }while(!$image instanceof Image);
+                    $image = $this->getById($imageId);
+                }
+            } while (!$image instanceof Image);
+        }catch (Exception $e) {
+            $this->logger->log(__METHOD__, "exception while creating image " . $width . "/" . $effect . " for target " . $targetId . ": " . $e->getMessage(), LOG_ERR);
+        }
         $this->logger->log(__METHOD__, "end loop", LOG_DEBUG);
 
-        return $image;
+        return $image instanceof Image ? $image : false;
     }
 
 
