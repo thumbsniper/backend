@@ -1,4 +1,4 @@
-FROM opensuse:42.1
+FROM opensuse:42.3
 MAINTAINER Thomas Schulte <thomas@cupracer.de>
 
 EXPOSE 80
@@ -9,9 +9,9 @@ RUN zypper --non-interactive ref \
     && zypper --non-interactive up \
     && zypper --non-interactive in curl
 
-RUN rpm --import http://download.opensuse.org/repositories/server:/php:/extensions/openSUSE_Leap_42.1/repodata/repomd.xml.key \
-    && zypper ar --refresh http://download.opensuse.org/repositories/server:/php:/extensions/openSUSE_Leap_42.1/server:php:extensions.repo \
-    && zypper ar --refresh --no-gpgcheck https://repo.mongodb.org/zypper/suse/12/mongodb-org/3.2/x86_64/ mongodb \
+RUN rpm --import http://download.opensuse.org/repositories/server:/php:/extensions/openSUSE_Leap_42.3/repodata/repomd.xml.key \
+    && zypper ar --refresh http://download.opensuse.org/repositories/server:/php:/extensions/openSUSE_Leap_42.3/server:php:extensions.repo \
+    && zypper ar --refresh --no-gpgcheck https://repo.mongodb.org/zypper/suse/12/mongodb-org/3.4/x86_64/ mongodb \
     && zypper ref
 
 RUN zypper --non-interactive in \
@@ -79,7 +79,7 @@ RUN a2enmod php5 \
     && a2enflag FOREGROUND
 
 #RUN git clone -b master https://github.com/thumbsniper/backend.git /opt/thumbsniper
-RUN git clone -b v0.9.11 https://github.com/thumbsniper/backend.git /opt/thumbsniper
+RUN git clone -b v0.9.12 https://github.com/thumbsniper/backend.git /opt/thumbsniper
 
 RUN composer --working-dir=/opt/thumbsniper update
 
