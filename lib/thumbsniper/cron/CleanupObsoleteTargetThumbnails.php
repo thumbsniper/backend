@@ -65,6 +65,7 @@ class CleanupObsoleteTargetThumbnails extends ApiV3
 
             $this->log(__METHOD__, "Searching for targets to clean up (threshold: " . Settings::getObsoleteTargetThumbnailsExireStr() . ")", LOG_INFO);
             $cursor = $collection->find($query, $fields);
+            $cursor->timeout(-1);
             $numTargetsLeft = $cursor->count();
             $this->log(__METHOD__, "Number of targets to clean up: " . $numTargetsLeft, LOG_INFO);
 
