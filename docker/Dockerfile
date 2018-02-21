@@ -79,7 +79,7 @@ RUN a2enmod php5 \
     && a2enflag FOREGROUND
 
 #RUN git clone -b master https://github.com/thumbsniper/backend.git /opt/thumbsniper
-RUN git clone -b v0.9.12 https://github.com/thumbsniper/backend.git /opt/thumbsniper
+RUN git clone -b v0.9.14 https://github.com/thumbsniper/backend.git /opt/thumbsniper
 
 RUN composer --working-dir=/opt/thumbsniper update
 
