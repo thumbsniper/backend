@@ -669,7 +669,12 @@ class ApiV3
                 }else {
                     //FIXME: error handling
                 }
-            }elseif(Settings::isLocalThumbnailStorageEnabled()) {
+//            }elseif(Settings::isLocalThumbnailStorageEnabled()) {
+            }else {
+                if(Settings::isAmazonS3enabled()) {
+                    $this->getLogger()->log(__METHOD__, "fallback to local thumbnail storage", LOG_DEBUG);
+                }
+
                 //TODO: ist diese if-Abrage ok? Mögliche Kombinationen prüfen
                 if (Settings::isImageWatermarksEnabled() == false ||
                     ($this->account && (!$this->account->getMaxDailyRequests() || $this->account->getRequestStats() < $this->account->getMaxDailyRequests()))
@@ -696,9 +701,9 @@ class ApiV3
                     $this->getLogger()->log(__METHOD__, "no cached image found.", LOG_INFO);
                     $output = $this->generateDummyOutput();
                 }
-            }else {
-                $this->getLogger()->log(__METHOD__, "Neither S3 or local storage are active!", LOG_CRIT);
-                $output = $this->generateDummyOutput();
+//            }else {
+//                $this->getLogger()->log(__METHOD__, "Neither S3 or local storage are active!", LOG_CRIT);
+//                $output = $this->generateDummyOutput();
             }
 
         } else {
