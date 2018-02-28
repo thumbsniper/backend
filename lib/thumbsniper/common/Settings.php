@@ -236,7 +236,7 @@ abstract class Settings
     //TODO: use separate expire property for Amazon S3 (don't use the redis cache expire anymore)
 	static private $redisImageCacheExpire = 28800; // 8 hours
     static private $amazonS3presignedUrlExpireSeconds = 28800; // 8 hours
-    static private $amazonS3presignedUrlExpireStr = '+8 hours'; // must match $redisImageCacheExpire
+    static private $amazonS3presignedUrlExpireStr = '+8 hours'; // must match $amazonS3presignedUrlExpireSeconds
     static private $obsoleteTargetThumbnailsExireStr = '-6 months';
     // LOCAL STORAGE
     /** @var bool */
