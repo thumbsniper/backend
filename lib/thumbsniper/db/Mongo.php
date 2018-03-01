@@ -67,13 +67,21 @@ class Mongo
     }
 
 
-    public function getConnection()
+    public function getConnection($disableTimeout = false)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
+        $mongoOptions = array();
+
+        if($disableTimeout) {
+            $mongoOptions = array(
+                "socketTimeoutMS" => -1
+            );
+        }
+
         if ($this->client == NULL) {
             try {
-                $client = new MongoClient("mongodb://" . $this->username . ":" . $this->password . "@" . $this->host . ":" . $this->port . "/" . $this->dbname);
+                $client = new MongoClient("mongodb://" . $this->username . ":" . $this->password . "@" . $this->host . ":" . $this->port . "/" . $this->dbname, $mongoOptions);
                 $db = $client->selectDB($this->dbname);
 
                 // assign (hopefully) working connection to class var
@@ -102,43 +110,43 @@ class Mongo
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyAccountAttrFirstName() => true,
-                Settings::getMongoKeyAccountAttrLastName() => true
+                Settings::getMongoKeyAccountAttrFirstName() => 1,
+                Settings::getMongoKeyAccountAttrLastName() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyAccountAttrId() => true,
-                Settings::getMongoKeyAccountAttrFirstName() => true,
-                Settings::getMongoKeyAccountAttrLastName() => true,
-                Settings::getMongoKeyAccountAttrEmail() => true
+                Settings::getMongoKeyAccountAttrId() => 1,
+                Settings::getMongoKeyAccountAttrFirstName() => 1,
+                Settings::getMongoKeyAccountAttrLastName() => 1,
+                Settings::getMongoKeyAccountAttrEmail() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyAccountAttrId() => true,
-                Settings::getMongoKeyAccountAttrNumRequestsDaily() => true
+                Settings::getMongoKeyAccountAttrId() => 1,
+                Settings::getMongoKeyAccountAttrNumRequestsDaily() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyAccountAttrEmail() => true
+                Settings::getMongoKeyAccountAttrEmail() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyAccountAttrId() => true,
-                Settings::getMongoKeyAccountAttrApiKey() => true
+                Settings::getMongoKeyAccountAttrId() => 1,
+                Settings::getMongoKeyAccountAttrApiKey() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyAccountAttrApiKey() => true
+                Settings::getMongoKeyAccountAttrApiKey() => 1
             )
         );
     }
@@ -152,68 +160,68 @@ class Mongo
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyTargetAttrId() => true,
-                Settings::getMongoKeyTargetAttrTsCheckedOut() => true
+                Settings::getMongoKeyTargetAttrId() => 1,
+                Settings::getMongoKeyTargetAttrTsCheckedOut() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyTargetAttrUrl() => true
+                Settings::getMongoKeyTargetAttrUrl() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                'referrers.id' => true
+                'referrers.id' => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyTargetAttrId() => true,
-                'referrers.id' => true
+                Settings::getMongoKeyTargetAttrId() => 1,
+                'referrers.id' => 1
             )
         );
 
         $collection->createIndex(
             array(
-                'referrers.id' => true,
-                Settings::getMongoKeyReferrerAttrAccountId() => true
+                'referrers.id' => 1,
+                Settings::getMongoKeyReferrerAttrAccountId() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                'referrers.id' => true,
-                Settings::getMongoKeyReferrerAttrAccountId() => true,
-                Settings::getMongoKeyTargetAttrUrl() => true
+                'referrers.id' => 1,
+                Settings::getMongoKeyReferrerAttrAccountId() => 1,
+                Settings::getMongoKeyTargetAttrUrl() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyTargetAttrCounterFailed() => true
+                Settings::getMongoKeyTargetAttrCounterFailed() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyTargetAttrId() => true,
-                'useragents.id' => true
+                Settings::getMongoKeyTargetAttrId() => 1,
+                'useragents.id' => 1
             )
         );
 
         $collection->createIndex(
             array(
-                'useragents.id' => true
+                'useragents.id' => 1
             )
         );
 
         $collection->createIndex(
             array(
-                'useragents.id' => true,
-                Settings::getMongoKeyTargetAttrUrl() => true
+                'useragents.id' => 1,
+                Settings::getMongoKeyTargetAttrUrl() => 1
             )
         );
     }
@@ -227,36 +235,36 @@ class Mongo
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyImageAttrId() => true,
-                Settings::getMongoKeyImageAttrNumRequestsDaily() => true
+                Settings::getMongoKeyImageAttrId() => 1,
+                Settings::getMongoKeyImageAttrNumRequestsDaily() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyImageAttrId() => true,
-                Settings::getMongoKeyImageAttrTsCheckedOut() => true
+                Settings::getMongoKeyImageAttrId() => 1,
+                Settings::getMongoKeyImageAttrTsCheckedOut() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyImageAttrId() => true,
-                Settings::getMongoKeyImageAttrFileNameSuffix() => true
+                Settings::getMongoKeyImageAttrId() => 1,
+                Settings::getMongoKeyImageAttrFileNameSuffix() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyImageAttrTargetId() => true
+                Settings::getMongoKeyImageAttrTargetId() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyImageAttrTargetId() => true,
-                Settings::getMongoKeyImageAttrId() => true,
-                Settings::getMongoKeyImageAttrFileNameSuffix() => true
+                Settings::getMongoKeyImageAttrTargetId() => 1,
+                Settings::getMongoKeyImageAttrId() => 1,
+                Settings::getMongoKeyImageAttrFileNameSuffix() => 1
             )
         );
     }
@@ -270,63 +278,63 @@ class Mongo
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyReferrerAttrId() => true,
-                Settings::getMongoKeyReferrerAttrAccountId() => true
+                Settings::getMongoKeyReferrerAttrId() => 1,
+                Settings::getMongoKeyReferrerAttrAccountId() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyReferrerAttrId() => true,
-                'targets.id' => true
+                Settings::getMongoKeyReferrerAttrId() => 1,
+                'targets.id' => 1
             )
         );
 
         $collection->createIndex(
             array(
-                'targets.id' => true
+                'targets.id' => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyReferrerAttrUrlBase() => true,
-                'targets.id' => true
+                Settings::getMongoKeyReferrerAttrUrlBase() => 1,
+                'targets.id' => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyReferrerAttrAccountId() => true,
-                'targets.id' => true
+                Settings::getMongoKeyReferrerAttrAccountId() => 1,
+                'targets.id' => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyReferrerAttrAccountId() => true,
-                Settings::getMongoKeyReferrerAttrUrlBase() => true,
-                'targets.id' => true
+                Settings::getMongoKeyReferrerAttrAccountId() => 1,
+                Settings::getMongoKeyReferrerAttrUrlBase() => 1,
+                'targets.id' => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyReferrerAttrId() => true
+                Settings::getMongoKeyReferrerAttrId() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyReferrerAttrId() => true,
-                Settings::getMongoKeyReferrerAttrUrlBase() => true
+                Settings::getMongoKeyReferrerAttrId() => 1,
+                Settings::getMongoKeyReferrerAttrUrlBase() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyReferrerAttrId() => true,
-                Settings::getMongoKeyReferrerAttrNumRequestsDaily() => true
+                Settings::getMongoKeyReferrerAttrId() => 1,
+                Settings::getMongoKeyReferrerAttrNumRequestsDaily() => 1
             )
         );
     }
@@ -340,14 +348,14 @@ class Mongo
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyReferrerDeeplinkAttrReferrerId() => true
+                Settings::getMongoKeyReferrerDeeplinkAttrReferrerId() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyReferrerDeeplinkAttrReferrerId() => true,
-                Settings::getMongoKeyReferrerDeeplinkAttrUrl() => true
+                Settings::getMongoKeyReferrerDeeplinkAttrReferrerId() => 1,
+                Settings::getMongoKeyReferrerDeeplinkAttrUrl() => 1
             )
         );
     }
@@ -361,47 +369,47 @@ class Mongo
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyUserAgentAttrId() => true,
-                'targets.id' => true
+                Settings::getMongoKeyUserAgentAttrId() => 1,
+                'targets.id' => 1
             )
         );
 
         $collection->createIndex(
             array(
-                'targets.id' => true
+                'targets.id' => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyUserAgentAttrId() => true,
-                'targets.id' => true
+                Settings::getMongoKeyUserAgentAttrId() => 1,
+                'targets.id' => 1
             )
         );
 
         $collection->createIndex(
             array(
-                'targets.id' => true,
-                Settings::getMongoKeyUserAgentAttrDescription() => true
+                'targets.id' => 1,
+                Settings::getMongoKeyUserAgentAttrDescription() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyUserAgentAttrDescription() => true
+                Settings::getMongoKeyUserAgentAttrDescription() => 1
             )
         );
 
         $collection->createIndex(
             array(
-                Settings::getMongoKeyUserAgentAttrId() => true,
-                Settings::getMongoKeyUserAgentAttrNumRequestsDaily() => true
+                Settings::getMongoKeyUserAgentAttrId() => 1,
+                Settings::getMongoKeyUserAgentAttrNumRequestsDaily() => 1
             )
         );
     }
 
 
-    private function init()
+    public function init()
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
