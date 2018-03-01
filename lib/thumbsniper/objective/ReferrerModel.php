@@ -20,6 +20,9 @@
 namespace ThumbSniper\objective;
 
 
+use DateTime;
+use DateTimeZone;
+use Slim\Helper\Set;
 use ThumbSniper\account\Account;
 use ThumbSniper\common\Helpers;
 use ThumbSniper\frontend\FrontendException;
@@ -33,6 +36,7 @@ use MongoDB;
 use MongoCollection;
 use MongoTimestamp;
 use MongoCursor;
+use MongoDate;
 
 
 class ReferrerModel
@@ -856,29 +860,41 @@ class ReferrerModel
     }
 
 
-
     public function incrementRequestsStats($referrerId)
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $now = time();
-        $today = date("Y-m-d", $now);
+        $dtNow = new DateTime();
+        $dtNow->setTimezone(new DateTimeZone('GMT'));
+        $beginOfDay = clone $dtNow;
+        $beginOfDay->modify('today');
+        $mongoToday = new MongoDate($beginOfDay->getTimestamp());
 
         try {
-            $statsCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionReferrers());
+            $statsCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionReferrerStatistics());
 
             $statsQuery = array(
-                Settings::getMongoKeyReferrerAttrId() => $referrerId
+                Settings::getMongoKeyReferrerStatisticsAttrReferrerId() => $referrerId,
+                Settings::getMongoKeyReferrerStatisticsAttrTs() => $mongoToday
+            );
+
+            $statsData = array(
+                Settings::getMongoKeyReferrerStatisticsAttrReferrerId() => $referrerId,
+                Settings::getMongoKeyReferrerStatisticsAttrTs() => $mongoToday
             );
 
             $statsUpdate = array(
+                '$setOnInsert' => $statsData,
                 '$inc' => array(
-                    Settings::getMongoKeyReferrerAttrNumRequests() => 1,
-                    Settings::getMongoKeyReferrerAttrNumRequestsDaily() . "." . $today => 1
+                    Settings::getMongoKeyReferrerStatisticsAttrNumRequests() => 1,
                 )
             );
 
-            if($statsCollection->update($statsQuery, $statsUpdate)) {
+            $statsOptions = array(
+                'upsert' => true
+            );
+
+            if($statsCollection->update($statsQuery, $statsUpdate, $statsOptions)) {
                 $this->logger->log(__METHOD__, "incremented referrer daily request stats for " . $referrerId, LOG_DEBUG);
                 return true;
             }

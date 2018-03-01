@@ -799,7 +799,7 @@ class ApiV3
                 $this->getApiStatistics()->incrementApiKeyRequestStats($this->account);
             }
 
-            if(!Settings::isEnergySaveActive() && $this->referrer) {
+             if(!Settings::isEnergySaveActive() && $this->referrer) {
                 $this->getApiStatistics()->incrementReferrerRequestStats($this->referrer);
                 $this->getApiStatistics()->incrementReferrerDeeplinkRequestStats($this->referrer->getCurrentDeeplink());
             }

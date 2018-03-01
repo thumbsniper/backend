@@ -20,6 +20,9 @@
 namespace ThumbSniper\objective;
 
 
+use DateTime;
+use DateTimeZone;
+use MongoDate;
 use ThumbSniper\common\Logger;
 use ThumbSniper\common\Settings;
 use ThumbSniper\shared\Target;
@@ -531,24 +534,37 @@ class UserAgentModel
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $now = time();
-        $today = date("Y-m-d", $now);
+        $dtNow = new DateTime();
+        $dtNow->setTimezone(new DateTimeZone('GMT'));
+        $beginOfDay = clone $dtNow;
+        $beginOfDay->modify('today');
+        $mongoToday = new MongoDate($beginOfDay->getTimestamp());
 
         try {
-            $statsCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionUserAgents());
+            $statsCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionUserAgentStatistics());
 
             $statsQuery = array(
-                Settings::getMongoKeyUserAgentAttrId() => $userAgentId
+                Settings::getMongoKeyUserAgentStatisticsAttrUserAgentId() => $userAgentId,
+                Settings::getMongoKeyUserAgentStatisticsAttrTs() => $mongoToday
+            );
+
+            $statsData = array(
+                Settings::getMongoKeyUserAgentStatisticsAttrUserAgentId() => $userAgentId,
+                Settings::getMongoKeyUserAgentStatisticsAttrTs() => $mongoToday
             );
 
             $statsUpdate = array(
+                '$setOnInsert' => $statsData,
                 '$inc' => array(
-                    Settings::getMongoKeyUserAgentAttrNumRequests() => 1,
-                    Settings::getMongoKeyUserAgentAttrNumRequestsDaily() . "." . $today => 1
+                    Settings::getMongoKeyUserAgentStatisticsAttrNumRequests() => 1,
                 )
             );
 
-            if($statsCollection->update($statsQuery, $statsUpdate)) {
+            $statsOptions = array(
+                'upsert' => true
+            );
+
+            if($statsCollection->update($statsQuery, $statsUpdate, $statsOptions)) {
                 $this->logger->log(__METHOD__, "incremented user agent daily request stats for " . $userAgentId, LOG_DEBUG);
                 return true;
             }

@@ -361,6 +361,27 @@ class Mongo
     }
 
 
+    private function ensureReferrerStatisticsIndexes()
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $collection = new \MongoCollection($this->db, Settings::getMongoCollectionReferrerStatistics());
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyReferrerStatisticsAttrReferrerId() => 1
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyReferrerStatisticsAttrReferrerId() => 1,
+                Settings::getMongoKeyReferrerStatisticsAttrTs() => 1
+            )
+        );
+    }
+
+
     private function ensureUserAgentIndexes()
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
@@ -409,6 +430,47 @@ class Mongo
     }
 
 
+    private function ensureUserAgentStatisticsIndexes()
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $collection = new \MongoCollection($this->db, Settings::getMongoCollectionUserAgentStatistics());
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyUserAgentStatisticsAttrUserAgentId() => 1
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyUserAgentStatisticsAttrUserAgentId() => 1,
+                Settings::getMongoKeyUserAgentStatisticsAttrTs() => 1
+            )
+        );
+    }
+
+    private function ensurReferrerDeeplinkStatisticsIndexes()
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $collection = new \MongoCollection($this->db, Settings::getMongoCollectionReferrerDeeplinkStatistics());
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyReferrerDeeplinkStatisticsAttrReferrerDeeplinkId() => 1
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyReferrerDeeplinkStatisticsAttrReferrerDeeplinkId() => 1,
+                Settings::getMongoKeyReferrerDeeplinkStatisticsAttrTs() => 1
+            )
+        );
+    }
+
+
     public function init()
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
@@ -422,6 +484,10 @@ class Mongo
         $this->ensureReferrerIndexes();
         $this->ensureReferrerDeeplinkIndexes();
         $this->ensureUserAgentIndexes();
+
+        $this->ensureReferrerStatisticsIndexes();
+        $this->ensureUserAgentStatisticsIndexes();
+        $this->ensurReferrerDeeplinkStatisticsIndexes();
 
         /*
 

@@ -299,6 +299,13 @@ abstract class Settings
     static private $mongoKeyReferrerAttrNumRequests = "numRequests";
     static private $mongoKeyReferrerAttrNumRequestsDaily = "numRequestsDaily";
 
+    //REFERRER STATISTICS
+    static private $mongoCollectionReferrerStatistics = "referrer_statistics";
+    static private $mongoKeyReferrerStatisticsAttrId = "_id";
+    static private $mongoKeyReferrerStatisticsAttrReferrerId = "referrerId";
+    static private $mongoKeyReferrerStatisticsAttrTs = "ts";
+    static private $mongoKeyReferrerStatisticsAttrNumRequests = "numRequests";
+
     //REFERRER DEEPLINKS
     static private $mongoCollectionReferrerDeeplinks = "referrer_deeplinks";
     static private $mongoKeyReferrerDeeplinkAttrId = "_id";
@@ -308,6 +315,12 @@ abstract class Settings
     static private $mongoKeyReferrerDeeplinkAttrTsLastSeen = "tsLastSeen";
     static private $mongoKeyReferrerDeeplinkAttrNumRequests = "numRequests";
 
+    //REFERRER DEEPLINKS STATISTICS
+    static private $mongoCollectionReferrerDeeplinkStatistics = "referrer_deeplink_statistics";
+    static private $mongoKeyReferrerDeeplinkStatisticsAttrId = "_id";
+    static private $mongoKeyReferrerDeeplinkStatisticsAttrReferrerDeeplinkId = "referrerDeeplinkId";
+    static private $mongoKeyReferrerDeeplinkStatisticsAttrTs = "ts";
+    static private $mongoKeyReferrerDeeplinkStatisticsAttrNumRequests = "numRequests";
 
     // TARGET
     static private $mongoCollectionTargets = "targets";
@@ -384,6 +397,13 @@ abstract class Settings
     static private $mongoKeyUserAgentAttrBlacklisted = "blacklisted";
     static private $mongoKeyUserAgentAttrNumRequests = "numRequests";
     static private $mongoKeyUserAgentAttrNumRequestsDaily = "numRequestsDaily";
+
+    //USERAGENT STATISTICS
+    static private $mongoCollectionUserAgentStatistics = "useragent_statistics";
+    static private $mongoKeyUserAgentStatisticsAttrId = "_id";
+    static private $mongoKeyUserAgentStatisticsAttrUserAgentId = "userAgentId";
+    static private $mongoKeyUserAgentStatisticsAttrTs = "ts";
+    static private $mongoKeyUserAgentStatisticsAttrNumRequests = "numRequests";
 
     // STATISTICS
     static private $mongoCollectionStatistics = "statistics";
@@ -2995,5 +3015,125 @@ abstract class Settings
     public static function setPreferAgentPhantom($preferAgentPhantom)
     {
         self::$preferAgentPhantom = $preferAgentPhantom;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoCollectionReferrerStatistics()
+    {
+        return self::$mongoCollectionReferrerStatistics;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyReferrerStatisticsAttrId()
+    {
+        return self::$mongoKeyReferrerStatisticsAttrId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyReferrerStatisticsAttrReferrerId()
+    {
+        return self::$mongoKeyReferrerStatisticsAttrReferrerId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyReferrerStatisticsAttrTs()
+    {
+        return self::$mongoKeyReferrerStatisticsAttrTs;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyReferrerStatisticsAttrNumRequests()
+    {
+        return self::$mongoKeyReferrerStatisticsAttrNumRequests;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoCollectionUserAgentStatistics()
+    {
+        return self::$mongoCollectionUserAgentStatistics;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyUserAgentStatisticsAttrId()
+    {
+        return self::$mongoKeyUserAgentStatisticsAttrId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyUserAgentStatisticsAttrUserAgentId()
+    {
+        return self::$mongoKeyUserAgentStatisticsAttrUserAgentId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyUserAgentStatisticsAttrTs()
+    {
+        return self::$mongoKeyUserAgentStatisticsAttrTs;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyUserAgentStatisticsAttrNumRequests()
+    {
+        return self::$mongoKeyUserAgentStatisticsAttrNumRequests;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoCollectionReferrerDeeplinkStatistics()
+    {
+        return self::$mongoCollectionReferrerDeeplinkStatistics;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyReferrerDeeplinkStatisticsAttrId()
+    {
+        return self::$mongoKeyReferrerDeeplinkStatisticsAttrId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyReferrerDeeplinkStatisticsAttrReferrerDeeplinkId()
+    {
+        return self::$mongoKeyReferrerDeeplinkStatisticsAttrReferrerDeeplinkId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyReferrerDeeplinkStatisticsAttrTs()
+    {
+        return self::$mongoKeyReferrerDeeplinkStatisticsAttrTs;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyReferrerDeeplinkStatisticsAttrNumRequests()
+    {
+        return self::$mongoKeyReferrerDeeplinkStatisticsAttrNumRequests;
     }
 }

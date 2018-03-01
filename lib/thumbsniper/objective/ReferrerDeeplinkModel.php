@@ -19,6 +19,9 @@
 
 namespace ThumbSniper\objective;
 
+use DateTime;
+use DateTimeZone;
+use MongoDate;
 use ThumbSniper\common\Logger;
 use ThumbSniper\common\Settings;
 
@@ -374,22 +377,37 @@ class ReferrerDeeplinkModel
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $now = time();
+        $dtNow = new DateTime();
+        $dtNow->setTimezone(new DateTimeZone('GMT'));
+        $beginOfDay = clone $dtNow;
+        $beginOfDay->modify('today');
+        $mongoToday = new MongoDate($beginOfDay->getTimestamp());
 
         try {
-            $statsCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionReferrerDeeplinks());
+            $statsCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionReferrerDeeplinkStatistics());
 
             $statsQuery = array(
-                Settings::getMongoKeyReferrerDeeplinkAttrId() => $referrerDeeplinkId
+                Settings::getMongoKeyReferrerDeeplinkStatisticsAttrReferrerDeeplinkId() => $referrerDeeplinkId,
+                Settings::getMongoKeyReferrerDeeplinkStatisticsAttrTs() => $mongoToday
+            );
+
+            $statsData = array(
+                Settings::getMongoKeyReferrerDeeplinkStatisticsAttrReferrerDeeplinkId() => $referrerDeeplinkId,
+                Settings::getMongoKeyReferrerDeeplinkStatisticsAttrTs() => $mongoToday
             );
 
             $statsUpdate = array(
+                '$setOnInsert' => $statsData,
                 '$inc' => array(
-                    Settings::getMongoKeyReferrerAttrNumRequests() => 1,
+                    Settings::getMongoKeyReferrerDeeplinkStatisticsAttrNumRequests() => 1,
                 )
             );
 
-            if($statsCollection->update($statsQuery, $statsUpdate)) {
+            $statsOptions = array(
+                'upsert' => true
+            );
+
+            if($statsCollection->update($statsQuery, $statsUpdate, $statsOptions)) {
                 $this->logger->log(__METHOD__, "incremented referrer deeplink daily request stats for " . $referrerDeeplinkId, LOG_DEBUG);
                 return true;
             }
