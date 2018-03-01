@@ -70,7 +70,9 @@ class CleanupOrphanedAmazonS3Thumbnails extends ApiV3
                 )
             ));
 
-            $s3baseUrl = 'https://thumbsniper.s3.eu-central-1.amazonaws.com';
+
+            $s3baseUrl = 'https://' . Settings::getAmazonS3bucketThumbnails() . ".s3." .
+                Settings::getAmazonS3region() . ".amazonaws.com";
 
             $objects = $client->getIterator('ListObjects', array('Bucket' => Settings::getAmazonS3bucketThumbnails()));
 
