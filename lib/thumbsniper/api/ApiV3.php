@@ -1344,6 +1344,14 @@ class ApiV3
         return $output;
     }
 
+    protected function createMongoIndexes()
+    {
+        $this->getLogger()->log(__METHOD__, "init new MongoDB instance", LOG_DEBUG);
+
+        $mongodb = new Mongo($this->getLogger(), Settings::getMongoHost(), Settings::getMongoPort(), Settings::getMongoUser(), Settings::getMongoPass(), Settings::getMongoDb());
+        $mongodb->getConnection(true);
+        $mongodb->init();
+    }
     
     /**
      * @param mixed $forceDebug
@@ -1361,13 +1369,13 @@ class ApiV3
     }
     
 
-    protected function getMongoDB()
+    protected function getMongoDB($disableTimeout = false)
     {
         if(!$this->mongodb instanceof MongoDB) {
             $this->getLogger()->log(__METHOD__, "init new MongoDB instance", LOG_DEBUG);
 
             $mongodb = new Mongo($this->getLogger(), Settings::getMongoHost(), Settings::getMongoPort(), Settings::getMongoUser(), Settings::getMongoPass(), Settings::getMongoDb());
-            $connection = $mongodb->getConnection();
+            $connection = $mongodb->getConnection($disableTimeout);
 
             if($connection) {
                 $this->mongodb = $connection;
