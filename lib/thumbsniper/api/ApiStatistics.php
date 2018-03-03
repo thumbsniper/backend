@@ -145,7 +145,7 @@ class ApiStatistics
 
         $success = TRUE;
 
-        if (!$this->imageModel->incrementNumRequests($imageId)) {
+        if (!$this->imageModel->incrementNumRequests($imageId) || !$this->imageModel->incrementRequestsStats($imageId)) {
             $success = false;
         }
 

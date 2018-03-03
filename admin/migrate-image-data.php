@@ -28,22 +28,22 @@ use ThumbSniper\shared\Target;
 
 
 
-class MigrateReferrerData extends ApiV3
+class MigrateImageData extends ApiV3
 {
     public function mainLoop()
     {
         try {
-            $collection = new MongoCollection($this->getMongoDB(true), Settings::getMongoCollectionReferrers());
+            $collection = new MongoCollection($this->getMongoDB(true), Settings::getMongoCollectionImages());
 
             $query = array(
-                Settings::getMongoKeyReferrerAttrNumRequestsDaily() => array(
+                Settings::getMongoKeyImageAttrNumRequestsDaily() => array(
                     '$exists' => true
                 )
             );
 
             $fields = array(
-                Settings::getMongoKeyReferrerAttrId() => true,
-                Settings::getMongoKeyReferrerAttrNumRequestsDaily() => true
+                Settings::getMongoKeyImageAttrId() => true,
+                Settings::getMongoKeyImageAttrNumRequestsDaily() => true
             );
 
             $cursor = $collection->find($query, $fields);
@@ -51,7 +51,7 @@ class MigrateReferrerData extends ApiV3
             $counter = $cursor->count();
 
             foreach ($cursor as $doc) {
-                $this->getLogger()->log(__METHOD__, "* " . $counter . " referrers left", LOG_DEBUG);
+                $this->getLogger()->log(__METHOD__, "* " . $counter . " images left", LOG_DEBUG);
 
                 if(!$this->migrateDailyRequests($doc))
                 {
@@ -62,7 +62,7 @@ class MigrateReferrerData extends ApiV3
             }
 
         } catch (Exception $e) {
-            $this->getLogger()->log(__METHOD__, "exception while migrating referrers: " . $e->getMessage(), LOG_ERR);
+            $this->getLogger()->log(__METHOD__, "exception while migrating images: " . $e->getMessage(), LOG_ERR);
         }
     }
 
@@ -70,54 +70,54 @@ class MigrateReferrerData extends ApiV3
     private function migrateDailyRequests($doc)
     {
         try {
-            foreach ($doc[Settings::getMongoKeyReferrerAttrNumRequestsDaily()] as $day => $numRequests) {
+            foreach ($doc[Settings::getMongoKeyImageAttrNumRequestsDaily()] as $day => $numRequests) {
 
                 $dateTimeObject = DateTime::createFromFormat("Y-m-d", $day, new DateTimeZone("UTC"));;
                 $beginOfDayString = $dateTimeObject->format('Y-m-d 00:00:00');
                 $beginOfDayObject = DateTime::createFromFormat('Y-m-d H:i:s', $beginOfDayString);
 
-                if (!$this->setRequestsStats($doc[Settings::getMongoKeyReferrerAttrId()], $beginOfDayObject, $numRequests)) {
+                if (!$this->setRequestsStats($doc[Settings::getMongoKeyImageAttrId()], $beginOfDayObject, $numRequests)) {
                     throw(new Exception("something went wrong 1"));
                 }
             }
 
-            return $this->deleteOldDailyRequestsContainer($doc[Settings::getMongoKeyReferrerAttrId()]);
+            return $this->deleteOldDailyRequestsContainer($doc[Settings::getMongoKeyImageAttrId()]);
 
         } catch (Exception $e) {
-            $this->getLogger()->log(__METHOD__, "exception while migrating referrer daily request stats for " . $doc[Settings::getMongoKeyReferrerAttrId()] . ": " . $e->getMessage(), LOG_ERR);
+            $this->getLogger()->log(__METHOD__, "exception while migrating image daily request stats for " . $doc[Settings::getMongoKeyImageAttrId()] . ": " . $e->getMessage(), LOG_ERR);
             return false;
         }
     }
 
 
 
-    private function setRequestsStats($referrerId, DateTime $date, $numRequests)
+    private function setRequestsStats($imageId, DateTime $date, $numRequests)
     {
         $this->getLogger()->log(__METHOD__, NULL, LOG_DEBUG);
 
         $originalTimezone = date_default_timezone_get();
         date_default_timezone_set("UTC");
-        $this->getLogger()->log(__METHOD__,$referrerId . " - " . $date->format("d.m.Y H:I:s") . " (" . $numRequests . ")", LOG_DEBUG);
+        $this->getLogger()->log(__METHOD__,$imageId . " - " . $date->format("d.m.Y H:I:s") . " (" . $numRequests . ")", LOG_DEBUG);
         $mongoDate = new MongoDate($date->getTimestamp());
         date_default_timezone_set($originalTimezone);
 
         try {
-            $statsCollection = new MongoCollection($this->getMongoDB(true), Settings::getMongoCollectionReferrerStatistics());
+            $statsCollection = new MongoCollection($this->getMongoDB(true), Settings::getMongoCollectionImageStatistics());
 
             $statsQuery = array(
-                Settings::getMongoKeyReferrerStatisticsAttrReferrerId() => $referrerId,
-                Settings::getMongoKeyReferrerStatisticsAttrTs() => $mongoDate
+                Settings::getMongoKeyImageStatisticsAttrImageId() => $imageId,
+                Settings::getMongoKeyImageStatisticsAttrTs() => $mongoDate
             );
 
             $statsData = array(
-                Settings::getMongoKeyReferrerStatisticsAttrReferrerId() => $referrerId,
-                Settings::getMongoKeyReferrerStatisticsAttrTs() => $mongoDate
+                Settings::getMongoKeyImageStatisticsAttrImageId() => $imageId,
+                Settings::getMongoKeyImageStatisticsAttrTs() => $mongoDate
             );
 
             $statsUpdate = array(
                 '$setOnInsert' => $statsData,
                 '$set' => array(
-                    Settings::getMongoKeyReferrerStatisticsAttrNumRequests() => $numRequests
+                    Settings::getMongoKeyImageStatisticsAttrNumRequests() => $numRequests
                 )
             );
 
@@ -126,43 +126,43 @@ class MigrateReferrerData extends ApiV3
             );
 
             if($statsCollection->update($statsQuery, $statsUpdate, $statsOptions)) {
-                $this->getLogger()->log(__METHOD__, "set referrer daily request stats for " . $referrerId, LOG_DEBUG);
+                $this->getLogger()->log(__METHOD__, "set image daily request stats for " . $imageId, LOG_DEBUG);
                 return true;
             }
 
         } catch (Exception $e) {
-            $this->getLogger()->log(__METHOD__, "exception while setting referrer daily request stats for " . $referrerId . ": " . $e->getMessage(), LOG_ERR);
+            $this->getLogger()->log(__METHOD__, "exception while setting image daily request stats for " . $imageId . ": " . $e->getMessage(), LOG_ERR);
         }
 
         return false;
     }
 
 
-    private function deleteOldDailyRequestsContainer($referrerId)
+    private function deleteOldDailyRequestsContainer($imageId)
     {
         try {
-            $collection = new MongoCollection($this->getMongoDB(true), Settings::getMongoCollectionReferrers());
+            $collection = new MongoCollection($this->getMongoDB(true), Settings::getMongoCollectionImages());
 
             $query = array(
-                Settings::getMongoKeyReferrerAttrId() => $referrerId,
-                Settings::getMongoKeyReferrerAttrNumRequestsDaily() => array(
+                Settings::getMongoKeyImageAttrId() => $imageId,
+                Settings::getMongoKeyImageAttrNumRequestsDaily() => array(
                     '$exists' => true
                 )
             );
 
             $update = array(
                 '$unset' => array(
-                    Settings::getMongoKeyReferrerAttrNumRequestsDaily() => true
+                    Settings::getMongoKeyImageAttrNumRequestsDaily() => true
                 )
             );
 
             if($collection->update($query, $update)) {
-                $this->getLogger()->log(__METHOD__, "deleted referrer daily request stats container for " . $referrerId, LOG_DEBUG);
+                $this->getLogger()->log(__METHOD__, "deleted image daily request stats container for " . $imageId, LOG_DEBUG);
                 return true;
             }
 
         } catch (Exception $e) {
-            $this->getLogger()->log(__METHOD__, "exception while deleting referrer daily request stats container for " . $referrerId . ": " . $e->getMessage(), LOG_ERR);
+            $this->getLogger()->log(__METHOD__, "exception while deleting image daily request stats container for " . $imageId . ": " . $e->getMessage(), LOG_ERR);
         }
 
         return false;
@@ -171,5 +171,5 @@ class MigrateReferrerData extends ApiV3
 }
 
 
-$main = new MigrateReferrerData(true);
+$main = new MigrateImageData(true);
 $main->mainLoop();

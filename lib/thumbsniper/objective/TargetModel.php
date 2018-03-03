@@ -1863,8 +1863,6 @@ class TargetModel
             }
 
             $numTargets = $collection->count($query);
-//            $this->logger->log(__METHOD__, "query: " . print_r($query, true), LOG_ERR);
-//            $this->logger->log(__METHOD__, "numTargets: " . print_r($numTargets, true), LOG_ERR);
 
             $this->logger->log(__METHOD__, "loaded numTargets (" . $numTargets . ") for user agent " . $userAgentId . " from DB", LOG_INFO);
 

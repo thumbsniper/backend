@@ -233,12 +233,12 @@ class Mongo
 
         $collection = new \MongoCollection($this->db, Settings::getMongoCollectionImages());
 
-        $collection->createIndex(
-            array(
-                Settings::getMongoKeyImageAttrId() => 1,
-                Settings::getMongoKeyImageAttrNumRequestsDaily() => 1
-            )
-        );
+//        $collection->createIndex(
+//            array(
+//                Settings::getMongoKeyImageAttrId() => 1,
+//                Settings::getMongoKeyImageAttrNumRequestsDaily() => 1
+//            )
+//        );
 
         $collection->createIndex(
             array(
@@ -331,12 +331,12 @@ class Mongo
             )
         );
 
-        $collection->createIndex(
-            array(
-                Settings::getMongoKeyReferrerAttrId() => 1,
-                Settings::getMongoKeyReferrerAttrNumRequestsDaily() => 1
-            )
-        );
+//        $collection->createIndex(
+//            array(
+//                Settings::getMongoKeyReferrerAttrId() => 1,
+//                Settings::getMongoKeyReferrerAttrNumRequestsDaily() => 1
+//            )
+//        );
     }
 
 
@@ -471,6 +471,27 @@ class Mongo
     }
 
 
+    private function ensureImageStatisticsIndexes()
+    {
+        $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
+
+        $collection = new \MongoCollection($this->db, Settings::getMongoCollectionImageStatistics());
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyImageStatisticsAttrImageId() => 1
+            )
+        );
+
+        $collection->createIndex(
+            array(
+                Settings::getMongoKeyImageStatisticsAttrImageId() => 1,
+                Settings::getMongoKeyImageStatisticsAttrTs() => 1
+            )
+        );
+    }
+
+
     public function init()
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
@@ -488,6 +509,7 @@ class Mongo
         $this->ensureReferrerStatisticsIndexes();
         $this->ensureUserAgentStatisticsIndexes();
         $this->ensurReferrerDeeplinkStatisticsIndexes();
+        $this->ensureImageStatisticsIndexes();
 
         /*
 

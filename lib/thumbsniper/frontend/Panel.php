@@ -1467,6 +1467,8 @@ class Panel extends ApiV3
 
             $rows = array();
 
+            //TODO: find a better way to filter for the last $days days
+
             /** @var Image $image */
             foreach($images as $image) {
                 $dailyNumRequests = $this->getImageModel()->getNumRequests($image->getId(), $days);

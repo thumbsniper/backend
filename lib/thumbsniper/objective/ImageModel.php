@@ -19,7 +19,10 @@
 
 namespace ThumbSniper\objective;
 
+use DateTime;
+use DateTimeZone;
 use Guzzle\Http\Message\RequestFactory;
+use MongoDate;
 use Predis\Client;
 use ThumbSniper\common\Helpers;
 use ThumbSniper\common\Logger;
@@ -234,9 +237,6 @@ class ImageModel
     {
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
-        $now = time();
-        $today = date("Y-m-d", $now);
-
         try {
             $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionImages());
 
@@ -247,7 +247,6 @@ class ImageModel
             $imageUpdate = array(
                 '$inc' => array(
                     Settings::getMongoKeyImageAttrNumRequests()  => 1,
-                    Settings::getMongoKeyImageAttrNumRequestsDaily() . '.' . $today => 1
                 ),
                 '$set' => array(
                     Settings::getMongoKeyImageAttrTsLastRequested()  => new MongoTimestamp()
@@ -261,12 +260,56 @@ class ImageModel
 
         $this->logger->log(__METHOD__, "incremented image daily request stats for " . $imageId, LOG_DEBUG);
 
-        //$this->incrementDailyRequests($imageId);
-
         //TODO: check result
         return true;
     }
 
+
+    public function incrementRequestsStats($imageId)
+    {
+        $this->logger->log(__METHOD__, null, LOG_DEBUG);
+
+        $dtNow = new DateTime();
+        $dtNow->setTimezone(new DateTimeZone('GMT'));
+        $beginOfDay = clone $dtNow;
+        $beginOfDay->modify('today');
+        $mongoToday = new MongoDate($beginOfDay->getTimestamp());
+
+        try {
+            $statsCollection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionImageStatistics());
+
+            $statsQuery = array(
+                Settings::getMongoKeyImageStatisticsAttrImageId() => $imageId,
+                Settings::getMongoKeyImageStatisticsAttrTs() => $mongoToday
+            );
+
+            $statsData = array(
+                Settings::getMongoKeyImageStatisticsAttrImageId() => $imageId,
+                Settings::getMongoKeyImageStatisticsAttrTs() => $mongoToday
+            );
+
+            $statsUpdate = array(
+                '$setOnInsert' => $statsData,
+                '$inc' => array(
+                    Settings::getMongoKeyImageStatisticsAttrNumRequests() => 1,
+                )
+            );
+
+            $statsOptions = array(
+                'upsert' => true
+            );
+
+            if($statsCollection->update($statsQuery, $statsUpdate, $statsOptions)) {
+                $this->logger->log(__METHOD__, "incremented image daily request stats for " . $imageId, LOG_DEBUG);
+                return true;
+            }
+
+        } catch (Exception $e) {
+            $this->logger->log(__METHOD__, "exception while incrementing image daily request stats for " . $imageId . ": " . $e->getMessage(), LOG_ERR);
+        }
+
+        return false;
+    }
 
 
     public function getNumRequests($imageId, $days)
@@ -275,37 +318,26 @@ class ImageModel
 
         $stats = array();
 
-        $now = time();
-
         try {
-            $collection = new \MongoCollection($this->mongoDB, Settings::getMongoCollectionImages());
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionImageStatistics());
 
             $query = array(
-                Settings::getMongoKeyImageAttrId() => $imageId,
-                Settings::getMongoKeyImageAttrNumRequestsDaily() => array(
-                    '$exists' => true
-                )
+                Settings::getMongoKeyImageStatisticsAttrImageId() => $imageId
             );
 
-            $fields = array(
-                Settings::getMongoKeyImageAttrNumRequestsDaily() => true
+            $sort = array(
+                Settings::getMongoKeyImageStatisticsAttrTs() => -1
             );
 
-            $imageData = $collection->findOne($query, $fields);
+            $docs = $collection->find($query)->sort($sort)->limit($days);
 
-            if(is_array($imageData)) {
-                //$this->logger->log(__METHOD__, "JOJO fuer " . $imageId . ": " . print_r($imageData, true), LOG_DEBUG);
+            foreach ($docs as $doc) {
+                /** @var MongoDate $date */
+                $date = $doc[Settings::getMongoKeyImageStatisticsAttrTs()];
 
-                for ($i = 0; $i < $days; $i++) {
-                    $day = date("Y-m-d", $now - (86400 * $i));
-                    //$this->logger->log(__METHOD__, "check day: " . $day, LOG_DEBUG);
-                    if (isset($imageData[Settings::getMongoKeyImageAttrNumRequestsDaily()][$day])) {
-                        $this->logger->log(__METHOD__, "check day: " . $day . ": " . $imageData[Settings::getMongoKeyImageAttrNumRequestsDaily()][$day], LOG_DEBUG);
-                        $stats[$day] = $imageData[Settings::getMongoKeyImageAttrNumRequestsDaily()][$day];
-                    }
-                }
+                $datetime = $date->toDateTime();
+                $stats[$datetime->format("Y-m-d")] = $doc[Settings::getMongoKeyImageStatisticsAttrNumRequests()];
             }
-
         } catch (\Exception $e) {
             $this->logger->log(__METHOD__, "exception while getting image daily request stats for " . $imageId . ": " . $e->getMessage(), LOG_ERR);
         }

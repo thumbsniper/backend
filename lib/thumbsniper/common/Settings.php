@@ -297,6 +297,8 @@ abstract class Settings
     static private $mongoKeyReferrerAttrBlacklisted = "blacklisted";
     static private $mongoKeyReferrerAttrTsDomainVerification = "tsDomainVerification";
     static private $mongoKeyReferrerAttrNumRequests = "numRequests";
+
+    //TODO: obsolete!
     static private $mongoKeyReferrerAttrNumRequestsDaily = "numRequestsDaily";
 
     //REFERRER STATISTICS
@@ -373,19 +375,28 @@ abstract class Settings
     static private $mongoKeyImageAttrCounterCheckedOut = "counterCheckedOut";
     static private $mongoKeyImageAttrCounterUpdated = "counterUpdated";
     static private $mongoKeyImageAttrNumRequests = "numRequests";
-    static private $mongoKeyImageAttrNumRequestsDaily = "numRequestsDaily";
     static private $mongoKeyImageAttrLocalPath = "localPath";
     static private $mongoKeyImageAttrAmazonS3url = "amazonS3url";
     static private $mongoKeyImageAttrTsLastCleanup = "tsLastCleanup";
     static private $mongoKeyImageAttrCounterCleanup = "counterCleanup";
-    
+
+    //TODO: obsolete!
+    static private $mongoKeyImageAttrNumRequestsDaily = "numRequestsDaily";
+
 	static private $redisKeyImageCacheData = "transient:key:image:cache:data:"; // . $imageId
 	static private $redisKeyImageCacheKeyBranded = "transient:key:image:cache:key:branded:"; // + imageId
 	static private $redisKeyImageCacheKeyUnbranded = "transient:key:image:cache:key:unbranded:"; // + imageId
 
     //TODO: differ between branded and unbranded
     static private $redisKeyImageAmazonS3url = "transient:key:image:amazons3url:"; // . $targetId . $imageId
-    
+
+    //IMAGE STATISTICS
+    static private $mongoCollectionImageStatistics = "image_statistics";
+    static private $mongoKeyImageStatisticsAttrId = "_id";
+    static private $mongoKeyImageStatisticsAttrImageId = "imageId";
+    static private $mongoKeyImageStatisticsAttrTs = "ts";
+    static private $mongoKeyImageStatisticsAttrNumRequests = "numRequests";
+
     // USERAGENT
     static private $mongoCollectionUserAgents = "useragents";
     static private $mongoCollectionUserAgentsBlacklist = "useragents_blacklist";
@@ -3135,5 +3146,45 @@ abstract class Settings
     public static function getMongoKeyReferrerDeeplinkStatisticsAttrNumRequests()
     {
         return self::$mongoKeyReferrerDeeplinkStatisticsAttrNumRequests;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoCollectionImageStatistics()
+    {
+        return self::$mongoCollectionImageStatistics;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyImageStatisticsAttrId()
+    {
+        return self::$mongoKeyImageStatisticsAttrId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyImageStatisticsAttrImageId()
+    {
+        return self::$mongoKeyImageStatisticsAttrImageId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyImageStatisticsAttrTs()
+    {
+        return self::$mongoKeyImageStatisticsAttrTs;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyImageStatisticsAttrNumRequests()
+    {
+        return self::$mongoKeyImageStatisticsAttrNumRequests;
     }
 }

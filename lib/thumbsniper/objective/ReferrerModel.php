@@ -914,30 +914,25 @@ class ReferrerModel
 
         $stats = array();
 
-        $now = time();
-
         try {
-            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionReferrers());
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionReferrerStatistics());
 
             $query = array(
-                Settings::getMongoKeyReferrerAttrId() => $referrerId,
-                Settings::getMongoKeyReferrerAttrNumRequestsDaily() => array(
-                    '$exists' => true
-                )
+                Settings::getMongoKeyReferrerStatisticsAttrReferrerId() => $referrerId
             );
 
-            $fields = array(
-                Settings::getMongoKeyReferrerAttrId() => false,
-                Settings::getMongoKeyReferrerAttrNumRequestsDaily() => true
+            $sort = array(
+                Settings::getMongoKeyReferrerStatisticsAttrTs() => -1
             );
 
-            $doc = $collection->findOne($query, $fields);
+            $docs = $collection->find($query)->sort($sort)->limit($days);
 
-            for ($i = 0; $i < $days; $i++) {
-                $day = date("Y-m-d", $now - (86400 * $i));
-                if (isset($doc[Settings::getMongoKeyReferrerAttrNumRequestsDaily()][$day])) {
-                    $stats[$day] = $doc[Settings::getMongoKeyReferrerAttrNumRequestsDaily()][$day];
-                }
+            foreach ($docs as $doc) {
+                /** @var MongoDate $date */
+                $date = $doc[Settings::getMongoKeyReferrerStatisticsAttrTs()];
+
+                $datetime = $date->toDateTime();
+                $stats[$datetime->format("Y-m-d")] = $doc[Settings::getMongoKeyReferrerStatisticsAttrNumRequests()];
             }
         } catch (Exception $e) {
             $this->logger->log(__METHOD__, "exception while getting referrer daily request stats for " . $referrerId . ": " . $e->getMessage(), LOG_ERR);
