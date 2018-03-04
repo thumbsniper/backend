@@ -409,6 +409,12 @@ abstract class Settings
     static private $mongoKeyUserAgentAttrNumRequests = "numRequests";
     static private $mongoKeyUserAgentAttrNumRequestsDaily = "numRequestsDaily";
 
+    // USERAGENT TARGETS
+    static private $mongoCollectionUserAgentTargets = "useragent_targets";
+    static private $mongoKeyUserAgentTargetsAttrId = "_id";
+    static private $mongoKeyUserAgentTargetsAttrUserAgentId = "userAgentId";
+    static private $mongoKeyUserAgentTargetsAttrTargetId = "targetId";
+    
     //USERAGENT STATISTICS
     static private $mongoCollectionUserAgentStatistics = "useragent_statistics";
     static private $mongoKeyUserAgentStatisticsAttrId = "_id";
@@ -3186,5 +3192,37 @@ abstract class Settings
     public static function getMongoKeyImageStatisticsAttrNumRequests()
     {
         return self::$mongoKeyImageStatisticsAttrNumRequests;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoCollectionUserAgentTargets()
+    {
+        return self::$mongoCollectionUserAgentTargets;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyUserAgentTargetsAttrId()
+    {
+        return self::$mongoKeyUserAgentTargetsAttrId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyUserAgentTargetsAttrUserAgentId()
+    {
+        return self::$mongoKeyUserAgentTargetsAttrUserAgentId;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getMongoKeyUserAgentTargetsAttrTargetId()
+    {
+        return self::$mongoKeyUserAgentTargetsAttrTargetId;
     }
 }

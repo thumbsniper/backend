@@ -584,7 +584,8 @@ class ApiV3
 
         $this->checkWaitImage($waitimg, $result);
         $this->checkReferrer($referrerUrl, $result);
-        $this->checkUserAgent($userAgentStr, $result);
+        //TODO: UserAgent wieder irgendwo erfallen?
+        //$this->checkUserAgent($userAgentStr, $result);
         $this->checkCallback($callback);
 
         if ($forceUpdate) {

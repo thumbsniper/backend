@@ -232,10 +232,11 @@ class UserAgentModel
         $this->logger->log(__METHOD__, NULL, LOG_DEBUG);
 
         try {
-            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionUserAgents());
+            $collection = new MongoCollection($this->mongoDB, Settings::getMongoCollectionUserAgentTargets());
 
             $data = array(
-                'id' => $target->getId()
+                Settings::getMongoKeyUserAgentTargetsAttrUserAgentId() => $userAgent->getId(),
+                Settings::getMongoKeyUserAgentTargetsAttrTargetId() => $target->getId(),
             );
 
             $query = array(
